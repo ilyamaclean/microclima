@@ -1,0 +1,33 @@
+Package: microclima
+Type: Package
+Title: microclimate modelling with R
+Version: 0.1.0
+Authors@R: c(
+    person("Ilya", "Maclean", email = "i.m.d.maclean@exeter.ac.uk", role = "cre"),
+    person("Jonathan", "Mosedale", email = "j.mosedale@exeter.ac.uk", role = "aut"),
+    person("JOnathan", "Bennie", email = "j.j.bennie@exeter.ac.uk", role = "aut"))
+Maintainer: Ilya M. D. Maclean <i.m.d.maclean@exeter.ac.uk>
+Description: The functions in the microclim package contain tools for 
+    modelling the mechanistic processes that govern fine-scale variation in 
+    temperature. It includes tools for determining local variation in 
+    temperature arising from variation in radiation, wind speed, altitude, 
+    surface albedo, coastal influences and cold air drainage. A series of
+    functions for determining the fine-scale topographic and vegetation 
+    effects on wind speed and radiation are also provided. It also includes 
+    tools for deriving canopy cover, leaf architecture, surface albedo and 
+    cold air drainage basins from digital elevation data and aerial imagery. 
+License: GPL-2
+Encoding: UTF-8
+LazyData: true
+Depends:
+    raster (>= 2.5.8),
+    rgdal (>= 1.2),
+    stringr (>= 1.2),
+    sp (>= 1.2),
+    dplyr(>= 0.7)
+RoxygenNote: 6.0.1
+Roxygen: list(markdown = TRUE) 
+Suggests: knitr,
+    rmarkdown,
+    testthat
+VignetteBuilder: knitr
