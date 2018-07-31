@@ -156,7 +156,9 @@ solazi <- function(localtime, lat, long, julian, merid = 0, dst = 0) {
             cos(pi * lat / 180) * sin(declin)) / sqrt((cos(declin) *
             sin(tt)) ^ 2 + (sin(pi * lat / 180) * cos(declin) * cos(tt) -
             cos(pi * lat / 180) * sin(declin)) ^ 2)
-  solz <- 180 + (180 * atan(sinazi / sqrt(1 - sinazi * sinazi))) / pi
+  sqt <- 1 - sinazi * sinazi
+  sqt[sqt < 0] <- 0
+  solz <- 180 + (180 * atan(sinazi / sqrt(sqt))) / pi
   if (cosazi < 0) {
     if (sinazi < 0) solz <- 180 - solz else solz <- 540 - solz
   }

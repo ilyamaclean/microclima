@@ -7,7 +7,7 @@ Authors@R: c(
     person("Jonathan", "Mosedale", email = "j.mosedale@exeter.ac.uk", role = "aut"),
     person("JOnathan", "Bennie", email = "j.j.bennie@exeter.ac.uk", role = "aut"))
 Maintainer: Ilya M. D. Maclean <i.m.d.maclean@exeter.ac.uk>
-Description: The functions in the microclim package contain tools for 
+Description: The functions in the microclima package contain tools for 
     modelling the mechanistic processes that govern fine-scale variation in 
     temperature. It includes tools for determining local variation in 
     temperature arising from variation in radiation, wind speed, altitude, 
@@ -31,3 +31,5 @@ Suggests: knitr,
     rmarkdown,
     testthat
 VignetteBuilder: knitr
+URL: https://github.com/ilyamaclean/microclima
+BugReports: http://github.com/hadley/microclima/issues
