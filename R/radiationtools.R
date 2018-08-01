@@ -664,7 +664,6 @@ longwaveveg <- function(h, tc, p = 101300, n, x, fr, svv = 1, albc = 0.23) {
 #' @param dst an optional numeric value representing the local summer time adjustment (hours in 24 hour clock)  (+1 for BST, +0 for GMT).
 #' @param shadow an optional logical value indicating whether topographic shading should be considered (False = No, True = Yes).
 #' @param component an optional character string of the component of radiation to be returned. One of "sw" (net shortwave radiation, i.e. accounting for albedo), "sw2" (total incoming shortwave radiation), "dir" (direct), "dif" (diffuse), "iso" (isotropic diffuse), "ani" (anistopic diffuse), "ref" (reflected).
-#' @param threshold an optional single numeric value specifying whether to limit the calculated ratio of inclined to flat anistropic radiation, which is high on slopes facing the sun at low solar angles, potentially leading to implausibly high values when `dif` is not calculated precisely.
 #' @import raster
 #' @export
 #'
@@ -743,7 +742,7 @@ shortwavetopo <- function(dni, dif, julian, localtime, lat = NA, long = NA,
                           dtm = array(0, dim = c(1, 1)), slope = NA,
                           aspect = NA, svf = 1, alb = 0.23, albr = 0.23,
                           ha = 0, res = 100, merid = 0, dst = 0, shadow = TRUE,
-                          component = "sw", threshold = 5) {
+                          component = "sw") {
   r <- dtm
   if (class(slope) == "logical" & class(r) == "RasterLayer") {
     slope <- terrain(r, opt = "slope", unit = "degrees")
@@ -772,22 +771,11 @@ shortwavetopo <- function(dni, dif, julian, localtime, lat = NA, long = NA,
   si <- solarindex(slope, aspect, localtime, lat, long, julian, dtm, res,
                    merid, dst, shadow)
   dirr <- si * dni
-  saltitude <- solalt(localtime, lat, long, julian, merid, dst)
-  z <- (90 - saltitude) * (pi / 180)
   a <- slope * (pi / 180)
   k <- dni / 4.87
   k <- ifelse(k > 1, 1, k)
   isor <- 0.5 * dif * (1 + cos(a)) * (1 - k) * svf
-  div <- si / cos(z)
-  div[div > threshold] <- threshold
-  cisr <- dif * k * div
-  if (shadow) {
-    sazimuth <- solazi(localtime, lat, long, julian, merid, dst)
-    alt <- saltitude * (pi / 180)
-    shadowmask <- array(1, dim(dtm))
-    shadowmask[horizonangle(dtm, sazimuth, res) > tan(alt)] <- 0
-  }
-  cisr <- cisr * shadowmask
+  cisr <- k * dif * si
   sdi <- (slope + ha) * (pi / 180)
   refr <- 0.5 * albr * (1 - cos(sdi)) * dif
   difr <- isor + cisr + refr
@@ -830,7 +818,6 @@ shortwavetopo <- function(dni, dif, julian, localtime, lat = NA, long = NA,
 #' @param shadow an optional logical value indicating whether topographic shading should be considered (False = No, True = Yes).
 #' @param x a raster object, two-dimensional array or matrix of numeric values representing the ratio of vertical to horizontal projections of leaf foliage as returned by [leaf_geometry()].
 #' @param l a raster object, two-dimensional array or matrix of leaf area index values as returned by [lai()].
-#' @param threshold an optional single numeric value specifying whether to limit the calculated ratio of inclined to flat anistropic radiation, which is high on slopes facing the sun at low solar angles, potentially leading to implausibly high values when `dif` is not calculated precisely.
 #' @import raster
 #' @export
 #'
@@ -901,7 +888,7 @@ shortwaveveg <- function(dni, dif, julian, localtime, lat = NA, long = NA,
                          dtm = array(0, dim = c(1, 1)), slope = NA, aspect = NA,
                          svv = 1, albg = 0.23, fr, albr = 0.23, ha = 0,
                          res = 1, merid = 0, dst = 0, shadow = TRUE, x,
-                         l, threshold = 5) {
+                         l) {
   r <- dtm
   if (class(slope) == "logical" & class(r) == "RasterLayer") {
     slope <- terrain(r, opt = "slope", unit = "degrees")
@@ -933,23 +920,11 @@ shortwaveveg <- function(dni, dif, julian, localtime, lat = NA, long = NA,
   si <- solarindex(slope, aspect, localtime, lat, long, julian, dtm, res,
                    merid, dst, shadow)
   dirr <- si * dni
-  saltitude <- solalt(localtime, lat, long, julian, merid, dst)
-  z <- 90 - saltitude
-  z <- z * (pi / 180)
   a <- slope * (pi / 180)
   k <- dni / 4.87
   k <- ifelse(k > 1, 1, k)
   isor <- 0.5 * dif * (1 + cos(a)) * (1 - k)
-  div <- si / cos(z)
-  div[div > threshold] <- threshold
-  cisr <- dif * k * div
-  if (shadow) {
-    sazimuth <- solazi(localtime, lat, long, julian, merid, dst)
-    alt <- saltitude * (pi / 180)
-    shadowmask <- array(1, dim(dtm))
-    shadowmask[horizonangle(dtm, sazimuth, res) > tan(alt)] <- 0
-  }
-  cisr <- cisr * shadowmask
+  cisr <- k * dif * si
   sdi <- (slope + ha) * (pi / 180)
   refr <- 0.5 * albr * (1 - cos(sdi)) * dif
   fd <- dirr + cisr

@@ -7,7 +7,7 @@
 shortwavetopo(dni, dif, julian, localtime, lat = NA, long = NA,
   dtm = array(0, dim = c(1, 1)), slope = NA, aspect = NA, svf = 1,
   alb = 0.23, albr = 0.23, ha = 0, res = 100, merid = 0, dst = 0,
-  shadow = TRUE, component = "sw", threshold = 5)
+  shadow = TRUE, component = "sw")
 }
 \arguments{
 \item{dni}{a single numeric value, raster object, two-dimensional array or matrix of coarse-resolution direct radiation perpendicular to the solar beam (\ifelse{html}{\out{MJ m<sup>-2</sup> hr<sup>-1</sup>}}{\eqn{MJ m^{-2} hr^{-1}}}).}
@@ -45,8 +45,6 @@ shortwavetopo(dni, dif, julian, localtime, lat = NA, long = NA,
 \item{shadow}{an optional logical value indicating whether topographic shading should be considered (False = No, True = Yes).}
 
 \item{component}{an optional character string of the component of radiation to be returned. One of "sw" (net shortwave radiation, i.e. accounting for albedo), "sw2" (total incoming shortwave radiation), "dir" (direct), "dif" (diffuse), "iso" (isotropic diffuse), "ani" (anistopic diffuse), "ref" (reflected).}
-
-\item{threshold}{an optional single numeric value specifying whether to limit the calculated ratio of inclined to flat anistropic radiation, which is high on slopes facing the sun at low solar angles, potentially leading to implausibly high values when \code{dif} is not calculated precisely.}
 }
 \value{
 If component is "sw", a raster object or two-dimensional array of numeric values representing net shortwave radiation (MJ m^-2 hr^-1).
