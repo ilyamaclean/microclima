@@ -265,6 +265,7 @@ windcoef <- function(dsm, direction, hgt = 1, res = 1) {
   dsm <- is.raster(dsm)
   dsm[is.na(dsm)] <- 0
   dtm <- dsm / res
+  hgt <- hgt / res
   direction <- direction - 90
   azi <- direction * (pi / 180)
   horizon <- array(0, dim(dtm))
