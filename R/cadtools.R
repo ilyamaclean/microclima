@@ -685,7 +685,7 @@ pcad <- function(dem, basins, fa, tc, h, p = 101300, out = "cadp") {
   if (out == "cadp") cdp <- pfa * td
   if (out == "tempdif") cdp <- td
   if (out == "pflow") cdp <- pfa
-  if (is.na(cdp[1])) {
+  if (is.na(max(cdp, na.rm = T))) {
     stop(paste0(out, " not recognized"))
   }
   if.raster(cdp, dem)
