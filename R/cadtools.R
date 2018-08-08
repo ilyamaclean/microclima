@@ -17,13 +17,20 @@
 #' dem <- matrix(c(4:1), nrow = 2, ncol = 2)
 #' basinsort(dem, basins)
 basinsort <- function(dem, basins) {
-  r <- dem
-  dem <- is.raster(dem)
-  basins <- is.raster(basins)
   mdf <- function(u) {
     sel <- which(basins == u)
     min(dem[sel], na.rm = TRUE)
   }
+  r <- dem
+  dem <- is.raster(dem)
+  basins <- is.raster(basins)
+  u <- unique(as.vector(basins))
+  u <- u[is.na(u) == F]
+  u2 <- c(1:length(u))
+  df1 <- data.frame(old = as.vector(basins))
+  df2 <- data.frame(old = c(NA, u), new = c(NA, u2))
+  df3 <- left_join(df1, df2, by = "old")
+  basins <- array(df3$new, dim = dim(basins))
   u <- unique(as.vector(basins))
   u <- u[is.na(u) == F]
   mnd <- sapply(u, mdf)
