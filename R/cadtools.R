@@ -516,7 +516,7 @@ flowacc <- function(dem, basins) {
       f <- fd[x, y]
       x2 <- x + (f - 1) %% 3 - 1
       y2 <- y + (f - 1) %/% 3 - 1
-      fa[x2, y2] <- fa[x2, y2] + 1
+      fa[x2, y2] <- fa[x, y] + 1
     }
   }
   if.raster(fa, dem)
