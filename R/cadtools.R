@@ -501,7 +501,7 @@ flowacc <- function(dem, basins) {
         mb9 <- mb2[x[i]:(x[i] + 2), y[i]:(y[i] + 2)]
         md9 <- md2[x[i]:(x[i] + 2), y[i]:(y[i] + 2)]
         md9 <- ifelse(mb9 == b, md9, NA)
-        fd[x[i], y[i]] <- which(md9 == min(md9, na.rm = T))[1]
+        fd[x[i], y[i]] <- round(mean(which(md9 == min(md9, na.rm = T))), 0)
       }
     }
     fd
