@@ -155,7 +155,7 @@ basindelin <- function(dem) {
     basin <- basin + 1
   }
   basinsm <- if.raster(basinsm, r)
-  basinsm
+  basinsort(r, basinsm)
 }
 #' Delineates hydrological basins for large datasets
 #'
@@ -355,6 +355,7 @@ basindelin_big <- function(dem, dirout = NA, trace = TRUE) {
   }
   basins[dem == 9999] <- NA
   if (trace) plot (basins, main = "Merge complete")
+  basins <- basinsort(dem, basins)
   basins
 }
 #' Merges adjoining basins
