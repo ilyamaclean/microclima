@@ -26,9 +26,8 @@ identified, a new basin identity assigned and the processes repeated until
 all pixels are assigned to a basin. Relative to heuristic algorithms, it is
 slow and run time increases exponentially with size of \code{dtm}. However, in
 contrast to many such algorithms, all basins are correctly seperated by
-boundaries >0. With large datasets, with > 40000 pixels, a warning is given
-to indicate that the calculations will be slow and \code{\link[=basindelin_big]{basindelin_big()}} should
-be used instead
+boundaries >0. With large datasets, with > 160,000 pixels, calculations will
+be slow and \code{\link[=basindelin_big]{basindelin_big()}} should be used instead
 }
 \examples{
 dem <- aggregate(dtm1m, 20)

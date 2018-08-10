@@ -65,9 +65,8 @@ basinsort <- function(dem, basins) {
 #' all pixels are assigned to a basin. Relative to heuristic algorithms, it is
 #' slow and run time increases exponentially with size of `dtm`. However, in
 #' contrast to many such algorithms, all basins are correctly seperated by
-#' boundaries >0. With large datasets, with > 40000 pixels, a warning is given
-#' to indicate that the calculations will be slow and [basindelin_big()] should
-#' be used instead
+#' boundaries >0. With large datasets, with > 160,000 pixels, calculations will
+#' be slow and [basindelin_big()] should be used instead
 #'
 #' @examples
 #' dem <- aggregate(dtm1m, 20)
@@ -110,10 +109,6 @@ basindelin <- function(dem) {
       }
     }
     updownm
-  }
-  if (dim(dem)[1] * dim(dem)[2] > 200 ^ 2) {
-    warning("Function is slow on large datasets. Suggest using basindelin_big
-            function instead")
   }
   r <- dem
   dem <- is.raster(dem)
