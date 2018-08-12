@@ -45,8 +45,8 @@ humidityconvert <- function(h, intype = "relative", tc = 20, p = 101300) {
     hr <- (ea / e0) * 100
   }
   if (intype == "relative") hr <- h
-  if (max(hr) > 100) warning(paste("Some relative humidity values > 100%",
-                            max(hr)))
+  if (max(hr, na.rm = T) > 100) warning(paste("Some relative humidity values > 100%",
+                            max(hr, na.rm = T)))
   ea <- e0 * (hr / 100)
   hs <- (hr / 100) * ws
   ha <- 2.16679 * (ea / tk)
