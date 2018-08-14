@@ -10,7 +10,6 @@
 #' @return a raster object, two-dimensional array or matrix of sequentially numbered basins
 #' @import raster
 #' @importFrom dplyr left_join
-#' @export
 #'
 #' @examples
 #' basins <- matrix(c(1:4), nrow = 2, ncol = 2)
@@ -41,6 +40,163 @@ basinsort <- function(dem, basins) {
   df3 <- left_join(df1, df2, by = "old")
   bm2 <- array(df3$new, dim = dim(basins))
   if.raster(bm2, r)
+}
+#' Internal funcion to calculate whether neighbouring cell is higher or lower
+#'
+hgttongbr <- function(m) {
+  hgt <- rep(m[2, 2], 8)
+  neighbours <- c(m[1, 2], m[1, 3], m[2, 3], m[3, 3], m[3, 2], m[3, 1],
+                  m[2, 1], m[1, 1])
+  htn <- ifelse(hgt > neighbours, 1, 0)
+  intcode <- sum(2 ^ (which(rev(unlist(strsplit(as.character(htn), "")) ==
+                                  1)) - 1))
+  intcode
+}
+#' Internal funcion to convert integer to binary
+#'
+integertobinary8 <- function(i) {
+  a <- 2 ^ (0:9)
+  b <- 2 * a
+  binc <- format(sapply(i, function(x) sum(10 ^ (0:9)[(x %% b) >= a])),
+                 scientific = FALSE)
+  if (nchar(binc) > 8) warning("Integer > 8 bit binary")
+  binc <- str_pad(binc, 8, pad = "0")
+  binc
+}
+#' Internal funcion to check whether neighbouring cell is higher or lower
+#'
+updown <- function(dem) {
+  m <- dem
+  m2 <- array(9999, dim = c(dim(dem)[1] + 2, dim(dem)[2] + 2))
+  m2[2:(dim(dem)[1] + 1), 2:(dim(dem)[2] + 1)] <- m
+  updownm <- matrix(rep(NA, length(dem)), nrow = dim(dem)[1])
+  for (y in 2:(dim(m2)[2] - 1)) {
+    for (x in 2:(dim(m2)[1] - 1)) {
+      focalcell <- m2[x, y]
+      if (is.na(focalcell) == FALSE) {
+        m9 <- matrix(c(m2[x - 1, y - 1], m2[x, y - 1], m2[x + 1, y - 1],
+                       m2[x - 1, y], focalcell, m2[x + 1, y],
+                       m2[x - 1, y + 1], m2[x, y + 1], m2[x + 1, y + 1]),
+                     nrow = 3)
+        updownm[(x - 1), (y - 1)] <- hgttongbr(m9)
+      }
+    }
+  }
+  updownm
+}
+#' Internal function to merge single basin
+#'
+onebasin_merge <- function(md, mb, b) {
+  mb2 <- array(NA, dim = c(dim(mb)[1] + 2, dim(mb)[2] + 2))
+  mb2[2:(dim(mb)[1] + 1), 2:(dim(mb)[2] + 1)] <- mb
+  md2 <- array(NA, dim = c(dim(md)[1] + 2, dim(md)[2] + 2))
+  md2[2:(dim(md)[1] + 1), 2:(dim(md)[2] + 1)] <- md
+  bm <-  b
+  sel <- which(mb == b)
+  x <- arrayInd(sel, dim(md))[, 1]
+  y <- arrayInd(sel, dim(md))[, 2]
+  for (i in 1:length(x)) {
+    mb9 <- mb2[x[i]:(x[i] + 2), y[i]:(y[i] + 2)]
+    md9 <- md2[x[i]:(x[i] + 2), y[i]:(y[i] + 2)]
+    sel2 <- which(mb9 > b)
+    if (length(sel2) > 0) {
+      for (j in 1:length(sel2)) {
+        xi <- arrayInd(sel2[j], dim(mb9))[, 1]
+        yi <- arrayInd(sel2[j], dim(mb9))[, 2]
+        x2 <- c(xi - 1, xi, xi + 1)
+        y2 <- c(yi - 1, yi, yi + 1)
+        x2 <- x2[x2 > 0 & x2 < 4]
+        y2 <- y2[y2 > 0 & y2 < 4]
+        mb3 <- mb9[x2, y2]
+        md3 <- md9[x2, y2]
+        md3[mb3 == b] <- NA
+        u <- unique(mb3[mb3 > b])
+        u <- u[is.na(u) == F]
+        for (k in 1:length(u)) {
+          vrs <- md3[mb3  == u[k]]
+          if (max(vrs, na.rm = T) > md9[2, 2]) bm <- c(bm, u[k])
+        }
+      }
+    }
+  }
+  unique(bm)
+}
+#'Internal function used by basinmerge
+#'
+basinchars <- function(md, mb) {
+  mb2 <- array(NA, dim = c(dim(mb)[1] + 2, dim(mb)[2] + 2))
+  mb2[2:(dim(mb)[1] + 1), 2:(dim(mb)[2] + 1)] <- mb
+  sel <- which(is.na(mb2) == T)
+  mb2[sel] <- (-999)
+  md2 <- array(NA, dim = c(dim(md)[1] + 2, dim(md)[2] + 2))
+  md2[2:(dim(md)[1] + 1), 2:(dim(md)[2] + 1)] <- md
+  md2[sel] <- 9999
+  dfm <- data.frame(basin = NA, basinmindepth = NA,
+                    pourpointbasin = NA, pourpointhgt = NA)
+  for (b in 1:max(mb, na.rm = T)) {
+    sel <- which(mb == b)
+    x <- arrayInd(sel, dim(md))[, 1]
+    y <- arrayInd(sel, dim(md))[, 2]
+    df1 <- data.frame(basin = b,
+                      basinmindepth = min(md[sel], na.rm = T),
+                      pourpointbasin = NA, pourpointhgt = 0)
+    b2 <- 0
+    pph <- 0
+    for (i in 1:length(x)) {
+      mb9 <- mb2[x[i]:(x[i] + 2), y[i]:(y[i] + 2)]
+      md9 <- md2[x[i]:(x[i] + 2), y[i]:(y[i] + 2)]
+      sel <- which(as.vector(mb9) != b)
+      b2[i] <- NA
+      pph[i] <- NA
+      if (length(sel) > 0) {
+        mb9 <- mb9[sel]
+        md9 <- md9[sel]
+        sel2 <- which(as.vector(md9) == min(as.vector(md9)))
+        b2[i] <- mb9[sel2][1]
+        pph[i] <- md9[sel2][1]
+      }
+    }
+    sel <- which(pph == min(pph, na.rm = T))
+    df1$pourpointbasin <- b2[sel[1]]
+    df1$pourpointhgt <- min(pph, na.rm = T)
+    dfm <- rbind(dfm, df1)
+  }
+  dfm <- dfm[which(is.na(dfm$basin) == F), ]
+  dfm
+}
+#'Internal function used by basinmerge
+#'
+bvarsrem <- function(bvars, boundary) {
+  sel <- which(bvars$pourpointbasin != -999)
+  if (length(sel) == 0) warning("all basins flow into sea")
+  bvars <- bvars[sel, ]
+  bvars$basindepth <- bvars$pourpointhgt - bvars$basinmindepth
+  bvars <- bvars[bvars$basindepth < boundary, ]
+  o <- order(bvars$pourpointhgt, decreasing = TRUE)
+  bvars <- bvars[o, ]
+  bvars
+}
+#' Internal function used to calculate flow direction
+#'
+flowdir <- function(md, mb) {
+  fd <- mb * 0
+  mb2 <- array(NA, dim = c(dim(mb)[1] + 2, dim(mb)[2] + 2))
+  mb2[2:(dim(mb)[1] + 1), 2:(dim(mb)[2] + 1)] <- mb
+  md2 <- array(NA, dim = c(dim(md)[1] + 2, dim(md)[2] + 2))
+  md2[2:(dim(md)[1] + 1), 2:(dim(md)[2] + 1)] <- md
+  u <- unique(as.vector(mb))
+  for (b in 1:max(u, na.rm = T)) {
+    sel <- which(mb == b)
+    x <- arrayInd(sel, dim(md))[, 1]
+    y <- arrayInd(sel, dim(md))[, 2]
+    for (i in 1:length(x)) {
+      mb9 <- mb2[x[i]:(x[i] + 2), y[i]:(y[i] + 2)]
+      md9 <- md2[x[i]:(x[i] + 2), y[i]:(y[i] + 2)]
+      md9 <- ifelse(mb9 == b, md9, NA)
+      fd[x[i], y[i]] <- round(mean(which(md9 == min(md9, na.rm = T))), 0)
+    }
+  }
+  fd
 }
 #' Delineates hydrological basins
 #'
@@ -73,43 +229,6 @@ basinsort <- function(dem, basins) {
 #' basins <- basindelin (dem)
 #' plot(basins, main = "Basins")
 basindelin <- function(dem) {
-  hgttongbr <- function(m) {
-    hgt <- rep(m[2, 2], 8)
-    neighbours <- c(m[1, 2], m[1, 3], m[2, 3], m[3, 3], m[3, 2], m[3, 1],
-                    m[2, 1], m[1, 1])
-    htn <- ifelse(hgt > neighbours, 1, 0)
-    intcode <- sum(2 ^ (which(rev(unlist(strsplit(as.character(htn), "")) ==
-                                    1)) - 1))
-    intcode
-  }
-  integertobinary8 <- function(i) {
-    a <- 2 ^ (0:9)
-    b <- 2 * a
-    binc <- format(sapply(i, function(x) sum(10 ^ (0:9)[(x %% b) >= a])),
-                   scientific = FALSE)
-    if (nchar(binc) > 8) warning("Integer > 8 bit binary")
-    binc <- str_pad(binc, 8, pad = "0")
-    binc
-  }
-  updown <- function(dem) {
-    m <- dem
-    m2 <- array(9999, dim = c(dim(dem)[1] + 2, dim(dem)[2] + 2))
-    m2[2:(dim(dem)[1] + 1), 2:(dim(dem)[2] + 1)] <- m
-    updownm <- matrix(rep(NA, length(dem)), nrow = dim(dem)[1])
-    for (y in 2:(dim(m2)[2] - 1)) {
-      for (x in 2:(dim(m2)[1] - 1)) {
-        focalcell <- m2[x, y]
-        if (is.na(focalcell) == FALSE) {
-          m9 <- matrix(c(m2[x - 1, y - 1], m2[x, y - 1], m2[x + 1, y - 1],
-                         m2[x - 1, y], focalcell, m2[x + 1, y],
-                         m2[x - 1, y + 1], m2[x, y + 1], m2[x + 1, y + 1]),
-                       nrow = 3)
-          updownm[(x - 1), (y - 1)] <- hgttongbr(m9)
-        }
-      }
-    }
-    updownm
-  }
   r <- dem
   dem <- is.raster(dem)
   ngbrow <- c(-1, -1, 0, 1, 1, 1, 0, -1)
@@ -181,41 +300,6 @@ basindelin <- function(dem) {
 #' basins <- basindelin_big(dtm1m)
 #' plot(basins, main = "Basins")
 basindelin_big <- function(dem, dirout = NA, trace = TRUE) {
-  onebasin_merge <- function(md, mb, b) {
-    mb2 <- array(NA, dim = c(dim(mb)[1] + 2, dim(mb)[2] + 2))
-    mb2[2:(dim(mb)[1] + 1), 2:(dim(mb)[2] + 1)] <- mb
-    md2 <- array(NA, dim = c(dim(md)[1] + 2, dim(md)[2] + 2))
-    md2[2:(dim(md)[1] + 1), 2:(dim(md)[2] + 1)] <- md
-    bm <-  b
-    sel <- which(mb == b)
-    x <- arrayInd(sel, dim(md))[, 1]
-    y <- arrayInd(sel, dim(md))[, 2]
-    for (i in 1:length(x)) {
-      mb9 <- mb2[x[i]:(x[i] + 2), y[i]:(y[i] + 2)]
-      md9 <- md2[x[i]:(x[i] + 2), y[i]:(y[i] + 2)]
-      sel2 <- which(mb9 > b)
-      if (length(sel2) > 0) {
-        for (j in 1:length(sel2)) {
-          xi <- arrayInd(sel2[j], dim(mb9))[, 1]
-          yi <- arrayInd(sel2[j], dim(mb9))[, 2]
-          x2 <- c(xi - 1, xi, xi + 1)
-          y2 <- c(yi - 1, yi, yi + 1)
-          x2 <- x2[x2 > 0 & x2 < 4]
-          y2 <- y2[y2 > 0 & y2 < 4]
-          mb3 <- mb9[x2, y2]
-          md3 <- md9[x2, y2]
-          md3[mb3 == b] <- NA
-          u <- unique(mb3[mb3 > b])
-          u <- u[is.na(u) == F]
-          for (k in 1:length(u)) {
-            vrs <- md3[mb3  == u[k]]
-            if (max(vrs, na.rm = T) > md9[2, 2]) bm <- c(bm, u[k])
-          }
-        }
-      }
-    }
-    unique(bm)
-  }
   dem <- trim(dem)
   dmsx <- ceiling(dim(dem)[2] / 200) - 1
   dmsy <- ceiling(dim(dem)[1] / 200) - 1
@@ -380,57 +464,6 @@ basindelin_big <- function(dem, dirout = NA, trace = TRUE) {
 #' plot(basins100m, main = "Basins")
 #' plot(basins2, main = "Merged basins")
 basinmerge <- function(dem, basins, boundary) {
-  basinchars <- function(md, mb) {
-    mb2 <- array(NA, dim = c(dim(mb)[1] + 2, dim(mb)[2] + 2))
-    mb2[2:(dim(mb)[1] + 1), 2:(dim(mb)[2] + 1)] <- mb
-    sel <- which(is.na(mb2) == T)
-    mb2[sel] <- (-999)
-    md2 <- array(NA, dim = c(dim(md)[1] + 2, dim(md)[2] + 2))
-    md2[2:(dim(md)[1] + 1), 2:(dim(md)[2] + 1)] <- md
-    md2[sel] <- 9999
-    dfm <- data.frame(basin = NA, basinmindepth = NA,
-                      pourpointbasin = NA, pourpointhgt = NA)
-    for (b in 1:max(mb, na.rm = T)) {
-      sel <- which(mb == b)
-      x <- arrayInd(sel, dim(md))[, 1]
-      y <- arrayInd(sel, dim(md))[, 2]
-      df1 <- data.frame(basin = b,
-                        basinmindepth = min(md[sel], na.rm = T),
-                        pourpointbasin = NA, pourpointhgt = 0)
-      b2 <- 0
-      pph <- 0
-      for (i in 1:length(x)) {
-        mb9 <- mb2[x[i]:(x[i] + 2), y[i]:(y[i] + 2)]
-        md9 <- md2[x[i]:(x[i] + 2), y[i]:(y[i] + 2)]
-        sel <- which(as.vector(mb9) != b)
-        b2[i] <- NA
-        pph[i] <- NA
-        if (length(sel) > 0) {
-          mb9 <- mb9[sel]
-          md9 <- md9[sel]
-          sel2 <- which(as.vector(md9) == min(as.vector(md9)))
-          b2[i] <- mb9[sel2][1]
-          pph[i] <- md9[sel2][1]
-        }
-      }
-      sel <- which(pph == min(pph, na.rm = T))
-      df1$pourpointbasin <- b2[sel[1]]
-      df1$pourpointhgt <- min(pph, na.rm = T)
-      dfm <- rbind(dfm, df1)
-    }
-    dfm <- dfm[which(is.na(dfm$basin) == F), ]
-    dfm
-  }
-  bvarsrem <- function(bvars, boundary) {
-    sel <- which(bvars$pourpointbasin != -999)
-    if (length(sel) == 0) warning("all basins flow into sea")
-    bvars <- bvars[sel, ]
-    bvars$basindepth <- bvars$pourpointhgt - bvars$basinmindepth
-    bvars <- bvars[bvars$basindepth < boundary, ]
-    o <- order(bvars$pourpointhgt, decreasing = TRUE)
-    bvars <- bvars[o, ]
-    bvars
-  }
   if (all.equal(dim(basins)[1:2], dim(dem)[1:2]) == FALSE)
     stop ("basins and dem have different dimensions")
   r <- basins
@@ -482,26 +515,6 @@ basinmerge <- function(dem, basins, boundary) {
 #' # plot data (expressed as area)
 #' plot(log(fa * 100^2), main = "Log (accumulated flow)")
 flowacc <- function(dem, basins) {
-  flowdir <- function(md, mb) {
-    fd <- mb * 0
-    mb2 <- array(NA, dim = c(dim(mb)[1] + 2, dim(mb)[2] + 2))
-    mb2[2:(dim(mb)[1] + 1), 2:(dim(mb)[2] + 1)] <- mb
-    md2 <- array(NA, dim = c(dim(md)[1] + 2, dim(md)[2] + 2))
-    md2[2:(dim(md)[1] + 1), 2:(dim(md)[2] + 1)] <- md
-    u <- unique(as.vector(mb))
-    for (b in 1:max(u, na.rm = T)) {
-      sel <- which(mb == b)
-      x <- arrayInd(sel, dim(md))[, 1]
-      y <- arrayInd(sel, dim(md))[, 2]
-      for (i in 1:length(x)) {
-        mb9 <- mb2[x[i]:(x[i] + 2), y[i]:(y[i] + 2)]
-        md9 <- md2[x[i]:(x[i] + 2), y[i]:(y[i] + 2)]
-        md9 <- ifelse(mb9 == b, md9, NA)
-        fd[x[i], y[i]] <- round(mean(which(md9 == min(md9, na.rm = T))), 0)
-      }
-    }
-    fd
-  }
   dm <- is.raster(dem)
   bm <- is.raster(basins)
   fd <- flowdir(dm, bm)

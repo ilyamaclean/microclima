@@ -7,7 +7,6 @@
 #' @param r an R object
 #'
 #' @return if `r` is a raster, `x` is converted to a raster with the same attributes as `r`, otherwise returns `x`
-#' @export
 #' @import raster
 #'
 #' @examples
@@ -29,7 +28,6 @@ if.raster <- function(x, r) {
 #' @param r an R object
 #'
 #' @return if `r` is a raster, returns a matrix containing all values of `r`, otherwise returns `r`
-#' @export
 #' @import raster
 #'
 #' @examples
