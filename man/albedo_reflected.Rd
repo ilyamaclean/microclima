@@ -32,7 +32,7 @@ e <- extent(c(169900, 170000, 12900, 13000))
 rt <-raster(e, res = 1)
 r_alb <- albedo_reflected(alb, e)
 par(mfrow = c(2, 1))
-plot(if.raster(alb, rt), main = "Surface albedo", col= gray(0:255/255))
-plot(if.raster(r_alb, rt), main = "Albedo of surrounding surfaces",
+plot(if_raster(alb, rt), main = "Surface albedo", col= gray(0:255/255))
+plot(if_raster(r_alb, rt), main = "Albedo of surrounding surfaces",
      col= gray(0:255/255))
 }

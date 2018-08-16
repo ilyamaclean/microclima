@@ -26,14 +26,14 @@ the effects of coastal buffering of land-temperatures by the sea.
 # =========================================
 temp <- tas[,,1]
 sst <- 10.665
-dT <- if.raster(sst - temp, dtm1km)
+dT <- if_raster(sst - temp, dtm1km)
 # ============================
 # Obtain coastal exposure data
 # ============================
 lsw <- landsearatios[,,7]  # upwind
 lsa <- apply(landsearatios, c(1, 2), mean) # mean, all directions
-lsw <- if.raster(lsw, dtm100m)
-lsa <- if.raster(lsa, dtm100m)
+lsw <- if_raster(lsw, dtm100m)
+lsa <- if_raster(lsa, dtm100m)
 # ==========================================================
 # Calculate coastal effects using thin-plate spline and plot
 # ==========================================================

@@ -1,21 +1,22 @@
 #' Flexible conversion to raster object
 #'
 #' @description
-#' `if.raster` is used to permit flexibility in the use of rasters, matrices or arrays in many functions.
+#' `if_raster` is used to permit flexibility in the use of rasters, matrices or arrays in many functions.
 #'
 #' @param x an R object
 #' @param r an R object
 #'
 #' @return if `r` is a raster, `x` is converted to a raster with the same attributes as `r`, otherwise returns `x`
 #' @import raster
+#' @export
 #'
 #' @examples
-#' r <- is.raster(dtm100m)
-#' r1 <- if.raster(r, dtm100m)
-#' r2 <- if.raster(r, r)
+#' r <- is_raster(dtm100m)
+#' r1 <- if_raster(r, dtm100m)
+#' r2 <- if_raster(r, r)
 #' class(r1) # is a RasterLayer
 #' class(r2) # is a matrix
-if.raster <- function(x, r) {
+if_raster <- function(x, r) {
   if (class(r) == "RasterLayer")
     x <- raster(x, template = r)
   x
@@ -23,20 +24,21 @@ if.raster <- function(x, r) {
 #' Checks whether object is a raster and returns a matrix if yes
 
 #' @description
-#' `is.raster` is used to permit flexibility in the use of rasters, matrices or arrays in many functions.
+#' `is_raster` is used to permit flexibility in the use of rasters, matrices or arrays in many functions.
 #'
 #' @param r an R object
 #'
 #' @return if `r` is a raster, returns a matrix containing all values of `r`, otherwise returns `r`
 #' @import raster
+#' @export
 #'
 #' @examples
-#' r <- is.raster(dtm100m)
+#' r <- is_raster(dtm100m)
 #' class(dtm100m) # is a RasterLayer
 #' class(r) # is a matrix
 #' plot(r) # not a raster
 #' plot(raster(r)) # converts to raster
-is.raster <- function(r) {
+is_raster <- function(r) {
   if (class(r) == "RasterLayer")
     r <- getValues(r, format = "matrix")
   r
@@ -193,7 +195,7 @@ solalt <- function(localtime, lat, long, julian, merid = 0, dst = 0) {
 #'
 #' @description `horizonangle` is used to calculate the tangent of the angle to the horizon in a specified direction.
 #'
-#' @param dtm a raster object, two-dimensional array or matrix of elevations (m). If not a raster, orientated as if derived from a raster using [is.raster()]. I.e. `[1, 1]` is the NW corner.
+#' @param dtm a raster object, two-dimensional array or matrix of elevations (m). If not a raster, orientated as if derived from a raster using [is_raster()]. I.e. `[1, 1]` is the NW corner.
 #' @param azimuth a numeric value representing the direction of the horizon as, for example, returned by [solazi()] (º from north).
 #' @param res a single numeric value representing the spatial resolution of `dtm` (m).
 #'
@@ -213,7 +215,7 @@ solalt <- function(localtime, lat, long, julian, merid = 0, dst = 0) {
 #' plot(ha, main = "Tangent of angle to horizon")
 horizonangle <- function(dtm, azimuth, res = 1) {
   r <- dtm
-  dtm <- is.raster(r)
+  dtm <- is_raster(r)
   dtm[is.na(dtm)] <- 0
   dtm <- (dtm * 5) / res
   azimuth <- azimuth - 90
@@ -230,20 +232,20 @@ horizonangle <- function(dtm, azimuth, res = 1) {
                          step ^ 2)] - dtm3[101:(x + 100), 101:(y + 100)]) /
                          (5 * step ^ 2))
   }
-  horizon <- if.raster(horizon, r)
+  horizon <- if_raster(horizon, r)
   horizon
 }
 #' Calculates the solar index
 #'
 #' @description `solarindex` is used to calculate the proportion of direct beam radiation incident on an inclined surface at a specified time and location.
 #'
-#' @param slope a single value, raster object, two-dimensional array or matrix of slopes (º). If an array or matrix, then orientated as if derived using [is.raster()]. I.e. `[1, 1]` is the NW corner.
-#' @param aspect a single value, raster object, two-dimensional array or matrix of aspects (º). If an array or matrix, then orientated as if derived using [is.raster()]. I.e. `[1, 1]` is the NW corner.
+#' @param slope a single value, raster object, two-dimensional array or matrix of slopes (º). If an array or matrix, then orientated as if derived using [is_raster()]. I.e. `[1, 1]` is the NW corner.
+#' @param aspect a single value, raster object, two-dimensional array or matrix of aspects (º). If an array or matrix, then orientated as if derived using [is_raster()]. I.e. `[1, 1]` is the NW corner.
 #' @param localtime a single numeric value representing local time (decimal hour, 24 hour clock).
 #' @param lat a single numeric value representing the mean latitude of the location for which the solar index is required (decimal degrees, -ve south of the equator).
 #' @param long a single numeric value representing the mean longitude of the location for which the solar index is required (decimal degrees, -ve west of Greenwich meridian).
 #' @param julian a single integer representing the Julian day as returned by [julday()].
-#' @param dtm an optional raster object, two-dimensional array or matrix of elevations (m). If not a raster, orientated as if derived from a raster using [is.raster()]. I.e. `[1, 1]` is the NW corner.
+#' @param dtm an optional raster object, two-dimensional array or matrix of elevations (m). If not a raster, orientated as if derived from a raster using [is_raster()]. I.e. `[1, 1]` is the NW corner.
 #' @param res a single numeric value representing the spatial resolution of `dtm` (m).
 #' @param merid an optional single numeric value representing the longitude (decimal degrees) of the local time zone meridian (0 for UK time).
 #' @param dst an optional single numeric value representing the local summer time adjustment (hours, e.g. +1 for BST).
@@ -297,9 +299,9 @@ solarindex <- function(slope = NA, aspect, localtime, lat = NA, long, julian,
   }
   if (class(lat) == "logical" & class(crs(r)) != "CRS")
     stop("Latitude not defined and cannot be determined from raster")
-  dtm <- is.raster(dtm)
-  slope <- is.raster(slope)
-  aspect <- is.raster(aspect)
+  dtm <- is_raster(dtm)
+  slope <- is_raster(slope)
+  aspect <- is_raster(aspect)
   saltitude <- solalt(localtime, lat, long, julian, merid, dst)
   alt <- saltitude * (pi / 180)
   zen <- pi / 2 - alt
@@ -313,7 +315,7 @@ solarindex <- function(slope = NA, aspect, localtime, lat = NA, long, julian,
   index <- cos(zen) * cos(sl) + sin(zen) * sin(sl) * cos(azi - asp)
   index[index < 0] <- 0
   index <- index * shadowmask
-  index <- if.raster(index, r)
+  index <- if_raster(index, r)
   index
 }
 #' Calculates the airmass coefficient

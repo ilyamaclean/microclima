@@ -48,9 +48,9 @@ sv <- skyviewtopo(dtm100m)
 # ===========================
 # Resample to 100m resolution
 # ===========================
-hr <- if.raster(h, dtm1km)
-tr <- if.raster(tc, dtm1km)
-pr <- if.raster(p, dtm1km)
+hr <- if_raster(h, dtm1km)
+tr <- if_raster(tc, dtm1km)
+pr <- if_raster(p, dtm1km)
 nr <- raster(n, xmn = -5.40, xmx = -5.00, ymn = 49.90, ymx = 50.15)
 crs(nr) <- '+init=epsg:4326'
 nr <- projectRaster(nr, crs = '+init=epsg:27700')

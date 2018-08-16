@@ -124,14 +124,14 @@ invls <- function(landsea, e, direction, maxdist = 2e+05) {
 #' # =========================================
 #' temp <- tas[,,1]
 #' sst <- 10.665
-#' dT <- if.raster(sst - temp, dtm1km)
+#' dT <- if_raster(sst - temp, dtm1km)
 #' # ============================
 #' # Obtain coastal exposure data
 #' # ============================
 #' lsw <- landsearatios[,,7]  # upwind
 #' lsa <- apply(landsearatios, c(1, 2), mean) # mean, all directions
-#' lsw <- if.raster(lsw, dtm100m)
-#' lsa <- if.raster(lsa, dtm100m)
+#' lsw <- if_raster(lsw, dtm100m)
+#' lsa <- if_raster(lsa, dtm100m)
 #' # ==========================================================
 #' # Calculate coastal effects using thin-plate spline and plot
 #' # ==========================================================
@@ -183,9 +183,9 @@ coastalTps <- function(dT, lsw, lsa) {
 #' lapserate(20, h$specific) * 1000 # lapse rate per km when relative humidity is 100%
 lapserate <- function(tc, h, p = 101300) {
   r <- tc
-  tc <- is.raster(tc)
-  h <- is.raster(h)
-  p <- is.raster(p)
+  tc <- is_raster(tc)
+  h <- is_raster(h)
+  p <- is_raster(p)
   pk <- p / 1000
   e0 <- 0.6108 * exp(17.27 * tc / (tc + 237.3))
   ws <- 0.622 * e0 / pk
@@ -196,7 +196,7 @@ lapserate <- function(tc, h, p = 101300) {
   lr <- 9.8076 * (1 + (2501000 * rv) / (287 * (tc + 273.15))) / (1003.5 +
         (0.622 * 2501000 ^ 2 * rv) / (287 * (tc + 273.15) ^ 2))
   lr <- lr * -1
-  if.raster(lr, r)
+  if_raster(lr, r)
 }
 #' Applies height correction to wind speed measurements
 #'
@@ -239,7 +239,7 @@ windheight <- function(ui, zi, zo) {
 #'
 #' @description `windcoef` is used to apply a topographic shelter coefficient to wind data.
 #'
-#' @param dsm raster object, two-dimensional array or matrix of elevations (m) derived either from a digital terrain or digital surface model, and orientated as if derived using [is.raster()]. I.e. `[1, 1]` is the NW corner.
+#' @param dsm raster object, two-dimensional array or matrix of elevations (m) derived either from a digital terrain or digital surface model, and orientated as if derived using [is_raster()]. I.e. `[1, 1]` is the NW corner.
 #' @param direction a single numeric value specifying the direction from which the wind is blowing (º).
 #' @param hgt a single numeric value specifying the height (m) at which wind speed is derived or measured. The wind speeds returned are also for this height, and account for the fact topography affords less shelter to wind at greater heights.
 #' @param res a single numeric value specifying the the resolution (m) of `dsm`.
@@ -262,7 +262,7 @@ windheight <- function(ui, zi, zo) {
 #' plot(mask(wc, dtm1m), main ="Northerly wind shelter coefficient")
 windcoef <- function(dsm, direction, hgt = 1, res = 1) {
   r <- dsm
-  dsm <- is.raster(dsm)
+  dsm <- is_raster(dsm)
   dsm[is.na(dsm)] <- 0
   dtm <- dsm / res
   hgt <- hgt / res
@@ -283,7 +283,7 @@ windcoef <- function(dsm, direction, hgt = 1, res = 1) {
                                 horizon[1:x, 1:y])
   }
   index <- 1 - atan(0.17 * 100 * horizon) / 1.65
-  index <- if.raster(index, r)
+  index <- if_raster(index, r)
   index
 }
 #' Calculates sunrise, sunset and daylength
@@ -666,7 +666,7 @@ fitmicro <- function(microfitdata, alldata = FALSE, windthresh = NA,
 #' extent(reftemp) <- extent(dtm1m)
 #' reftemp <- resample(reftemp, dtm1m)
 #' temps <- tempanom + getValues(reftemp, format = "matrix")
-#' plot(if.raster(temps, dtm1m), main =
+#' plot(if_raster(temps, dtm1m), main =
 #'      expression(paste("Temperature ",(~degree~C))))
 #'
 #' # ======================================================================
@@ -727,15 +727,15 @@ fitmicro <- function(microfitdata, alldata = FALSE, windthresh = NA,
 #' # Calculate coastal effects
 #' # ----------------------------
 #' sst <- 10.771
-#' dT <- if.raster(sst - tc, dtm1km)
-#' lsw <- if.raster(landsearatios[,,28], dtm100m)  # upwind
-#' lsa <- if.raster(apply(landsearatios, c(1, 2), mean), dtm100m) # mean, all directions
+#' dT <- if_raster(sst - tc, dtm1km)
+#' lsw <- if_raster(landsearatios[,,28], dtm100m)  # upwind
+#' lsa <- if_raster(apply(landsearatios, c(1, 2), mean), dtm100m) # mean, all directions
 #' dTf <- coastalTps(dT, lsw, lsa)
 #'
 #' # ------------------------------
 #' # Calculate altitudinal effects
 #' # ------------------------------
-#' lrr <- if.raster(lr, dtm1km)
+#' lrr <- if_raster(lr, dtm1km)
 #' lrr <- resample (lrr, dtm100m)
 #' tc <- sst - dTf + lrr * dtm100m
 #'
@@ -745,8 +745,8 @@ fitmicro <- function(microfitdata, alldata = FALSE, windthresh = NA,
 #' dni <- resampleraster(dnirad[,,2891], dtm100m)
 #' dif <- resampleraster(difrad[,,2891], dtm100m)
 #' n <- resampleraster(cfc[,,2891], dtm100m)
-#' h <- resample(if.raster(h[,,12], dtm1km), dtm100m)
-#' p <- resample(if.raster(p[,,12], dtm1km), dtm100m)
+#' h <- resample(if_raster(h[,,12], dtm1km), dtm100m)
+#' p <- resample(if_raster(p[,,12], dtm1km), dtm100m)
 #' sv <- skyviewtopo(dtm100m)
 #' netshort <- shortwavetopo(dni, dif, jd, 11, dtm = dtm100m, svf = sv)
 #' netlong <- longwavetopo(h, tc, p, n, sv)
@@ -769,10 +769,10 @@ fitmicro <- function(microfitdata, alldata = FALSE, windthresh = NA,
 #'      expression(paste("Mesoclimate temperature ",(~degree~C))))
 runmicro <- function(params, netrad, wind) {
   r <- netrad
-  netrad <- is.raster(netrad)
-  wind <- is.raster(wind)
+  netrad <- is_raster(netrad)
+  wind <- is_raster(wind)
   wf <- ifelse(wind > params[5, 1], 1, 0)
   temp <- params[1, 1] + params[2, 1] * wf + params[3, 1] * netrad +
     params[4, 1] * wf * netrad
-  if.raster(temp, r)
+  if_raster(temp, r)
 }

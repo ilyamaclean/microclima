@@ -48,6 +48,6 @@ fr <- canopy(l, x)
 ag <- albedo2(alb, fr)
 ac <- albedo2(alb, fr, ground = FALSE)
 par(mfrow=c(2, 1))
-plot(if.raster(ag, dtm1m), main = "Ground albedo", col = gray(0:255/255))
-plot(if.raster(ac, dtm1m), main = "Canopy albedo", col = gray(0:255/255))
+plot(if_raster(ag, dtm1m), main = "Ground albedo", col = gray(0:255/255))
+plot(if_raster(ac, dtm1m), main = "Canopy albedo", col = gray(0:255/255))
 }

@@ -32,4 +32,4 @@ Suggests: knitr,
     testthat
 VignetteBuilder: knitr
 URL: https://github.com/ilyamaclean/microclima
-BugReports: http://github.com/hadley/microclima/issues
+BugReports: http://github.com/microclima/issues

@@ -23,3 +23,4 @@ basins <- matrix(c(1:4), nrow = 2, ncol = 2)
 dem <- matrix(c(4:1), nrow = 2, ncol = 2)
 basinsort(dem, basins)
 }
+\keyword{internal}

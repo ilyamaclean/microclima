@@ -10,7 +10,8 @@
 #' @return a raster object, two-dimensional array or matrix of sequentially numbered basins
 #' @import raster
 #' @importFrom dplyr left_join
-#'
+#' @export
+#' @keywords internal
 #' @examples
 #' basins <- matrix(c(1:4), nrow = 2, ncol = 2)
 #' dem <- matrix(c(4:1), nrow = 2, ncol = 2)
@@ -21,8 +22,8 @@ basinsort <- function(dem, basins) {
     min(dem[sel], na.rm = TRUE)
   }
   r <- dem
-  dem <- is.raster(dem)
-  basins <- is.raster(basins)
+  dem <- is_raster(dem)
+  basins <- is_raster(basins)
   u <- unique(as.vector(basins))
   u <- u[is.na(u) == F]
   u2 <- c(1:length(u))
@@ -39,11 +40,11 @@ basinsort <- function(dem, basins) {
   df2 <- data.frame(old = c(NA, u), new = c(NA, u2))
   df3 <- left_join(df1, df2, by = "old")
   bm2 <- array(df3$new, dim = dim(basins))
-  if.raster(bm2, r)
+  if_raster(bm2, r)
 }
 #' Internal funcion to calculate whether neighbouring cell is higher or lower
-#'
-hgttongbr <- function(m) {
+#' @export
+.hgttongbr <- function(m) {
   hgt <- rep(m[2, 2], 8)
   neighbours <- c(m[1, 2], m[1, 3], m[2, 3], m[3, 3], m[3, 2], m[3, 1],
                   m[2, 1], m[1, 1])
@@ -53,8 +54,8 @@ hgttongbr <- function(m) {
   intcode
 }
 #' Internal funcion to convert integer to binary
-#'
-integertobinary8 <- function(i) {
+#' @export
+.integertobinary8 <- function(i) {
   a <- 2 ^ (0:9)
   b <- 2 * a
   binc <- format(sapply(i, function(x) sum(10 ^ (0:9)[(x %% b) >= a])),
@@ -64,8 +65,8 @@ integertobinary8 <- function(i) {
   binc
 }
 #' Internal funcion to check whether neighbouring cell is higher or lower
-#'
-updown <- function(dem) {
+#' @export
+.updown <- function(dem) {
   m <- dem
   m2 <- array(9999, dim = c(dim(dem)[1] + 2, dim(dem)[2] + 2))
   m2[2:(dim(dem)[1] + 1), 2:(dim(dem)[2] + 1)] <- m
@@ -78,15 +79,15 @@ updown <- function(dem) {
                        m2[x - 1, y], focalcell, m2[x + 1, y],
                        m2[x - 1, y + 1], m2[x, y + 1], m2[x + 1, y + 1]),
                      nrow = 3)
-        updownm[(x - 1), (y - 1)] <- hgttongbr(m9)
+        updownm[(x - 1), (y - 1)] <- .hgttongbr(m9)
       }
     }
   }
   updownm
 }
 #' Internal function to merge single basin
-#'
-onebasin_merge <- function(md, mb, b) {
+#' @export
+.onebasin_merge <- function(md, mb, b) {
   mb2 <- array(NA, dim = c(dim(mb)[1] + 2, dim(mb)[2] + 2))
   mb2[2:(dim(mb)[1] + 1), 2:(dim(mb)[2] + 1)] <- mb
   md2 <- array(NA, dim = c(dim(md)[1] + 2, dim(md)[2] + 2))
@@ -121,9 +122,9 @@ onebasin_merge <- function(md, mb, b) {
   }
   unique(bm)
 }
-#'Internal function used by basinmerge
-#'
-basinchars <- function(md, mb) {
+#' Internal function used by basinmerge
+#' @export
+.basinchars <- function(md, mb) {
   mb2 <- array(NA, dim = c(dim(mb)[1] + 2, dim(mb)[2] + 2))
   mb2[2:(dim(mb)[1] + 1), 2:(dim(mb)[2] + 1)] <- mb
   sel <- which(is.na(mb2) == T)
@@ -164,9 +165,9 @@ basinchars <- function(md, mb) {
   dfm <- dfm[which(is.na(dfm$basin) == F), ]
   dfm
 }
-#'Internal function used by basinmerge
-#'
-bvarsrem <- function(bvars, boundary) {
+#' Internal function used by basinmerge
+#' @export
+.bvarsrem <- function(bvars, boundary) {
   sel <- which(bvars$pourpointbasin != -999)
   if (length(sel) == 0) warning("all basins flow into sea")
   bvars <- bvars[sel, ]
@@ -177,8 +178,8 @@ bvarsrem <- function(bvars, boundary) {
   bvars
 }
 #' Internal function used to calculate flow direction
-#'
-flowdir <- function(md, mb) {
+#' @export
+.flowdir <- function(md, mb) {
   fd <- mb * 0
   mb2 <- array(NA, dim = c(dim(mb)[1] + 2, dim(mb)[2] + 2))
   mb2[2:(dim(mb)[1] + 1), 2:(dim(mb)[2] + 1)] <- mb
@@ -230,10 +231,10 @@ flowdir <- function(md, mb) {
 #' plot(basins, main = "Basins")
 basindelin <- function(dem) {
   r <- dem
-  dem <- is.raster(dem)
+  dem <- is_raster(dem)
   ngbrow <- c(-1, -1, 0, 1, 1, 1, 0, -1)
   ngbcol <- c(0, 1, 1, 1, 0, -1, -1, -1)
-  updownm <- updown(dem)
+  updownm <- .updown(dem)
   basinsm <- ifelse(is.na(dem), NA, 0)
   donem <- dem
   basincell <- order(dem)[1]
@@ -244,7 +245,7 @@ basindelin <- function(dem) {
       irow <- arrayInd(i, dim(dem))[1]
       icol <- arrayInd(i, dim(dem))[2]
       basinsm[irow, icol] <- basin
-      neighbours <- integertobinary8(updownm[i])
+      neighbours <- .integertobinary8(updownm[i])
       for (n in 1:8) {
         if ((irow + ngbrow[n]) > 0 & (irow + ngbrow[n]) <= dim(basinsm)[1] &
             (icol + ngbcol[n]) > 0 & (icol + ngbcol[n]) <= dim(basinsm)[2]) {
@@ -268,7 +269,7 @@ basindelin <- function(dem) {
     else basincell <- -999
     basin <- basin + 1
   }
-  basinsm <- if.raster(basinsm, r)
+  basinsm <- if_raster(basinsm, r)
   basinsort(r, basinsm)
 }
 #' Delineates hydrological basins for large datasets
@@ -374,7 +375,7 @@ basindelin_big <- function(dem, dirout = NA, trace = TRUE) {
           u <- u[order(u)]
           if (length(u) > 0) {
             for (k in 1:length(u)) {
-              lst[[ii]] <- onebasin_merge(md, mb, u[k])
+              lst[[ii]] <- .onebasin_merge(md, mb, u[k])
               ii <- ii + 1
             }
           }
@@ -394,7 +395,7 @@ basindelin_big <- function(dem, dirout = NA, trace = TRUE) {
           u <- u[order(u)]
           if (length(u) > 0) {
             for (k in 1:length(u)) {
-              lst[[ii]] <- onebasin_merge(md, mb, u[k])
+              lst[[ii]] <- .onebasin_merge(md, mb, u[k])
               ii <- ii + 1
             }
           }
@@ -467,13 +468,13 @@ basinmerge <- function(dem, basins, boundary) {
   if (all.equal(dim(basins)[1:2], dim(dem)[1:2]) == FALSE)
     stop ("basins and dem have different dimensions")
   r <- basins
-  dem <- is.raster(dem)
-  basins <- is.raster(basins)
+  dem <- is_raster(dem)
+  basins <- is_raster(basins)
   test <- F
   while (test == F) {
     mb2 <- basins
-    bvars <- basinchars(dem, basins)
-    bkeep <- bvarsrem(bvars, boundary)
+    bvars <- .basinchars(dem, basins)
+    bkeep <- .bvarsrem(bvars, boundary)
     if (dim(bkeep)[1] == 0) test <- T
     for (b in 1:(dim(bkeep)[1])) {
       sel <- which(bkeep$pourpointbasin == bkeep$basin[b])
@@ -492,7 +493,7 @@ basinmerge <- function(dem, basins, boundary) {
     }
   }
   basins <- basinsort(dem, basins)
-  if.raster(basins, r)
+  if_raster(basins, r)
 }
 #' Calculates accumulated flow
 #'
@@ -515,9 +516,9 @@ basinmerge <- function(dem, basins, boundary) {
 #' # plot data (expressed as area)
 #' plot(log(fa * 100^2), main = "Log (accumulated flow)")
 flowacc <- function(dem, basins) {
-  dm <- is.raster(dem)
-  bm <- is.raster(basins)
-  fd <- flowdir(dm, bm)
+  dm <- is_raster(dem)
+  bm <- is_raster(basins)
+  fd <- .flowdir(dm, bm)
   fa <- fd * 0 + 1
   for (b in 1:max(bm, na.rm = T)) {
     sel <- which(bm == b)
@@ -532,7 +533,7 @@ flowacc <- function(dem, basins) {
       fa[x2, y2] <- fa[x, y] + 1
     }
   }
-  if.raster(fa, dem)
+  if_raster(fa, dem)
 }
 #' Calculates whether conditions are right for cold air drainage
 #'
@@ -671,12 +672,12 @@ cadconditions <- function(h, tc, n, p = 100346.13, wind, startjul, lat, long,
 #' plot(cp2, main = "Expected temperature difference")
 #' plot(cp1, main = "Cold air drainage potential")
 pcad <- function(dem, basins, fa, tc, h, p = 101300, out = "cadp") {
-  h <- is.raster(h)
-  tc <- is.raster(tc)
-  p <- is.raster(p)
-  dm <- is.raster(dem)
-  bm <- is.raster(basins)
-  fm <- is.raster(fa) * xres(dem) * yres(dem)
+  h <- is_raster(h)
+  tc <- is_raster(tc)
+  p <- is_raster(p)
+  dm <- is_raster(dem)
+  bm <- is_raster(basins)
+  fm <- is_raster(fa) * xres(dem) * yres(dem)
   pfa <- fm * 0
   td <- fm * 0
   lr <- lapserate(tc, h, p)
@@ -697,5 +698,5 @@ pcad <- function(dem, basins, fa, tc, h, p = 101300, out = "cadp") {
   if (is.na(max(cdp, na.rm = T))) {
     stop(paste0(out, " not recognized"))
   }
-  if.raster(cdp, dem)
+  if_raster(cdp, dem)
 }

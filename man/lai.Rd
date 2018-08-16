@@ -26,7 +26,7 @@ locally calibrated values are obtained.
 }
 \examples{
 leaf <- lai(aerial_image[,,3], aerial_image[,,4])
-plot(if.raster(leaf, dtm1m), main = "Leaf area index")
+plot(if_raster(leaf, dtm1m), main = "Leaf area index")
 }
 \seealso{
 function \code{\link[=lai_adjust]{lai_adjust()}} for calculated leaf area index values at specified heights above the ground.

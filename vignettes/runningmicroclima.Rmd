@@ -2,7 +2,7 @@
 title: "microclima: micro- and meso-scale climate modelling with R"
 author: "Ilya M. D. Maclean[aut, cre], Jonathan R. Mosedale[aut], Jonathan J. Bennie [aut]"
 date: "`r Sys.Date()`"
-output: rmarkdown::pdf_document
+output: rmarkdown::html_vignette
 vignette: >
   %\VignetteIndexEntry{Vignette Title}
   %\VignetteEngine{knitr::rmarkdown}
@@ -119,9 +119,9 @@ sv <- skyviewtopo(dtm100m)
 # ===========================
 # Resample to 100m resolution
 # ===========================
-hr <- if.raster(h, dtm1km)
-tr <- if.raster(tc, dtm1km)
-pr <- if.raster(p, dtm1km)
+hr <- if_raster(h, dtm1km)
+tr <- if_raster(tc, dtm1km)
+pr <- if_raster(p, dtm1km)
 nr <- raster(n, xmn = -5.40, xmx = -5.00, ymn = 49.90, ymx = 50.15)
 crs(nr) <- '+init=epsg:4326'
 nr <- projectRaster(nr, crs = '+init=epsg:27700')
@@ -137,7 +137,7 @@ netlong100m <- mask(netlong100m, dtm100m)
 plot(netlong100m, 
      main = expression("Net longwave radiation" ~ (MJ ~ m^{-2} ~   hour^{-1})))
 ```
-In the example above, the meteorological variables needed to calculate atmospheric emissivity for 2010-05-24 11:00 are first extracted from the one km resolution dataset include with the package. The package also includes datasets of daily mean temperature and the diurnal temperature range. For the sake of simplicity and for illustration only, we assume the temperature at 11am is the mean daily temperature + half the diurnal temperature range. As spatial variation in longwave radiation is affected by sky view, this is calculated using function `skyviewtopo`. The meteorological variables are then converted to a raster and resampled to 100 m resolution. Finally, longwave radiation is downscaled to 100m resolution using function `longwavetopo`. This function calculates atmospheric emissivity and applies the sky view correction factor. The functions `if.raster` and `is.raster` are included with the package to permit flexibility in using either raster datasets or matrices to run components of the model. The code above produces the plot below.
+In the example above, the meteorological variables needed to calculate atmospheric emissivity for 2010-05-24 11:00 are first extracted from the one km resolution dataset include with the package. The package also includes datasets of daily mean temperature and the diurnal temperature range. For the sake of simplicity and for illustration only, we assume the temperature at 11am is the mean daily temperature + half the diurnal temperature range. As spatial variation in longwave radiation is affected by sky view, this is calculated using function `skyviewtopo`. The meteorological variables are then converted to a raster and resampled to 100 m resolution. Finally, longwave radiation is downscaled to 100m resolution using function `longwavetopo`. This function calculates atmospheric emissivity and applies the sky view correction factor. The functions `if_raster` and `is_raster` are included with the package to permit flexibility in using either raster datasets or matrices to run components of the model. The code above produces the plot below.
 
 ![](C:/microclimatemodel/packageimages/lwtopo.png)
 
@@ -257,14 +257,14 @@ The overall coastal effects on temperature are derived using function `coastalTp
 # =========================================
 temp <- tas[,,1]
 sst <- 10.665
-dT <- if.raster(sst - temp, dtm1km)
+dT <- if_raster(sst - temp, dtm1km)
 # ============================
 # Obtain coastal exposure data
 # ============================
 lsw <- landsearatios[,,7] # upwind (NNE wind)
 lsa <- apply(landsearatios, c(1, 2), mean) # mean, all directions
-lsw <- if.raster(lsw, dtm100m)
-lsa <- if.raster(lsa, dtm100m)
+lsw <- if_raster(lsw, dtm100m)
+lsa <- if_raster(lsa, dtm100m)
 # ==========================================================
 # Calculate coastal effects using thin-plate spline and plot
 # ==========================================================
@@ -429,14 +429,14 @@ for (i in 1:19) {
 # Calculate coastal effects
 # ----------------------------
 sst <- 10.771
-dT <- if.raster(sst - tc, dtm1km)
-lsw <- if.raster(landsearatios[,,28], dtm100m)  # upwind
-lsa <- if.raster(apply(landsearatios, c(1, 2), mean), dtm100m) # mean, all directions
+dT <- if_raster(sst - tc, dtm1km)
+lsw <- if_raster(landsearatios[,,28], dtm100m)  # upwind
+lsa <- if_raster(apply(landsearatios, c(1, 2), mean), dtm100m) # mean, all directions
 dTf <- coastalTps(dT, lsw, lsa)
 # ------------------------------
 # Calculate altitudinal effects
 # ------------------------------
-lrr <- if.raster(lr, dtm1km)
+lrr <- if_raster(lr, dtm1km)
 lrr <- resample (lrr, dtm100m)
 tc <- sst - dTf + lrr * dtm100m
 # ------------------------------
@@ -445,8 +445,8 @@ tc <- sst - dTf + lrr * dtm100m
 dni <- resampleraster(dnirad[,,2891], dtm100m)
 dif <- resampleraster(difrad[,,2891], dtm100m)
 n <- resampleraster(cfc[,,2891], dtm100m)
-h <- resample(if.raster(h[,,12], dtm1km), dtm100m)
-p <- resample(if.raster(p[,,12], dtm1km), dtm100m)
+h <- resample(if_raster(h[,,12], dtm1km), dtm100m)
+p <- resample(if_raster(p[,,12], dtm1km), dtm100m)
 sv <- skyviewtopo(dtm100m)
 netshort <- shortwavetopo(dni, dif, jd, 11, dtm = dtm100m, svf = sv)
 netlong <- longwavetopo(h, tc, p, n, sv)

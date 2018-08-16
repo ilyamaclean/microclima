@@ -25,7 +25,7 @@
 #' @examples
 #' alb <- albedo(aerial_image[,,1], aerial_image[,,2], aerial_image[,,3],
 #'               aerial_image[,,4])
-#' plot(if.raster(alb, dtm1m), main = "Albedo", col = gray(0:255/255))
+#' plot(if_raster(alb, dtm1m), main = "Albedo", col = gray(0:255/255))
 albedo <- function(blue, green, red, nir, maxval = 255,
                    bluerange = c(430, 490), greenrange = c(535, 585),
                    redrange = c(610, 660), nirrange = c(835, 885)) {
@@ -39,10 +39,10 @@ albedo <- function(blue, green, red, nir, maxval = 255,
     b
   }
   r <- blue
-  blue <- is.raster(blue)
-  green <- is.raster(green)
-  red <- is.raster(red)
-  nir <- is.raster(nir)
+  blue <- is_raster(blue)
+  green <- is_raster(green)
+  red <- is_raster(red)
+  nir <- is_raster(nir)
   d <- c(1:3000)
   p <- planck(d)
   weight1 <- mean(p[bluerange[1]:bluerange[2]])
@@ -56,7 +56,7 @@ albedo <- function(blue, green, red, nir, maxval = 255,
   rat4 <- weight4 / weightall
   albedo <- blue * rat1 + green * rat2 + red * rat3 + nir * rat4
   albedo <- albedo / maxval
-  albedo <- if.raster(albedo, r)
+  albedo <- if_raster(albedo, r)
   albedo
 }
 #' Adjusts albedo to correct for image brightness and contrast
@@ -73,7 +73,7 @@ albedo <- function(blue, green, red, nir, maxval = 255,
 #' @examples
 #' alb <- albedo(aerial_image[,,1], aerial_image[,,2], aerial_image[,,3],
 #'               aerial_image[,,4])
-#' img <- if.raster(alb, dtm1m)
+#' img <- if_raster(alb, dtm1m)
 #' mds <- raster(modis, xmn = 169000, xmx = 170000, ymn = 12000, ymx = 13000)
 #' alb2 <- albedo_adjust(img, mds)
 #' par(mfrow=c(2, 1))
@@ -112,16 +112,16 @@ albedo_adjust <- function(alb_image, alb_modis) {
 
 #' @examples
 #' leaf <- lai(aerial_image[,,3], aerial_image[,,4])
-#' plot(if.raster(leaf, dtm1m), main = "Leaf area index")
+#' plot(if_raster(leaf, dtm1m), main = "Leaf area index")
 lai <- function(red, nir, maxlai = 20) {
   r <- red
-  red <- is.raster(red)
-  nir <- is.raster(nir)
+  red <- is_raster(red)
+  nir <- is_raster(nir)
   ndvi <- (nir - red) / (nir + red)
   logl <- 3.4838 * ndvi - 0.148
   l <- 10 ^ logl
   l[l > maxlai] <- maxlai
-  if.raster(l, r)
+  if_raster(l, r)
 }
 #' Calculates Leaf Area Index for specified height above ground
 #'
@@ -145,16 +145,16 @@ lai <- function(red, nir, maxlai = 20) {
 #' l <- lai(aerial_image[,,3], aerial_image[,,4])
 #' la<-lai_adjust(l, veg_hgt)
 #' par(mfrow=c(2, 1))
-#' plot(if.raster(l, dtm1m), main = "Leaf area index")
-#' plot(if.raster(la, dtm1m), main = "Adjusted leaf area index")
+#' plot(if_raster(l, dtm1m), main = "Leaf area index")
+#' plot(if_raster(la, dtm1m), main = "Adjusted leaf area index")
 lai_adjust <- function(l, veghgt, hgt = 0.05) {
   r <- l
-  l <- is.raster(l)
-  veghgt <- is.raster(veghgt)
+  l <- is_raster(l)
+  veghgt <- is_raster(veghgt)
   cf <- (veghgt - hgt) / veghgt
   cf[cf < 0] <- 0
   l <- l * cf
-  if.raster(l, r)
+  if_raster(l, r)
 }
 #' Calculates leaf orientation
 #'
@@ -188,11 +188,11 @@ lai_adjust <- function(l, veghgt, hgt = 0.05) {
 #' plot(x, main = "Leaf geometry")
 leaf_geometry <- function(veghgt, maxx = 20) {
   r <- veghgt
-  veghgt <- is.raster(veghgt)
+  veghgt <- is_raster(veghgt)
   logx <- 5.5246 * log(veghgt + 1) - 1.4384
   x <- 10 ^ logx
   x[x > maxx] <- maxx
-  if.raster(x, r)
+  if_raster(x, r)
 }
 #' Calculates canopy cover
 #'
@@ -211,14 +211,14 @@ leaf_geometry <- function(veghgt, maxx = 20) {
 #'
 #' @examples
 #' l <- lai(aerial_image[,,3], aerial_image[,,4])
-#' l <- if.raster(l, dtm1m) # convert to raster
+#' l <- if_raster(l, dtm1m) # convert to raster
 #' x <- leaf_geometry(veg_hgt)
 #' fr <- canopy(l, x)
 #' plot(fr, main = "Fractional canopy cover")
 canopy <- function(l, x) {
   r <- l
-  l <- is.raster(l)
-  x <- is.raster(x)
+  l <- is_raster(l)
+  x <- is_raster(x)
   xs <- c(0.01, 0.02, 0.05, 0.1, 0.2, 0.5, 1, 2, 5, 10)
   p1s <- c(-25.287, -25.254, -25.196, -24.932, -24.278, -22.088, -19.097,
            -15.255, -10.159, -7.105)
@@ -235,7 +235,7 @@ canopy <- function(l, x) {
   arad <- a * (pi / 180)
   k <- sqrt(x ^ 2 + tan(arad) ^ 2) / (x + 1.774 * (x + 1.182) ^ -0.733)
   fr <- 1 - exp(-k * l)
-  if.raster(fr, r)
+  if_raster(fr, r)
 }
 #' Partitions surface albedo between ground and canopy albedo
 #'
@@ -277,17 +277,17 @@ canopy <- function(l, x) {
 #' ag <- albedo2(alb, fr)
 #' ac <- albedo2(alb, fr, ground = FALSE)
 #' par(mfrow=c(2, 1))
-#' plot(if.raster(ag, dtm1m), main = "Ground albedo", col = gray(0:255/255))
-#' plot(if.raster(ac, dtm1m), main = "Canopy albedo", col = gray(0:255/255))
+#' plot(if_raster(ag, dtm1m), main = "Ground albedo", col = gray(0:255/255))
+#' plot(if_raster(ac, dtm1m), main = "Canopy albedo", col = gray(0:255/255))
 albedo2 <- function(alb, fr, ground = TRUE) {
   r <- alb
-  alb <- is.raster(alb)
-  fr <- is.raster(fr)
+  alb <- is_raster(alb)
+  fr <- is_raster(fr)
   mg <- mean(alb[fr < 0.03], na.rm = TRUE)
   mc <- mean(alb[fr > 0.97], na.rm = TRUE)
   alb2 <- alb * fr + mc * (1 - fr)
   if (ground) alb2 <- alb * (1 - fr) + mg * fr
-  if.raster(alb2, r)
+  if_raster(alb2, r)
 }
 #' Calculates the mean albedo of surfaces surrounding each location
 #'
@@ -317,12 +317,12 @@ albedo2 <- function(alb, fr, ground = TRUE) {
 #' rt <-raster(e, res = 1)
 #' r_alb <- albedo_reflected(alb, e)
 #' par(mfrow = c(2, 1))
-#' plot(if.raster(alb, rt), main = "Surface albedo", col= gray(0:255/255))
-#' plot(if.raster(r_alb, rt), main = "Albedo of surrounding surfaces",
+#' plot(if_raster(alb, rt), main = "Surface albedo", col= gray(0:255/255))
+#' plot(if_raster(r_alb, rt), main = "Albedo of surrounding surfaces",
 #'      col= gray(0:255/255))
 albedo_reflected <- function(alb, e = extent(alb)) {
   rr <- alb
-  alb <- is.raster(rr)
+  alb <- is_raster(rr)
   albr <- array(NA, dim = dim(alb))
   r <- raster(alb)
   extent(r) <- e
@@ -346,7 +346,7 @@ albedo_reflected <- function(alb, e = extent(alb)) {
       }
     }
   }
-  if.raster(albr, rr)
+  if_raster(albr, rr)
 }
 #' Calculates the mean slope to the horizon
 #'
@@ -371,7 +371,7 @@ albedo_reflected <- function(alb, e = extent(alb)) {
 #' plot(ms, main = "Mean slope to horizon")
 mean_slope <- function(dtm, steps = 36, res = 1) {
   r <- dtm
-  dtm <- is.raster(dtm)
+  dtm <- is_raster(dtm)
   dtm[is.na(dtm)] <- 0
   ha <- array(0, dim(dtm))
   for (s in 1:steps) {
@@ -379,7 +379,7 @@ mean_slope <- function(dtm, steps = 36, res = 1) {
   }
   ha <- ha / steps
   ha <- ha * (180 / pi)
-  if.raster(ha, r)
+  if_raster(ha, r)
 }
 #' calculates the proportion of sky in view
 #'
@@ -408,11 +408,11 @@ mean_slope <- function(dtm, steps = 36, res = 1) {
 #' plot(sv, main = "Sky view factor")
 skyviewtopo <- function(dtm, steps = 36, res = 100) {
   r <- dtm
-  dtm <- is.raster(dtm)
+  dtm <- is_raster(dtm)
   ha <- mean_slope(dtm, steps, res)
   ha <- ha * (pi / 180)
   svf <- 0.5 * cos(2 * ha) + 0.5
-  if.raster(svf, r)
+  if_raster(svf, r)
 }
 #' Calculates a sky view correction factor underneath vegetation
 #'
@@ -454,9 +454,9 @@ skyviewtopo <- function(dtm, steps = 36, res = 100) {
 #' plot(sv, main = "Sky view factor")
 skyviewveg <- function(dtm, l, x, steps = 36, res = 1) {
   r <- dtm
-  dtm <- is.raster(dtm)
-  l <- is.raster(l)
-  x <- is.raster(x)
+  dtm <- is_raster(dtm)
+  l <- is_raster(l)
+  x <- is_raster(x)
   xs <- c(0.01, 0.02, 0.05, 0.1, 0.2, 0.5, 1, 2, 5, 10)
   p1s <- c(0.5421, 0.542, 0.5409, 0.5375, 0.5265, 0.4775, 0.3941, 0.2805,
            0.1462, 0.0811)
@@ -474,7 +474,7 @@ skyviewveg <- function(dtm, l, x, steps = 36, res = 1) {
   a <- p1 * l ^ p2 + 0.564
   H2 <- (pi / 2) * (ha ^ a) / ((pi / 2) ^ a)
   svv <- 0.5 * cos(2 * H2) + 0.5
-  if.raster(svv, r)
+  if_raster(svv, r)
 }
 #' calculates net longwave radiation above canopy
 #'
@@ -519,9 +519,9 @@ skyviewveg <- function(dtm, l, x, steps = 36, res = 1) {
 #' # ===========================
 #' # Resample to 100m resolution
 #' # ===========================
-#' hr <- if.raster(h, dtm1km)
-#' tr <- if.raster(tc, dtm1km)
-#' pr <- if.raster(p, dtm1km)
+#' hr <- if_raster(h, dtm1km)
+#' tr <- if_raster(tc, dtm1km)
+#' pr <- if_raster(p, dtm1km)
 #' nr <- raster(n, xmn = -5.40, xmx = -5.00, ymn = 49.90, ymx = 50.15)
 #' crs(nr) <- '+init=epsg:4326'
 #' nr <- projectRaster(nr, crs = '+init=epsg:27700')
@@ -537,11 +537,11 @@ skyviewveg <- function(dtm, l, x, steps = 36, res = 1) {
 #' plot(netlong100m, main = "Net longwave radiation")
 longwavetopo <- function(h, tc, p = 101300, n, svf = 1) {
   r <- svf
-  h <- is.raster(h)
-  tc <- is.raster(tc)
-  p <- is.raster(p)
-  n <- is.raster(n)
-  svf <- is.raster(svf)
+  h <- is_raster(h)
+  tc <- is_raster(tc)
+  p <- is_raster(p)
+  n <- is_raster(n)
+  svf <- is_raster(svf)
   pk <- p / 1000
   e0 <- 0.6108 * exp(17.27 * tc / (tc + 237.3))
   ws <- 0.622 * e0 / pk
@@ -552,7 +552,7 @@ longwavetopo <- function(h, tc, p = 101300, n, svf = 1) {
   em <- emcs * (1 - n ^ 2) + 0.976 * n ^ 2
   Ln <- 2.043e-10 * (1 - em) * (tc + 273.15) ^ 4
   lwr <- Ln * svf
-  if.raster(lwr, r)
+  if_raster(lwr, r)
 }
 #' Calculates net longwave radiation below canopy
 #'
@@ -612,14 +612,14 @@ longwavetopo <- function(h, tc, p = 101300, n, svf = 1) {
 #' plot(nlr, main = "Net longwave radiation")
 longwaveveg <- function(h, tc, p = 101300, n, x, fr, svv = 1, albc = 0.23) {
   rr <- svv
-  h <- is.raster(h)
-  tc <- is.raster(tc)
-  p <- is.raster(p)
-  n <- is.raster(n)
-  x <- is.raster(x)
-  fr <- is.raster(fr)
-  svv <- is.raster(svv)
-  albc <- is.raster(alb)
+  h <- is_raster(h)
+  tc <- is_raster(tc)
+  p <- is_raster(p)
+  n <- is_raster(n)
+  x <- is_raster(x)
+  fr <- is_raster(fr)
+  svv <- is_raster(svv)
+  albc <- is_raster(alb)
   pk <- p / 1000
   e0 <- 0.6108 * exp(17.27 * tc / (tc + 237.3))
   ws <- 0.622 * e0 / pk
@@ -637,7 +637,7 @@ longwaveveg <- function(h, tc, p = 101300, n, x, fr, svv = 1, albc = 0.23) {
   lw3 <- r * (1 - albc) * fr * 2.043e-10 * (tc + 273.15) ^ 4
   lwd <- lw1 + lw2 + lw3
   lwrad <- (le0 - lwd) * svv
-  if.raster(lwrad, rr)
+  if_raster(lwrad, rr)
 }
 #' Downscales shortwave radiation accounting for topographic effects
 #'
@@ -652,9 +652,9 @@ longwaveveg <- function(h, tc, p = 101300, n, x, fr, svv = 1, albc = 0.23) {
 #' @param localtime a single numeric value representing local time (decimal hour, 24 hour clock).
 #' @param lat a single numeric value representing the mean latitude of the location for which downscaled radiation is required (decimal degrees, -ve south of equator).
 #' @param long a single numeric value representing the mean longitude of the location for which downscaled radiation is required (decimal degrees, -ve west of Greenwich meridian).
-#' @param dtm an optional raster object, two-dimensional array or matrix of elevations (m), orientated as if derived using [is.raster()]. I.e. `[1, 1]` is the NW corner.
-#' @param slope a single value, raster object, two-dimensional array or matrix of slopes (º). If an array or matrix, then orientated as if derived using [is.raster()]. I.e. `[1, 1]` is the NW corner.
-#' @param aspect a single value, raster object, two-dimensional array or matrix of aspects (º). If an array or matrix, then orientated as if derived using [is.raster()]. I.e. `[1, 1]` is the NW corner.
+#' @param dtm an optional raster object, two-dimensional array or matrix of elevations (m), orientated as if derived using [is_raster()]. I.e. `[1, 1]` is the NW corner.
+#' @param slope a single value, raster object, two-dimensional array or matrix of slopes (º). If an array or matrix, then orientated as if derived using [is_raster()]. I.e. `[1, 1]` is the NW corner.
+#' @param aspect a single value, raster object, two-dimensional array or matrix of aspects (º). If an array or matrix, then orientated as if derived using [is_raster()]. I.e. `[1, 1]` is the NW corner.
 #' @param svf an optional single value, raster object, two-dimensional array or matrix of values representing the proportion of isotropic radiation received by a partially obscured surface relative to the full hemisphere as returned by [skyviewtopo()].
 #' @param alb an optional single value, raster object, two-dimensional array or matrix of surface albedo(s) (range 0 - 1) derived using [albedo()] or [albedo_adjust()].
 #' @param albr an optional single value, raster object, two-dimensional array or matrix of values of albedo(s) of adjacent surfaces (range 0 - 1) as returned by [albedo_reflected()].
@@ -758,15 +758,15 @@ shortwavetopo <- function(dni, dif, julian, localtime, lat = NA, long = NA,
   }
   if (class(lat) == "logical" & class(crs(r)) != "CRS")
     stop("Latitude not defined and cannot be determined from raster")
-  dni <- is.raster(dni)
-  dif <- is.raster(dif)
-  slope <- is.raster(slope)
-  aspect <- is.raster(aspect)
-  svf <- is.raster(svf)
-  alb <- is.raster(alb)
-  albr <- is.raster(albr)
-  ha <- is.raster(ha)
-  dtm <- is.raster(dtm)
+  dni <- is_raster(dni)
+  dif <- is_raster(dif)
+  slope <- is_raster(slope)
+  aspect <- is_raster(aspect)
+  svf <- is_raster(svf)
+  alb <- is_raster(alb)
+  albr <- is_raster(albr)
+  ha <- is_raster(ha)
+  dtm <- is_raster(dtm)
   dtm[is.na(dtm)] <- 0
   si <- solarindex(slope, aspect, localtime, lat, long, julian, dtm, res,
                    merid, dst, shadow)
@@ -789,7 +789,7 @@ shortwavetopo <- function(dni, dif, julian, localtime, lat = NA, long = NA,
   if (component == "iso") rad <- isor
   if (component == "ani") rad <- cisr
   if (component == "ref") rad <- refr
-  if.raster(rad, r)
+  if_raster(rad, r)
 }
 #' Downscales net shortwave radiation accounting for topography and vegetation
 #'
@@ -804,9 +804,9 @@ shortwavetopo <- function(dni, dif, julian, localtime, lat = NA, long = NA,
 #' @param localtime a single numeric value representing local time (decimal hour, 24 hour clock).
 #' @param lat an optional single numeric value representing the mean latitude of the location for which downscaled radiation is required (decimal degrees, -ve south of equator).
 #' @param long an optional single numeric value representing the mean longitude of the location for which downscaled radiation is required (decimal degrees, -ve west of Greenwich meridian).
-#' @param dtm an optional raster object, two-dimensional array or matrix of elevations (m), orientated as if derived using [is.raster()]. I.e. `[1, 1]` is the NW corner.
-#' @param slope an optional single value, raster object, two-dimensional array or matrix of slopes (º). If an array or matrix, then orientated as if derived using [is.raster()]. I.e. `[1, 1]` is the NW corner.
-#' @param aspect an optional single value, raster object, two-dimensional array or matrix of aspects (º). If an array or matrix, then orientated as if derived using [is.raster()]. I.e. `[1, 1]` is the NW corner.
+#' @param dtm an optional raster object, two-dimensional array or matrix of elevations (m), orientated as if derived using [is_raster()]. I.e. `[1, 1]` is the NW corner.
+#' @param slope an optional single value, raster object, two-dimensional array or matrix of slopes (º). If an array or matrix, then orientated as if derived using [is_raster()]. I.e. `[1, 1]` is the NW corner.
+#' @param aspect an optional single value, raster object, two-dimensional array or matrix of aspects (º). If an array or matrix, then orientated as if derived using [is_raster()]. I.e. `[1, 1]` is the NW corner.
 #' @param svv an optional raster object, two-dimensional array or matrix of values representing the proportion of isotropic radiation received by a surface partially obscured by topography relative to the full hemisphere underneath vegetation as returned by [skyviewveg()].
 #' @param albg an optional single value, raster object, two-dimensional array or matrix of values representing the albedo(s) of the ground as returned by [albedo2()].
 #' @param fr a raster object, two-dimensional array or matrix of fractional canopy cover as returned by [canopy()].
@@ -904,18 +904,18 @@ shortwaveveg <- function(dni, dif, julian, localtime, lat = NA, long = NA,
   }
   if (class(lat) == "logical" & class(crs(r)) != "CRS")
     stop("Latitude not defined and cannot be determined from raster")
-  dni <- is.raster(dni)
-  dif <- is.raster(dif)
-  slope <- is.raster(slope)
-  aspect <- is.raster(aspect)
-  svv <- is.raster(svv)
-  albg <- is.raster(albg)
-  fr <- is.raster(fr)
-  albr <- is.raster(albr)
-  ha <- is.raster(ha)
-  x <- is.raster(x)
-  l <- is.raster(l)
-  dtm <- is.raster(dtm)
+  dni <- is_raster(dni)
+  dif <- is_raster(dif)
+  slope <- is_raster(slope)
+  aspect <- is_raster(aspect)
+  svv <- is_raster(svv)
+  albg <- is_raster(albg)
+  fr <- is_raster(fr)
+  albr <- is_raster(albr)
+  ha <- is_raster(ha)
+  x <- is_raster(x)
+  l <- is_raster(l)
+  dtm <- is_raster(dtm)
   dtm[is.na(dtm)] <- 0
   si <- solarindex(slope, aspect, localtime, lat, long, julian, dtm, res,
                    merid, dst, shadow)
@@ -936,7 +936,7 @@ shortwaveveg <- function(dni, dif, julian, localtime, lat = NA, long = NA,
   fgd <- fd * trd * (1 - albg)
   fged <- fdf * trf * (1 - albg) * svv
   fgc <- fgd + fged
-  if.raster(fgc, r)
+  if_raster(fgc, r)
 }
 #' Calculates the diffuse fraction from incoming shortwave radiation
 #'

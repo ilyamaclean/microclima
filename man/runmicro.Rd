@@ -50,7 +50,7 @@ reftemp <- raster(temp100[,,564])
 extent(reftemp) <- extent(dtm1m)
 reftemp <- resample(reftemp, dtm1m)
 temps <- tempanom + getValues(reftemp, format = "matrix")
-plot(if.raster(temps, dtm1m), main =
+plot(if_raster(temps, dtm1m), main =
      expression(paste("Temperature ",(~degree~C))))
 
 # ======================================================================
@@ -111,15 +111,15 @@ for (i in 1:19) {
 # Calculate coastal effects
 # ----------------------------
 sst <- 10.771
-dT <- if.raster(sst - tc, dtm1km)
-lsw <- if.raster(landsearatios[,,28], dtm100m)  # upwind
-lsa <- if.raster(apply(landsearatios, c(1, 2), mean), dtm100m) # mean, all directions
+dT <- if_raster(sst - tc, dtm1km)
+lsw <- if_raster(landsearatios[,,28], dtm100m)  # upwind
+lsa <- if_raster(apply(landsearatios, c(1, 2), mean), dtm100m) # mean, all directions
 dTf <- coastalTps(dT, lsw, lsa)
 
 # ------------------------------
 # Calculate altitudinal effects
 # ------------------------------
-lrr <- if.raster(lr, dtm1km)
+lrr <- if_raster(lr, dtm1km)
 lrr <- resample (lrr, dtm100m)
 tc <- sst - dTf + lrr * dtm100m
 
@@ -129,8 +129,8 @@ tc <- sst - dTf + lrr * dtm100m
 dni <- resampleraster(dnirad[,,2891], dtm100m)
 dif <- resampleraster(difrad[,,2891], dtm100m)
 n <- resampleraster(cfc[,,2891], dtm100m)
-h <- resample(if.raster(h[,,12], dtm1km), dtm100m)
-p <- resample(if.raster(p[,,12], dtm1km), dtm100m)
+h <- resample(if_raster(h[,,12], dtm1km), dtm100m)
+p <- resample(if_raster(p[,,12], dtm1km), dtm100m)
 sv <- skyviewtopo(dtm100m)
 netshort <- shortwavetopo(dni, dif, jd, 11, dtm = dtm100m, svf = sv)
 netlong <- longwavetopo(h, tc, p, n, sv)

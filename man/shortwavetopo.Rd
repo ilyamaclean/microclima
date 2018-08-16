@@ -22,11 +22,11 @@ shortwavetopo(dni, dif, julian, localtime, lat = NA, long = NA,
 
 \item{long}{a single numeric value representing the mean longitude of the location for which downscaled radiation is required (decimal degrees, -ve west of Greenwich meridian).}
 
-\item{dtm}{an optional raster object, two-dimensional array or matrix of elevations (m), orientated as if derived using \code{\link[=is.raster]{is.raster()}}. I.e. \code{[1, 1]} is the NW corner.}
+\item{dtm}{an optional raster object, two-dimensional array or matrix of elevations (m), orientated as if derived using \code{\link[=is_raster]{is_raster()}}. I.e. \code{[1, 1]} is the NW corner.}
 
-\item{slope}{a single value, raster object, two-dimensional array or matrix of slopes (º). If an array or matrix, then orientated as if derived using \code{\link[=is.raster]{is.raster()}}. I.e. \code{[1, 1]} is the NW corner.}
+\item{slope}{a single value, raster object, two-dimensional array or matrix of slopes (º). If an array or matrix, then orientated as if derived using \code{\link[=is_raster]{is_raster()}}. I.e. \code{[1, 1]} is the NW corner.}
 
-\item{aspect}{a single value, raster object, two-dimensional array or matrix of aspects (º). If an array or matrix, then orientated as if derived using \code{\link[=is.raster]{is.raster()}}. I.e. \code{[1, 1]} is the NW corner.}
+\item{aspect}{a single value, raster object, two-dimensional array or matrix of aspects (º). If an array or matrix, then orientated as if derived using \code{\link[=is_raster]{is_raster()}}. I.e. \code{[1, 1]} is the NW corner.}
 
 \item{svf}{an optional single value, raster object, two-dimensional array or matrix of values representing the proportion of isotropic radiation received by a partially obscured surface relative to the full hemisphere as returned by \code{\link[=skyviewtopo]{skyviewtopo()}}.}
 

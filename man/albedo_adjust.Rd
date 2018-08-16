@@ -20,7 +20,7 @@ a raster object with numeric values representing the adjusted surface albedo val
 \examples{
 alb <- albedo(aerial_image[,,1], aerial_image[,,2], aerial_image[,,3],
               aerial_image[,,4])
-img <- if.raster(alb, dtm1m)
+img <- if_raster(alb, dtm1m)
 mds <- raster(modis, xmn = 169000, xmx = 170000, ymn = 12000, ymx = 13000)
 alb2 <- albedo_adjust(img, mds)
 par(mfrow=c(2, 1))

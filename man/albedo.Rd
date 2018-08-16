@@ -40,7 +40,7 @@ If \code{blue} is a raster object, then a raster object is returned.
 \examples{
 alb <- albedo(aerial_image[,,1], aerial_image[,,2], aerial_image[,,3],
               aerial_image[,,4])
-plot(if.raster(alb, dtm1m), main = "Albedo", col = gray(0:255/255))
+plot(if_raster(alb, dtm1m), main = "Albedo", col = gray(0:255/255))
 }
 \seealso{
 Function \code{\link[=albedo_adjust]{albedo_adjust()}} for adjusted albedo for image brightness and contrast.

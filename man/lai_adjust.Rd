@@ -29,6 +29,6 @@ leaf area for a specified height about the ground.
 l <- lai(aerial_image[,,3], aerial_image[,,4])
 la<-lai_adjust(l, veg_hgt)
 par(mfrow=c(2, 1))
-plot(if.raster(l, dtm1m), main = "Leaf area index")
-plot(if.raster(la, dtm1m), main = "Adjusted leaf area index")
+plot(if_raster(l, dtm1m), main = "Leaf area index")
+plot(if_raster(la, dtm1m), main = "Adjusted leaf area index")
 }

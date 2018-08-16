@@ -24,7 +24,7 @@ returned.
 }
 \examples{
 l <- lai(aerial_image[,,3], aerial_image[,,4])
-l <- if.raster(l, dtm1m) # convert to raster
+l <- if_raster(l, dtm1m) # convert to raster
 x <- leaf_geometry(veg_hgt)
 fr <- canopy(l, x)
 plot(fr, main = "Fractional canopy cover")
