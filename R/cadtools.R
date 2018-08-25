@@ -179,23 +179,17 @@ basinsort <- function(dem, basins) {
 }
 #' Internal function used to calculate flow direction
 #' @export
-.flowdir <- function(md, mb) {
-  fd <- mb * 0
-  mb2 <- array(NA, dim = c(dim(mb)[1] + 2, dim(mb)[2] + 2))
-  mb2[2:(dim(mb)[1] + 1), 2:(dim(mb)[2] + 1)] <- mb
+.flowdir <- function(md) {
+  fd <- md * 0
   md2 <- array(NA, dim = c(dim(md)[1] + 2, dim(md)[2] + 2))
   md2[2:(dim(md)[1] + 1), 2:(dim(md)[2] + 1)] <- md
-  u <- unique(as.vector(mb))
-  for (b in 1:max(u, na.rm = T)) {
-    sel <- which(mb == b)
-    x <- arrayInd(sel, dim(md))[, 1]
-    y <- arrayInd(sel, dim(md))[, 2]
-    for (i in 1:length(x)) {
-      mb9 <- mb2[x[i]:(x[i] + 2), y[i]:(y[i] + 2)]
-      md9 <- md2[x[i]:(x[i] + 2), y[i]:(y[i] + 2)]
-      md9 <- ifelse(mb9 == b, md9, NA)
-      fd[x[i], y[i]] <- round(mean(which(md9 == min(md9, na.rm = T))), 0)
-    }
+  v <- c(1:length(md))
+  v <- v[is.na(md) == F]
+  x <- arrayInd(v, dim(md))[, 1]
+  y <- arrayInd(v, dim(md))[, 2]
+  for (i in 1:length(x)) {
+    md9 <- md2[x[i]:(x[i] + 2), y[i]:(y[i] + 2)]
+    fd[x[i], y[i]] <- round(mean(which(md9 == min(md9, na.rm = T))), 0)
   }
   fd
 }
@@ -502,36 +496,28 @@ basinmerge <- function(dem, basins, boundary) {
 #' basin
 #'
 #' @param dem a raster object, two-dimensional array or matrix of elevations.
-#' @param basins a raster object, two-dimensional array or matrix with basins numbered as integers as returned by [basindelin()].
 #'
 #' @return a raster object, two-dimensional array or matrix of accumulated flow.
 #' @details Accumulated flow is expressed in terms of number of cells.
 #' @export
 #'
 #' @examples
-#' # Merge basins seperated by boundary < 2m
-#' basins <- basinmerge(dtm100m, basins100m, 2)
-#' # Calculate accumulated flow: takes a few minutes to run
-#' fa <- flowacc(dtm100m, basins)
-#' # plot data (expressed as area)
-#' plot(log(fa * 100^2), main = "Log (accumulated flow)")
-flowacc <- function(dem, basins) {
+#' fa <- flowacc(dtm100m)
+#' plot(fa, main = 'Accumulated flow')
+flowacc <- function (dem)
+{
   dm <- is_raster(dem)
-  bm <- is_raster(basins)
-  fd <- .flowdir(dm, bm)
+  fd <- .flowdir(dm)
   fa <- fd * 0 + 1
-  for (b in 1:max(bm, na.rm = T)) {
-    sel <- which(bm == b)
-    d <- dm[sel]
-    o <- order(d, decreasing = T)
-    for (i in 1:length(o)) {
-      x <- arrayInd(sel[o[i]], dim(dm))[1]
-      y <- arrayInd(sel[o[i]], dim(dm))[2]
-      f <- fd[x, y]
-      x2 <- x + (f - 1) %% 3 - 1
-      y2 <- y + (f - 1) %/% 3 - 1
+  o <- order(dm, decreasing = T, na.last = NA)
+  for (i in 1:length(o)) {
+    x <- arrayInd(o[i], dim(dm))[1]
+    y <- arrayInd(o[i], dim(dm))[2]
+    f <- fd[x, y]
+    x2 <- x + (f - 1)%%3 - 1
+    y2 <- y + (f - 1)%/%3 - 1
+    if (x2 > 0 & x2 < dim(dm)[1] & y2 > 0 & y2 < dim(dm)[2])
       fa[x2, y2] <- fa[x, y] + 1
-    }
   }
   if_raster(fa, dem)
 }

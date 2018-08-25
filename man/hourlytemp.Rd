@@ -4,17 +4,19 @@
 \alias{hourlytemp}
 \title{Derives hourly temperatures from daily data}
 \usage{
-hourlytemp(julian, h, n, p = 100346.13, dni, dif, mintemp, maxtemp, lat, long,
-  merid = 0, tz = 0, dst = 0)
+hourlytemp(julian, em = NA, h, n, p = 100346.13, dni, dif, mintemp, maxtemp,
+  lat, long, merid = 0, tz = 0, dst = 0)
 }
 \arguments{
 \item{julian}{vector of julian days expressed as integers for every day for which \code{mintemp} and \code{maxtemp} are provided, as returned by function \code{\link[=julday]{julday()}}.}
 
-\item{h}{a vector of hourly specific humidities (\ifelse{html}{\out{kg kg<sup>-1</sup> }}{\eqn{kg kg^{-1}}}).}
+\item{em}{an optional vector of hourly emissivities. If not provided, calculated from \code{h}, \code{n} and \code{p}.}
 
-\item{n}{a vector of hourly fractional cloud cover values (range 0 - 1).}
+\item{h}{a vector of hourly specific humidities (\ifelse{html}{\out{kg kg<sup>-1</sup> }}{\eqn{kg kg^{-1}}}). Ignored if \code{em} provided.}
 
-\item{p}{an optional vector of hourly atmospheric pressure values (Pa).}
+\item{n}{a vector of hourly fractional cloud cover values (range 0 - 1). Ignored if \code{em} provided.}
+
+\item{p}{an optional vector of hourly atmospheric pressure values (Pa). Ignored if \code{em} provided.}
 
 \item{dni}{a vector of hourly direct radiation values normal to the solar beam (\ifelse{html}{\out{MJ m<sup>-2</sup> hr<sup>-1</sup>}}{\eqn{MJ m^-2 hr^{-1}}}).}
 
@@ -49,7 +51,7 @@ e.g. \code{mintemp} x 24.
 }
 \examples{
 jd <- julday(2010, 5 , c(1,2))
-ht <- hourlytemp(jd, microvars$humidity[1:48], microvars$cloudcover[1:48],
+ht <- hourlytemp(jd, NA, microvars$humidity[1:48], microvars$cloudcover[1:48],
                  microvars$pressure[1:48], dni = microvars$dni[1:48],
                  dif = microvars$dif[1:48], c(7.5, 7.2), c(14.6, 15.2),
                  49.968, -5.216)

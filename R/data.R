@@ -29,6 +29,13 @@
 #'
 #' @source \url{http://www.cmsaf.eu/}
 "cfc"
+#' A 2.5º resolution dataset of elevations
+#'
+#' A dataset global dataset elevation in metres (CRS: +init=epsg:4326)
+#' @format A raster object with 72 rows and 144 columns.
+#'
+#' @source \url{http://www.cmsaf.eu/}
+"demworld"
 #' A 0.05º resolution dataset of hourly diffuse radiation
 #'
 #' A dataset containing hourly diffuse radiation values in 2010 (\ifelse{html}{\out{MJ m<sup>-2</sup> hr<sup>-1</sup>}}{\eqn{MJ m^{-2} hr^{-1}}})

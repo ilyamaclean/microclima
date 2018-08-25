@@ -4,12 +4,10 @@
 \alias{flowacc}
 \title{Calculates accumulated flow}
 \usage{
-flowacc(dem, basins)
+flowacc(dem)
 }
 \arguments{
 \item{dem}{a raster object, two-dimensional array or matrix of elevations.}
-
-\item{basins}{a raster object, two-dimensional array or matrix with basins numbered as integers as returned by \code{\link[=basindelin]{basindelin()}}.}
 }
 \value{
 a raster object, two-dimensional array or matrix of accumulated flow.
@@ -22,10 +20,6 @@ basin
 Accumulated flow is expressed in terms of number of cells.
 }
 \examples{
-# Merge basins seperated by boundary < 2m
-basins <- basinmerge(dtm100m, basins100m, 2)
-# Calculate accumulated flow: takes a few minutes to run
-fa <- flowacc(dtm100m, basins)
-# plot data (expressed as area)
-plot(log(fa * 100^2), main = "Log (accumulated flow)")
+fa <- flowacc(dtm100m)
+plot(fa, main = 'Accumulated flow')
 }

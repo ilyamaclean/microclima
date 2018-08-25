@@ -19,17 +19,20 @@ Description: The functions in the microclima package contain tools for
 License: GPL-2
 Encoding: UTF-8
 LazyData: true
-Depends:
-    raster (>= 2.5.8),
-    rgdal (>= 1.2),
+Imports:
+    raster (>= 2.5),
+    elevatr(>= 0.1.4),
     stringr (>= 1.2),
     sp (>= 1.2),
-    dplyr(>= 0.7)
+    dplyr(>= 0.7),
+    RNCEP (>= 1.0.8),
+    zoo (>= 1.8)
 RoxygenNote: 6.0.1
 Roxygen: list(markdown = TRUE) 
 Suggests: knitr,
+    NicheMapR,
     rmarkdown,
-    testthat
+    testthat 
 VignetteBuilder: knitr
 URL: https://github.com/ilyamaclean/microclima
 BugReports: http://github.com/microclima/issues

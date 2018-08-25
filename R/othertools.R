@@ -345,14 +345,52 @@ suntimes <- function(julian, lat, long, tz = 0, dst = 0) {
   sunvars <- data.frame(sunrise = hrise, sunset = hset, daylight = dl)
   sunvars
 }
+#' derived fraction of solar day
+.solarday <- function(julian, localtime, lat, long, tz = 0, dst = 0) {
+  src <- suntimes(julian, lat, long, tz, dst)$sunrise
+  ssc <- suntimes(julian, lat, long, tz, dst)$sunset
+  ssp <- suntimes(julian - 1, lat, long, tz, dst)$sunset
+  srn <- suntimes(julian + 1, lat, long, tz, dst)$sunrise
+  st <- ifelse(localtime >= src & localtime <= ssc,
+               ((localtime - src) / (ssc - src)) * 12 + 6, localtime)
+  st <- ifelse(localtime > ssc, ((localtime - ssc) / (srn + 24 - ssc)) *
+                 12 + 18, st)
+  st <- ifelse(localtime < src, ((localtime + 24 - ssp) / (src + 24 - ssp)) *
+                 12 - 6, st)
+  st <- (st / 24)%%1
+  st
+}
+#' derived proportion of maximum radiation
+.propmaxrad <- function(dif, dct, am) {
+  theta <- 1.1 * (0.7 ^ (am ^ 0.678))
+  mxr <- 4.87 * theta
+  pr <- (dif + dct) / mxr
+  pr <- ifelse(pr > 1, 1, pr)
+  pr
+}
+#' calculates emsisivity from humidity etc
+.emissivity <- function(h, tc, n, p = 100346.13) {
+  pk <- p / 1000
+  e0 <- 0.6108 * exp(17.27 * tc / (tc + 237.3))
+  ws <- 0.622 * e0 / pk
+  rh <- (h / ws) * 100
+  rh[rh > 100] <- 100
+  ea <- e0 * rh / 100
+  emcs <- 0.23 + 0.433 * (ea / (tc + 273.15)) ^ (1 / 8)
+  em <- emcs * (1 - n ^ 2) + 0.976 * n ^ 2
+  em
+}
+
+
 #' Derives hourly temperatures from daily data
 #'
 #' @description `hourlytemp` is used to derive hourly temperatures from daily maxima and minima.
 #'
 #' @param julian vector of julian days expressed as integers for every day for which `mintemp` and `maxtemp` are provided, as returned by function [julday()].
-#' @param h a vector of hourly specific humidities (\ifelse{html}{\out{kg kg<sup>-1</sup> }}{\eqn{kg kg^{-1}}}).
-#' @param n a vector of hourly fractional cloud cover values (range 0 - 1).
-#' @param p an optional vector of hourly atmospheric pressure values (Pa).
+#' @param em an optional vector of hourly emissivities. If not provided, calculated from `h`, `n` and `p`.
+#' @param h a vector of hourly specific humidities (\ifelse{html}{\out{kg kg<sup>-1</sup> }}{\eqn{kg kg^{-1}}}). Ignored if `em` provided.
+#' @param n a vector of hourly fractional cloud cover values (range 0 - 1). Ignored if `em` provided.
+#' @param p an optional vector of hourly atmospheric pressure values (Pa). Ignored if `em` provided.
 #' @param dni a vector of hourly direct radiation values normal to the solar beam (\ifelse{html}{\out{MJ m<sup>-2</sup> hr<sup>-1</sup>}}{\eqn{MJ m^-2 hr^{-1}}}).
 #' @param dif a vector of hourly diffuse radiation values (\ifelse{html}{\out{MJ m<sup>-2</sup> hr<sup>-1</sup>}}{\eqn{MJ m^-2 hr^{-1}}}).
 #' @param mintemp a vector of daily minimum temperatures (ºC).
@@ -374,47 +412,15 @@ suntimes <- function(julian, lat, long, tz = 0, dst = 0) {
 #'
 #' @examples
 #' jd <- julday(2010, 5 , c(1,2))
-#' ht <- hourlytemp(jd, microvars$humidity[1:48], microvars$cloudcover[1:48],
+#' ht <- hourlytemp(jd, NA, microvars$humidity[1:48], microvars$cloudcover[1:48],
 #'                  microvars$pressure[1:48], dni = microvars$dni[1:48],
 #'                  dif = microvars$dif[1:48], c(7.5, 7.2), c(14.6, 15.2),
 #'                  49.968, -5.216)
 #' plot(ht ~ c(0:47),type="l", xlab = "Hour", ylab = "Temperature",
 #'      main = paste("tmins:", 7.2, 7.5, "tmaxs:", 14.6, 15.2))
-hourlytemp <- function(julian, h, n, p = 100346.13, dni, dif,
-                     mintemp, maxtemp, lat, long, merid=0, tz=0, dst=0) {
-  solarday <- function(julian, localtime, lat, long, tz = 0, dst = 0) {
-    src <- suntimes(julian, lat, long, tz, dst)$sunrise
-    ssc <- suntimes(julian, lat, long, tz, dst)$sunset
-    ssp <- suntimes(julian - 1, lat, long, tz, dst)$sunset
-    srn <- suntimes(julian + 1, lat, long, tz, dst)$sunrise
-    st <- ifelse(localtime >= src & localtime <= ssc,
-                 ((localtime - src) / (ssc - src)) * 12 + 6, localtime)
-    st <- ifelse(localtime > ssc, ((localtime - ssc) / (srn + 24 - ssc)) *
-                   12 + 18, st)
-    st <- ifelse(localtime < src, ((localtime + 24 - ssp) / (src + 24 - ssp)) *
-                   12 - 6, st)
-    st <- (st / 24)%%1
-    st
-  }
-  propmaxrad <- function(dif, dct, am) {
-    theta <- 1.1 * (0.7 ^ (am ^ 0.678))
-    mxr <- 4.87 * theta
-    pr <- (dif + dct) / mxr
-    pr <- ifelse(pr > 1, 1, pr)
-    pr
-  }
-  emissivity <- function(h, tc, n, p = 100346.13) {
-    pk <- p / 1000
-    e0 <- 0.6108 * exp(17.27 * tc / (tc + 237.3))
-    ws <- 0.622 * e0 / pk
-    rh <- (h / ws) * 100
-    rh[rh > 100] <- 100
-    ea <- e0 * rh / 100
-    emcs <- 0.23 + 0.433 * (ea / (tc + 273.15)) ^ (1 / 8)
-    em <- emcs * (1 - n ^ 2) + 0.976 * n ^ 2
-    em
-  }
-  l1 <- unlist(lapply(list(h, n, dni, dif), length))
+hourlytemp <- function(julian, em = NA, h, n, p = 100346.13, dni, dif,
+                       mintemp, maxtemp, lat, long, merid=0, tz=0, dst=0) {
+  l1 <- unlist(lapply(list(dni, dif), length))
   l2 <- unlist(lapply(list(julian, mintemp, maxtemp), length))
   if (length(unique(l1)) != 1) {
     warning("Number of hourly values not identical")
@@ -422,28 +428,25 @@ hourlytemp <- function(julian, h, n, p = 100346.13, dni, dif,
   if (length(unique(l2)) != 1) {
     warning("Number of daily values not identical")
   }
-  if (length(h)%%24 != 0) warning ("Hourly values must be multiple of 24")
+  if (length(dni)%%24 != 0) warning ("Hourly values must be multiple of 24")
   if (l1[1] != l2[1] * 24) {
     warning("Number of hourly values not 24 times number of daily values")
   }
   o <- order(rep(c(1:length(julian)), 24))
   jd <- rep(jd, 24)[o]
   localtime <- rep(c(0:23), length(mintemp))
-  solfrac <- solarday(julian, localtime, lat, long, tz, dst)
+  solfrac <- .solarday(julian, localtime, lat, long, tz, dst)
   am <- airmasscoef(localtime, lat, long, julian, merid, dst)
-  dct <- 0
-  for (i in 1:length(jd)) {
-    dct[i] <- dni[i] * solarindex(0, 0, localtime[i], lat, long, jd[i],
-                                  shadow = FALSE)
-  }
-  pr <- propmaxrad(dif, dct, am)
+  dct <- dni * siflat(localtime, lat, long, jd, merid, dst)
+  pr <- .propmaxrad(dif, dct, am)
   tfrac <- 110.42201 * sin(solfrac) - 38.64802 * cos(solfrac) - 79.82963 *
     sin(2 * solfrac) + 65.39122 * cos(2 * solfrac) + 15.54387 *
     sin(3 * solfrac) - 26.30047 * cos(3 * solfrac)
   mns <- rep(mintemp, 24)[o]
   mxs <- rep(maxtemp, 24)[o]
   tc <- (mxs - mns) * tfrac + mns
-  em <- emissivity(h, tc, n, p)
+  if (is.na(em[1]))
+    em <- .emissivity(h, tc, n, p)
   day <- which(is.na(pr) == F)
   ngt <- which(is.na(pr))
   tfrac[day] <- -0.5154639 + 1.1060481 * tfrac[day] + 6.1147121 * pr[day] -
