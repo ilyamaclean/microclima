@@ -21,7 +21,7 @@ Encoding: UTF-8
 LazyData: true
 Imports:
     raster (>= 2.5),
-    rgdal (≥ 0.8),
+    rgdal (>= 0.8),
     elevatr(>= 0.1.4),
     stringr (>= 1.2),
     sp (>= 1.2),
