@@ -340,6 +340,6 @@ airmasscoef <- function(localtime, lat, long, julian, merid = 0, dst = 0) {
   sa <- solalt(localtime, lat, long, julian, merid, dst)
   z <- 90 - sa
   thickness <- 1 / (cos(z * pi / 180) + 0.50572 * (96.07995 - z) ^ (-1.6364))
-  thickness[sa < -1.757] <- NA
+  thickness[sa < -1.757168] <- NA
   thickness
 }

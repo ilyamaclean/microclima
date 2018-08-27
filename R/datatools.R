@@ -259,7 +259,7 @@ siflat <- function(localtime, lat, long, julian, merid = 0, dst = 0){
 #' values. Requires internet connection.
 #'
 #' @examples
-#' tme <- as.POSIXlt(c(0:364) * 24 * 3600, origin ="2015-01-01 00:00", tz = "GMT")
+#' tme <- as.POSIXlt(c(0:30) * 24 * 3600, origin ="2015-01-15 00:00", tz = "GMT")
 #' # NB takes a while to download data
 #' hdata<- hourlyNCEP(tme, 50, -5)
 #' head(hdata)
@@ -277,21 +277,24 @@ hourlyNCEP <- function(tme, lat, long, reanalysis2 = TRUE) {
   tmo  <- spline(tme6, ncepdata$sh, n = n)$x
   tmo <- as.POSIXlt(tmo, origin = "1970-01-01 00:00",
                     tz = "GMT")
-  tmoend <- as.POSIXlt(c(1:6) * 3600, origin = max(tmo),
-                       tz = "GMT")
-  tmo2 <- c(tmo, tmoend)
+  tmo2 <- as.POSIXlt(seq(0,(lgth + 2), by = 1/24) * 3600 * 24, origin = min(tme)-3600*24, tz = 'GMT')
   jd <- julday(tmo2$year + 1900,  tmo2$mon + 1, tmo2$mday)
   si <- siflat(tmo2$hour, lat, long, jd)
+  sa <- solalt(tmo2$hour, lat, long, jd)
   amc <- airmasscoef(tmo2$hour, lat, long, jd)
+  amc[amc > 19.43325] <- 19.43325
+  od <- 0.535
+  af <- exp(-amc * od) / exp(-od)
   si_m <- 0
   am_m <- 0
+  af_m <- 0
   for (i in 1:(length(tme6))) {
     st <- (i - 1) * 6 + 1
     ed <- st + 5
     si_m[i] <- mean(si[st:ed], na.rm = T)
     am_m[i] <- mean(amc[st:ed], na.rm = T)
+    af_m[i] <- mean(af[st:ed], na.rm = T)
   }
-  af <- 1.1 * 0.7 ^ (am_m^0.678)
   jd <- julday(tme6$year + 1900, tme6$mon + 1, tme6$mday)
   dp <- 0
   for (i in 1:length(jd)) {
@@ -299,7 +302,8 @@ hourlyNCEP <- function(tme, lat, long, reanalysis2 = TRUE) {
   }
   dp[ncepdata$dsw == 0] <- NA
   dirr <- (ncepdata$dsw * (1 - dp)) / si_m
-  difr <- (ncepdata$dsw * dp) / af
+  dirr[am_m > 19.43325] <- NA
+  difr <- (ncepdata$dsw * dp)  / af_m
   globr <- dirr + difr
   globr[globr > (4.87 / 0.0036)] <- (4.87 / 0.0036)
   nd <- length(globr)
@@ -311,12 +315,13 @@ hourlyNCEP <- function(tme, lat, long, reanalysis2 = TRUE) {
   dp <- na.approx(dp, na.rm = F)
   h_dp <- spline(tme6, dp, n = n)$y
   h_gr <- spline(tme6, globr, n = n)$y
+  h_gr[h_gr > (4.87 / 0.0036)] <- (4.87 / 0.0036)
   tmorad <- as.POSIXlt(tmo + 3600 * 3)
   jd <- julday(tmorad$year + 1900, tmorad$mon + 1, tmorad$mday)
   si <- siflat(tmorad$hour, lat, long, jd)
   szenith <- 90 - solalt(tmorad$hour, lat, long, jd)
   am <- airmasscoef(tmorad$hour, lat, long, jd)
-  af <- 1.1 * 0.7 ^ (am^0.678)
+  af <- exp(-am * od) / exp(-od)
   h_dni <- h_gr * (1 - h_dp)
   h_dni[si == 0] <- 0
   h_dif <- h_gr * h_dp * af
