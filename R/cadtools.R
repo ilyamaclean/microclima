@@ -54,6 +54,7 @@ basinsort <- function(dem, basins) {
   intcode
 }
 #' Internal funcion to convert integer to binary
+#' @import stringr
 #' @export
 .integertobinary8 <- function(i) {
   a <- 2 ^ (0:9)

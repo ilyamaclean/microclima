@@ -85,6 +85,7 @@ get_dem <- function(r = NA, lat, long, resolution = 30, zmin = 0) {
 #' @param long longitude
 #' @param tme object of type POSIXlt specifying times
 #' @import RNCEP
+#' @export
 .get_inputs <- function(lat, long, tme, reanalysis2 = TRUE) {
   sorttimes <- function(tme) {
     tme2 <- as.POSIXct(tme)
@@ -165,6 +166,7 @@ siflat <- function(localtime, lat, long, julian, merid = 0, dst = 0){
   index
 }
 #' Calculates the diffuse fraction from incoming shortwave radiation (time series)
+#' @export
 .difprop2 <- function (rad, julian, localtime, lat, long, hourly = FALSE,
                       watts = TRUE, merid = 0, dst = 0)
 {
@@ -370,6 +372,7 @@ hourlyNCEP <- function(tme, lat, long, reanalysis2 = TRUE) {
   dpre
 }
 #' get radiation and wind for use with NicheMapR
+#' @export
 .pointradwind <- function(hourlydata, dem, lat, long, l, x, albr = 0.15, zmin = 0, slope = NA, aspect = NA) {
   m <- is_raster(dem)
   m[is.na(m)] <- zmin
@@ -449,6 +452,7 @@ hourlyNCEP <- function(tme, lat, long, reanalysis2 = TRUE) {
   hourlyrad
 }
 #' Cold air drainage direct from emissivity
+#' @export
 .cadconditions2 <- function (em, wind, startjul, lat, long,
                              starttime = 0, hourint = 1, windthresh = 4.5, emthresh = 0.725,
                              tz = 0, dst = 0, con = TRUE)
