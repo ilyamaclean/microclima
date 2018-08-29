@@ -2,20 +2,21 @@
 % Please edit documentation in R/datatools.R
 \name{hourlyNCEP}
 \alias{hourlyNCEP}
-\title{Obtain NCEP data for running microclima}
+\title{Interpolate NCEP data for running microclima to hourly}
 \usage{
-hourlyNCEP(tme, lat, long, reanalysis2 = TRUE)
+hourlyNCEP(ncepdata = NA, tme, lat, long, reanalysis2 = TRUE)
 }
 \arguments{
-\item{tme}{a POSIXlt object covering the duration for which data are required.
-Hourly data are returned irrespective of the time interval of \code{tme}.}
+\item{ncepdata}{an optional  data frame of climate variables as returned by \code{\link[=get_ncep]{get_ncep()}}.}
 
-\item{lat}{the latitude of the location for which data are required}
+\item{tme}{a POSIXlt object covering the duration for which data are required. Ignored if \code{ncepdata`` provided. Hourly data are returned irrespective of the time interval of}tme\code{.Ignored if}ncepdata` provided.}
 
-\item{long}{the longitude of the location for which data are required}
+\item{lat}{the latitude of the location for which data are required. Ignored if \code{ncepdata} provided.}
+
+\item{long}{the longitude of the location for which data are required. Ignored if \code{ncepdata} provided.}
 
 \item{reanalysis2}{Logical. Should data be obtained from the Reanalysis II dataset (default) or
-from Reanalysis I (data prior to 1979).}
+from Reanalysis I (data prior to 1979). Ignored if \code{ncepdata} provided.}
 }
 \value{
 a dataframe with the following variables: (i) obs_time: a POSIXlt oobject of times,
@@ -30,28 +31,27 @@ atmosphere (0 - 1), (viii) netlong: Net longwave radiation (\ifelse{html}{\out{M
 (xii) szenith: the zenith angle (degrees).
 }
 \description{
-\code{hourlyNCEP} downloads the required NCEP climate and radiation forcing data
+\code{hourlyNCEP} optionally downloads the required NCEP climate and radiation forcing data
 required for running microclima and interpolates 4x daily data to hourly.
 }
 \details{
-The NCEP-NCAR and NCEP–DOE Atmospheric Model Intercomparison Project (Kanamitso et al 2002)
-provides estimates of a range of climate and radiation data for the period 1948 to present.
-Data at six-hourly intervals are available at a spatial resolution of 2.5ºC. The function downloads
-the following datasets: air temperature at 2m,  specific humidity and 2m, surface pressure,
-the u and v wind vectors at 10, thr downward and upward longwave radiation fluxes at the surface
-and the downward shortwave flux at the surface. Pressure, humidity and the u and v wind vectors
-are converted to hourly using spline interpolation. Wind speeed and diretcion and then
+If \code{ncepdata} is not provided, then \code{\link[=get_ncep]{get_ncep()}} and data are downloaded from NCEP Atmospheric
+Model Intercomparison Project (Kanamitso et al 2002). Six-hourly data are interpolated as follows.
+Pressure, humidity and the u and v wind vectors are converted to hourly using spline interpolation. Wind speeed and diretcion and then
 calculated and adjusted to give values at 1 m using \code{\link[=windheight]{windheight()}}. The diffuse radiation
 proportion is calculated using \code{\link[=difprop]{difprop()}}, and hourly obtained by adusting for the direction
 of the solar beam and airmass thickness using functions \code{\link[=siflat]{siflat()}} and \code{\link[=airmasscoef]{airmasscoef()}}.
 Hourly temperature are derived using \code{\link[=hourlytemp]{hourlytemp()}} and longwave radiation by splining emissivity
-values. Requires internet connection.
+values.
 }
 \examples{
-tme <- as.POSIXlt(c(0:364) * 24 * 3600, origin ="2015-01-01 00:00", tz = "GMT")
+tme <- as.POSIXlt(c(0:30) * 24 * 3600, origin ="2015-01-15 00:00", tz = "GMT")
 # NB takes a while to download data
 hdata<- hourlyNCEP(tme, 50, -5)
 head(hdata)
 plot(temperature ~ as.POSIXct(obs_time), data = hdata, type = "l", xlab = "Month")
 plot(rad_dif ~ as.POSIXct(obs_time), data = hdata, type = "l", xlab = "Month")
+}
+\seealso{
+\code{\link[=get_NCEP]{get_NCEP()}}
 }

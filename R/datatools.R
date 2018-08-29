@@ -79,29 +79,56 @@ get_dem <- function(r = NA, lat, long, resolution = 30, zmin = 0) {
   r2 <- if_raster(m2, r2)
   return(r2)
 }
-#' Internal function used to get NCEP data
+#' Obtains NCEP data required to run microclima
 #'
-#' @param lat latitude
-#' @param long longitude
-#' @param tme object of type POSIXlt specifying times
+#' @param tme a POSIXlt object covering the duration for which data are required.
+#' Hourly data are returned irrespective of the time interval of `tme`.
+#' @param lat the latitude of the location for which data are required
+#' @param long the longitude of the location for which data are required
+#' @param reanalysis2 Logical. Should data be obtained from the Reanalysis II dataset (default) or
+#' from Reanalysis I (data prior to 1979).
+#'
+#' @return a dataframe with the following variables: (i) obs_time:times in YYY-MM-DD HH:MM format (GMT),
+#' (ii) Tk: mean temperatures at 2m (K), (iii) Tkmin:  minimum temperatures at 2m (K) (iv) Tkmax:
+#' maximum temperatures at 2m (K), (v) sh: specific humidity at 2m (Kg / Kg),
+#' (vi) pr: surface pressure (Pa), (vii) wu u wind vector at 10m (m/s) (viii) wv: v wind vector
+#' at 10m (m/s) (ix) dlw: downward longwave radiation flux (\ifelse{html}{\out{W m<sup>-2</sup>}}{\eqn{W m^-2}}),
+#' (x) ulw: upward longwave radiation flux (\ifelse{html}{\out{W m<sup>-2</sup>}}{\eqn{W m^-2}}), (xi)
+#' dsw: downward shortwave radiation flux (\ifelse{html}{\out{W m<sup>-2</sup>}}{\eqn{W m^-2}})
+
 #' @import RNCEP
 #' @export
-.get_inputs <- function(lat, long, tme, reanalysis2 = TRUE) {
+#'
+#' @seealso [hourlyNCEP()]
+#'
+#' @details The NCEP-NCAR and NCEP–DOE Atmospheric Model Intercomparison Project (Kanamitso et al 2002)
+#' provides estimates of a range of climate and radiation data for the period 1948 to present.
+#' Data at six-hourly intervals are available at a spatial resolution of ~ 1.8 to 2.5º. The function downloads
+#' the following datasets: mean, min and max air temperature at 2m,  specific humidity and 2m, surface pressure,
+#' the u and v wind vectors at 10, the downward and upward longwave radiation fluxes at the surface
+#' and the downward shortwave flux at the surface. Data for days either side of `tme` are downloaded to aid with
+#' interpolation by [hourlyNCEP()]. Requires internet connection.
+#'
+#' @references Kanamitsu M, Ebisuzaki W, Woollen J, Yang SK, Hnilo JJ, Fiorino M, Potter GL (2002)
+#'Ncep–doe amip-ii reanalysis (r-2). Bulletin of the American Meteorological Society 83: 1631-1644.
+#'
+#' @examples
+#' tme <- as.POSIXlt(c(1:15) * 24 * 3600, origin = "2015-01-15", tz = 'GMT')
+#' head(get_ncep(tme, 50, -5))
+get_NCEP <- function(lat, long, tme, reanalysis2 = TRUE) {
   sorttimes <- function(tme) {
     tme2 <- as.POSIXct(tme)
     tme2 <- c((tme2 - 24 * 3600), tme2, (tme2 + 24 * 3600), (tme2 + 48 * 3600))
     tme2 <- as.POSIXlt(tme2)
     yrs <- unique(tme2$year + 1900)
     mths <- unique(tme2$mon + 1)
-    yrs <-yrs[order(yrs)]
-    mths <-mths[order(mths)]
     tma <- 0
     dm <- c(31,28,31,30,31,30,31,31,30,31,30,31) * 4 - 1
-    for (yr in 1:length(yrs)) {
-      dm[2] <- ifelse(yrs[yr]%%4 == 0, 115, 111)
-      for (mth in 1:length(mths)) {
+    for (yr in min(yrs):max(yrs)) {
+      dm[2] <- ifelse(yr%%4 == 0, 115, 111)
+      for (mth in min(mths):max(mths)) {
         tmym <- as.POSIXct(c(0:dm[mth]) * 3600 * 6,
-                           origin = paste0(yrs[yr],"-",mths[mth],"-01 00:00"),
+                           origin = paste0(yr,"-",mth,"-01 00:00"),
                            tz = 'GMT')
         tma <- c(tma, tmym)
       }
@@ -119,7 +146,9 @@ get_dem <- function(r = NA, lat, long, resolution = 30, zmin = 0) {
                      months.minma = c(min(mths):max(mths)),
                      lat.southnorth = c(ll$y,ll$y), lon.westeast = c(ll$x,ll$x),
                      reanalysis2 = reanalysis2, return.units = FALSE, status.bar = FALSE)
-    v <- apply(v, 3, mean, na.rm = T)
+    latdif <- ((ll$y - as.numeric(rownames(v)))^2)^0.5
+    londif <- ((ll$x%%360 - as.numeric(colnames(v)))^2)^0.5
+    v <- v[which.min(londif), which.min(latdif),]
     v[sel]
   }
   ll <- data.frame(x = long, y = lat)
@@ -141,6 +170,7 @@ get_dem <- function(r = NA, lat, long, resolution = 30, zmin = 0) {
   rownames(dfout) <- NULL
   return(dfout)
 }
+
 #' Calculates the solar index for a flat surface
 #'
 #' @param localtime local time (decimal hour, 24 hour clock).
@@ -168,7 +198,7 @@ siflat <- function(localtime, lat, long, julian, merid = 0, dst = 0){
 #' Calculates the diffuse fraction from incoming shortwave radiation (time series)
 #' @export
 .difprop2 <- function (rad, julian, localtime, lat, long, hourly = FALSE,
-                      watts = TRUE, merid = 0, dst = 0)
+                       watts = TRUE, merid = 0, dst = 0)
 {
   if (watts)
     rad <- rad * 0.0036
@@ -219,17 +249,19 @@ siflat <- function(localtime, lat, long, julian, merid = 0, dst = 0){
   d[d > 1] <- 1
   mean(d, na.rm = T)
 }
-#' Obtain NCEP data for running microclima
+#' Interpolate NCEP data for running microclima to hourly
 #'
-#' @description `hourlyNCEP` downloads the required NCEP climate and radiation forcing data
+#' @description `hourlyNCEP` optionally downloads the required NCEP climate and radiation forcing data
 #' required for running microclima and interpolates 4x daily data to hourly.
 #'
-#' @param tme a POSIXlt object covering the duration for which data are required.
-#' Hourly data are returned irrespective of the time interval of `tme`.
-#' @param lat the latitude of the location for which data are required
-#' @param long the longitude of the location for which data are required
+#' @param ncepdata an optional  data frame of climate variables as returned by [get_ncep()].
+#' @param tme a POSIXlt object covering the duration for which data are required. Ignored if `ncepdata``
+#' provided.
+#' Hourly data are returned irrespective of the time interval of `tme`.Ignored if `ncepdata` provided.
+#' @param lat the latitude of the location for which data are required. Ignored if `ncepdata` provided.
+#' @param long the longitude of the location for which data are required. Ignored if `ncepdata` provided.
 #' @param reanalysis2 Logical. Should data be obtained from the Reanalysis II dataset (default) or
-#' from Reanalysis I (data prior to 1979).
+#' from Reanalysis I (data prior to 1979). Ignored if `ncepdata` provided.
 #'
 #' @return a dataframe with the following variables: (i) obs_time: a POSIXlt oobject of times,
 #' (ii) temperature: temperatures at 2m (ºC), (iii) humidity: specific humidity at 2m (Kg / Kg),
@@ -245,18 +277,15 @@ siflat <- function(localtime, lat, long, julian, merid = 0, dst = 0){
 #' @export
 #' @import zoo
 #'
-#' @details The NCEP-NCAR and NCEP–DOE Atmospheric Model Intercomparison Project (Kanamitso et al 2002)
-#' provides estimates of a range of climate and radiation data for the period 1948 to present.
-#' Data at six-hourly intervals are available at a spatial resolution of 2.5ºC. The function downloads
-#' the following datasets: air temperature at 2m,  specific humidity and 2m, surface pressure,
-#' the u and v wind vectors at 10, thr downward and upward longwave radiation fluxes at the surface
-#' and the downward shortwave flux at the surface. Pressure, humidity and the u and v wind vectors
-#' are converted to hourly using spline interpolation. Wind speeed and diretcion and then
+#' @seealso [get_NCEP()]
+#' @details If `ncepdata` is not provided, then [get_ncep()] and data are downloaded from NCEP Atmospheric
+#' Model Intercomparison Project (Kanamitso et al 2002). Six-hourly data are interpolated as follows.
+#' Pressure, humidity and the u and v wind vectors are converted to hourly using spline interpolation. Wind speeed and diretcion and then
 #' calculated and adjusted to give values at 1 m using [windheight()]. The diffuse radiation
 #' proportion is calculated using [difprop()], and hourly obtained by adusting for the direction
 #' of the solar beam and airmass thickness using functions [siflat()] and [airmasscoef()].
 #' Hourly temperature are derived using [hourlytemp()] and longwave radiation by splining emissivity
-#' values. Requires internet connection.
+#' values.
 #'
 #' @examples
 #' tme <- as.POSIXlt(c(0:30) * 24 * 3600, origin ="2015-01-15 00:00", tz = "GMT")
@@ -265,11 +294,19 @@ siflat <- function(localtime, lat, long, julian, merid = 0, dst = 0){
 #' head(hdata)
 #' plot(temperature ~ as.POSIXct(obs_time), data = hdata, type = "l", xlab = "Month")
 #' plot(rad_dif ~ as.POSIXct(obs_time), data = hdata, type = "l", xlab = "Month")
-hourlyNCEP <- function(tme, lat, long, reanalysis2 = TRUE) {
-  int <- as.numeric(tme[2]) - as.numeric(tme[1])
-  lgth <- (length(tme) * int) / (24 * 3600)
-  tme2 <- as.POSIXlt(c(0:(lgth - 1)) * 3600 * 24, origin = min(tme), tz = 'GMT')
-  ncepdata <- .get_inputs(lat, long, tme2, reanalysis2)
+hourlyNCEP <- function(ncepdata = NA, tme, lat, long, reanalysis2 = TRUE) {
+  bound <- function(x) {
+    x[x > 1] <- 1
+    x[x < 0] <- 0
+    x
+  }
+  if (is.na(ncepdata)) {
+    int <- as.numeric(tme[2]) - as.numeric(tme[1])
+    lgth <- (length(tme) * int) / (24 * 3600)
+    tme2 <- as.POSIXlt(c(0:(lgth - 1)) * 3600 * 24, origin = min(tme), tz = 'GMT')
+    ncepdata <- get_NCEP(tme2, lat, long, reanalysis2)
+  }
+  # *** NB sort out times (take form tme6 rather than tme)
   tme6 <- as.POSIXlt(ncepdata$obs_time)
   n <- (length(tme6) - 1) * 6 + 1
   h_pr <- spline(tme6, ncepdata$pr, n = n)$y
@@ -277,54 +314,71 @@ hourlyNCEP <- function(tme, lat, long, reanalysis2 = TRUE) {
   tmo  <- spline(tme6, ncepdata$sh, n = n)$x
   tmo <- as.POSIXlt(tmo, origin = "1970-01-01 00:00",
                     tz = "GMT")
-  tmo2 <- as.POSIXlt(seq(0,(lgth + 2), by = 1/24) * 3600 * 24, origin = min(tme)-3600*24, tz = 'GMT')
+  tmo2 <- as.POSIXlt(seq(0,(length(tme6) / 4), by = 1/24) * 3600 * 24, origin = min(tme6), tz = 'GMT')
   jd <- julday(tmo2$year + 1900,  tmo2$mon + 1, tmo2$mday)
   si <- siflat(tmo2$hour, lat, long, jd)
-  sa <- solalt(tmo2$hour, lat, long, jd)
-  amc <- airmasscoef(tmo2$hour, lat, long, jd)
-  amc[amc > 19.43325] <- 19.43325
-  od <- 0.535
-  af <- exp(-amc * od) / exp(-od)
+  am <- airmasscoef(tmo2$hour, lat, long, jd)
   si_m <- 0
   am_m <- 0
-  af_m <- 0
   for (i in 1:(length(tme6))) {
     st <- (i - 1) * 6 + 1
     ed <- st + 5
     si_m[i] <- mean(si[st:ed], na.rm = T)
-    am_m[i] <- mean(amc[st:ed], na.rm = T)
-    af_m[i] <- mean(af[st:ed], na.rm = T)
+    am_m[i] <- mean(am[st:ed], na.rm = T)
   }
+  # Calculate diffuse proportion
   jd <- julday(tme6$year + 1900, tme6$mon + 1, tme6$mday)
   dp <- 0
   for (i in 1:length(jd)) {
     dp[i] <- .difprop2(ncepdata$dsw[i], jd[i], tme6$hour[i], lat, long)
   }
+  # Adjust direct and diffuse
   dp[ncepdata$dsw == 0] <- NA
-  dirr <- (ncepdata$dsw * (1 - dp)) / si_m
-  dirr[am_m > 19.43325] <- NA
-  difr <- (ncepdata$dsw * dp)  / af_m
-  globr <- dirr + difr
+  dnir <- (ncepdata$dsw * (1 - dp)) / si_m
+  difr <- (ncepdata$dsw * dp)
+  rmx <- 4.87 / 0.0036 * (1 - dp)
+  sdni <- dnir - rmx
+  sdni[sdni < 0] <- 0
+  sdni[si_m < 0.0348995] <- dnir[si_m < 0.0348995]
+  dnir <- dnir - sdni
+  difr <- difr + sdni
+  # Calculate extinction coefficient
+  edni <- dnir / ((4.87 / 0.0036) * (1 - dp))
+  edif <- difr / ((4.87 / 0.0036) * dp)
+  #Calculate optical depths
+  odni <- bound(log(edni) / -am_m)
+  odif <- bound(log(edif) / -am_m)
+  # Interpolate to hourly
+  globr <- dnir * si_m + difr
   globr[globr > (4.87 / 0.0036)] <- (4.87 / 0.0036)
   nd <- length(globr)
-  globr[1] <- mean(globr[1:4], na.rm = T)
-  globr[nd] <- mean(globr[(nd - 4):nd], na.rm = T)
-  dp[1] <- mean(dp[1:4], na.rm = T)
-  dp[nd] <- mean(dp[(nd - 4):nd], na.rm = T)
+  sel <-which(is.na(globr * dp * odni * odif) == F)
+  globr[1] <- globr[min(sel)]
+  dp[1] <- dp[min(sel)]
+  odni[1] <- odni[min(sel)]
+  odif[1] <- odif[min(sel)]
+  globr[nd] <- globr[max(sel)]
+  dp[nd] <- dp[max(sel)]
+  odni[nd] <- odni[max(sel)]
+  odif[nd] <- odif[max(sel)]
   globr <- na.approx(globr, na.rm = F)
   dp <- na.approx(dp, na.rm = F)
-  h_dp <- spline(tme6, dp, n = n)$y
+  odni <- na.approx(odni, na.rm = F)
+  odif <- na.approx(odif, na.rm = F)
   h_gr <- spline(tme6, globr, n = n)$y
+  h_dp <- bound(spline(tme6, dp, n = n)$y)
+  h_oi <- bound(spline(tme6, odni, n = n)$y)
+  h_od <- bound(spline(tme6, odif, n = n)$y)
   h_gr[h_gr > (4.87 / 0.0036)] <- (4.87 / 0.0036)
   tmorad <- as.POSIXlt(tmo + 3600 * 3)
   jd <- julday(tmorad$year + 1900, tmorad$mon + 1, tmorad$mday)
   si <- siflat(tmorad$hour, lat, long, jd)
-  szenith <- 90 - solalt(tmorad$hour, lat, long, jd)
   am <- airmasscoef(tmorad$hour, lat, long, jd)
-  af <- exp(-am * od) / exp(-od)
-  h_dni <- h_gr * (1 - h_dp)
+  afi <- exp(-am * h_oi) / exp(h_oi)
+  afd <- exp(-am * h_od) / exp(h_od)
+  h_dni <- (1 - h_dp) * afi * h_gr
+  h_dif <- h_dp * afd * h_gr
   h_dni[si == 0] <- 0
-  h_dif <- h_gr * h_dp * af
   h_dif[is.na(h_dif)] <- 0
   em <- ncepdata$dlw / ncepdata$ulw
   em_h <- spline(tme6, em, n = n)$y
@@ -494,8 +548,8 @@ hourlyNCEP <- function(tme, lat, long, reanalysis2 = TRUE) {
   tme <- as.POSIXlt(hourlydata$obs_time)
   jds <- julday(tme$year[1] + 1900, tme$mday[1] + 1, tme$mday[1])
   cad <- .cadconditions2(hourlydata$emissivity, hourlydata$windspeed,
-                        jds, lat, long, starttime = tme$hour[1], hourint = 1,
-                        windthresh = windthresh, emthresh = emthresh)
+                         jds, lat, long, starttime = tme$hour[1], hourint = 1,
+                         windthresh = windthresh, emthresh = emthresh)
   pxls <- dim(dem)[1] * dim(dem)[2]
   if (pxls > 300 * 300) {
     basins <- basindelin_big(dem)
@@ -604,20 +658,19 @@ hourlyNCEP <- function(tme, lat, long, reanalysis2 = TRUE) {
 microclimaforNicheMapR <- function(lat, long, dstart, dfinish, dem = NA, l, x, albr =0.15,
                                    resolution = 30, zmin = 0, slope = NA, aspect = NA,
                                    windthresh = 4.5, emthresh = 0.78, reanalysis2 = TRUE) {
-    if (class(dem) == "logical") {
-      cat("Downloading digital elevation data \n")
-      dem <- get_dem(r = NA, lat = lat, long = long, resolution = resolution, zmin = zmin)
-    }
-    cat("Extracting weather data with RNCEP \n")
-    tme <- seq(as.POSIXlt(dstart, format = "%d/%m/%Y", origin = "01/01/1900"),
-               as.POSIXlt(dfinish, format = "%d/%m/%Y", origin = "01/01/1900"),
-               by = 'days')
-    hdata <- hourlyNCEP(tme, lat, long, reanalysis2 = reanalysis2)
-    rain <- .dailyrainNCEP(lat, long, tme)
-    cat("Downscaling radiation and wind speed \n")
-    radwind <- .pointradwind(hdata, dem, lat, long, l, x, albr, zmin, slope, aspect)
-    cat("Calculating elevation and cold-air drainage effects \n")
-    elev <- .eleveffects(hdata, dem, lat, long, windthresh, emthresh)
-    return(list(hourlydata = hdata, hourlyradwind = radwind, tref = elev, dailyrain = rain))
+  if (class(dem) == "logical") {
+    cat("Downloading digital elevation data \n")
+    dem <- get_dem(r = NA, lat = lat, long = long, resolution = resolution, zmin = zmin)
   }
-
+  cat("Extracting weather data with RNCEP \n")
+  tme <- seq(as.POSIXlt(dstart, format = "%d/%m/%Y", origin = "01/01/1900"),
+             as.POSIXlt(dfinish, format = "%d/%m/%Y", origin = "01/01/1900"),
+             by = 'days')
+  hdata <- hourlyNCEP(tme, lat, long, reanalysis2 = reanalysis2)
+  rain <- .dailyrainNCEP(lat, long, tme)
+  cat("Downscaling radiation and wind speed \n")
+  radwind <- .pointradwind(hdata, dem, lat, long, l, x, albr, zmin, slope, aspect)
+  cat("Calculating elevation and cold-air drainage effects \n")
+  elev <- .eleveffects(hdata, dem, lat, long, windthresh, emthresh)
+  return(list(hourlydata = hdata, hourlyradwind = radwind, tref = elev, dailyrain = rain))
+}
