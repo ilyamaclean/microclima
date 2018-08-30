@@ -304,10 +304,10 @@ hourlyNCEP <- function(ncepdata = NA, lat, long, tme, reanalysis2 = TRUE) {
     x[x < mn] <- mn
     x
   }
+  int <- as.numeric(tme[2]) - as.numeric(tme[1])
+  lgth <- (length(tme) * int) / (24 * 3600)
   tme2 <- as.POSIXlt(c(0:(lgth - 1)) * 3600 * 24, origin = min(tme), tz = 'UTC')
   if (is.na(ncepdata)) {
-    int <- as.numeric(tme[2]) - as.numeric(tme[1])
-    lgth <- (length(tme) * int) / (24 * 3600)
     ncepdata <- get_NCEP(lat, long, tme2, reanalysis2)
   }
   # *** NB sort out times (take form tme6 rather than tme)
