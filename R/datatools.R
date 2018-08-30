@@ -306,7 +306,7 @@ hourlyNCEP <- function(ncepdata = NA, lat, long, tme, reanalysis2 = TRUE) {
   int <- as.numeric(tme[2]) - as.numeric(tme[1])
   lgth <- (length(tme) * int) / (24 * 3600)
   tme2 <- as.POSIXlt(c(0:(lgth - 1)) * 3600 * 24, origin = min(tme), tz = 'UTC')
-  if (is.na(ncepdata)) {
+  if (class(ncepdata) == "logical") {
     ncepdata <- get_NCEP(lat, long, tme2, reanalysis2)
   }
   # *** NB sort out times (take form tme6 rather than tme)
@@ -395,6 +395,7 @@ hourlyNCEP <- function(ncepdata = NA, lat, long, tme, reanalysis2 = TRUE) {
   tmin <- apply(tcmn, 1, min)
   tmax <- apply(tcmx, 1, max)
   jd <- julday(tme2$year + 1900, tme2$mon + 1, tme2$mday)
+  szenith <- 90 - solalt(tme2$hour, lat, long, jd)
   h_tc<-hourlytemp(julian = jd, em = em_h[thsel], dni = h_dni[thsel],
                    dif = h_dif[thsel], mintemp = tmin, maxtemp = tmax,
                    lat = lat, long = long)
@@ -720,7 +721,7 @@ microclimaforNMR <- function(lat, long, dstart, dfinish, l, x, hourlydata = NA,
   cat("Downscaling radiation and wind speed \n")
   radwind <- .pointradwind(hourlydata, dem, lat, long, l, x, albr, zmin, slope, aspect)
   cat("Calculating elevation and cold-air drainage effects \n")
-  elev <- .eleveffects(hdata, dem, lat, long, windthresh, emthresh)
+  elev <- .eleveffects(hourlydata, dem, lat, long, windthresh, emthresh)
   return(list(hourlydata = hourlydata, hourlyradwind = radwind, tref = elev, dailyprecip = dailyprecip))
 }
 

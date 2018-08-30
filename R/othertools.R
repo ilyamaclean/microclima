@@ -433,7 +433,7 @@ hourlytemp <- function(julian, em = NA, h, n, p = 100346.13, dni, dif,
     warning("Number of hourly values not 24 times number of daily values")
   }
   o <- order(rep(c(1:length(julian)), 24))
-  jd <- rep(jd, 24)[o]
+  jd <- rep(julian, 24)[o]
   localtime <- rep(c(0:23), length(mintemp))
   solfrac <- .solarday(julian, localtime, lat, long, tz, dst)
   am <- airmasscoef(localtime, lat, long, julian, merid, dst)
