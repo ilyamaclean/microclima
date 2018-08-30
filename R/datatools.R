@@ -304,10 +304,10 @@ hourlyNCEP <- function(ncepdata = NA, lat, long, tme, reanalysis2 = TRUE) {
     x[x < mn] <- mn
     x
   }
+  tme2 <- as.POSIXlt(c(0:(lgth - 1)) * 3600 * 24, origin = min(tme), tz = 'UTC')
   if (is.na(ncepdata)) {
     int <- as.numeric(tme[2]) - as.numeric(tme[1])
     lgth <- (length(tme) * int) / (24 * 3600)
-    tme2 <- as.POSIXlt(c(0:(lgth - 1)) * 3600 * 24, origin = min(tme), tz = 'UTC')
     ncepdata <- get_NCEP(lat, long, tme2, reanalysis2)
   }
   # *** NB sort out times (take form tme6 rather than tme)
@@ -694,12 +694,12 @@ dailyprecipNCEP <- function(lat, long, tme, reanalysis2 = TRUE) {
 #' @export
 #'
 #' @examples
-#' mnr <- microclimaforNicheMapR(50, -5.2, '15/01/2015', '15/02/2015', 1, 1)
+#' mnr <- microclimaforNMR(50, -5.2, '15/01/2015', '15/02/2015', 1, 1)
 #' head(mnr$hourlydata)
 #' head(mnr$hourlyradwind)
 #' head(mnr$tref)
 #' head(mnr$dailyprecip)
-microclimaforNicheMapR <- function(lat, long, dstart, dfinish, l, x, hourlydata = NA,
+microclimaforNMR <- function(lat, long, dstart, dfinish, l, x, hourlydata = NA,
                                    dailyprecip = NA, dem = NA, albr =0.15,
                                    resolution = 30, zmin = 0, slope = NA, aspect = NA,
                                    windthresh = 4.5, emthresh = 0.78, reanalysis2 = TRUE) {
