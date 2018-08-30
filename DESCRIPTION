@@ -19,6 +19,7 @@ Description: The functions in the microclima package contain tools for
 License: GPL-2
 Encoding: UTF-8
 LazyData: true
+Remotes: mrke/NicheMapR
 Imports:
     raster (>= 2.5),
     rgdal (>= 0.8),
@@ -27,7 +28,8 @@ Imports:
     sp (>= 1.2),
     dplyr(>= 0.7),
     RNCEP (>= 1.0.8),
-    zoo (>= 1.8)
+    zoo (>= 1.8),
+    devtools
 RoxygenNote: 6.0.1
 Roxygen: list(markdown = TRUE) 
 Suggests: knitr,
