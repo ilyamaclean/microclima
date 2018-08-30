@@ -4,16 +4,16 @@
 \alias{hourlyNCEP}
 \title{Interpolate NCEP data for running microclima to hourly}
 \usage{
-hourlyNCEP(ncepdata = NA, tme, lat, long, reanalysis2 = TRUE)
+hourlyNCEP(ncepdata = NA, lat, long, tme, reanalysis2 = TRUE)
 }
 \arguments{
 \item{ncepdata}{an optional  data frame of climate variables as returned by \code{\link[=get_ncep]{get_ncep()}}.}
 
-\item{tme}{a POSIXlt object covering the duration for which data are required. Ignored if \code{ncepdata`` provided. Hourly data are returned irrespective of the time interval of}tme\code{.Ignored if}ncepdata` provided.}
-
 \item{lat}{the latitude of the location for which data are required. Ignored if \code{ncepdata} provided.}
 
 \item{long}{the longitude of the location for which data are required. Ignored if \code{ncepdata} provided.}
+
+\item{tme}{a POSIXlt object covering the duration for which data are required. Ignored if \code{ncepdata`` provided. Hourly data are returned irrespective of the time interval of}tme\code{.Ignored if}ncepdata` provided.}
 
 \item{reanalysis2}{Logical. Should data be obtained from the Reanalysis II dataset (default) or
 from Reanalysis I (data prior to 1979). Ignored if \code{ncepdata} provided.}
@@ -28,7 +28,7 @@ atmosphere (0 - 1), (viii) netlong: Net longwave radiation (\ifelse{html}{\out{M
 (x) downlong: downward longwave radiation (\ifelse{html}{\out{MJ m<sup>-2</sup> hr<sup>-1</sup>}}{\eqn{MJ m^-2 hr^{-1}}}),
 (xi) rad_dni: Direct radiation normal to the solar beam (\ifelse{html}{\out{MJ m<sup>-2</sup> hr<sup>-1</sup>}}{\eqn{MJ m^-2 hr^{-1}}}),
 (xii) rad_dif: Diffuse radiation (\ifelse{html}{\out{MJ m<sup>-2</sup> hr<sup>-1</sup>}}{\eqn{MJ m^-2 hr^{-1}}}),
-(xii) szenith: the zenith angle (degrees).
+(xiii) szenith: the zenith angle (degrees), (ixx) cloudcover: cloud cover (%).
 }
 \description{
 \code{hourlyNCEP} optionally downloads the required NCEP climate and radiation forcing data
@@ -45,9 +45,9 @@ Hourly temperature are derived using \code{\link[=hourlytemp]{hourlytemp()}} and
 values.
 }
 \examples{
-tme <- as.POSIXlt(c(0:30) * 24 * 3600, origin ="2015-01-15 00:00", tz = "GMT")
+tme <- as.POSIXlt(c(0:30) * 24 * 3600, origin ="2015-01-15 00:00", tz = "UTC")
 # NB takes a while to download data
-hdata<- hourlyNCEP(tme, 50, -5)
+hdata<- hourlyNCEP(NA, 50, -5, tme)
 head(hdata)
 plot(temperature ~ as.POSIXct(obs_time), data = hdata, type = "l", xlab = "Month")
 plot(rad_dif ~ as.POSIXct(obs_time), data = hdata, type = "l", xlab = "Month")

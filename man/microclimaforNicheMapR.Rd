@@ -4,9 +4,10 @@
 \alias{microclimaforNicheMapR}
 \title{Extract NCEP data and run microclima for use with NicheMapR}
 \usage{
-microclimaforNicheMapR(lat, long, dstart, dfinish, dem = NA, l, x,
-  albr = 0.15, resolution = 30, zmin = 0, slope = NA, aspect = NA,
-  windthresh = 4.5, emthresh = 0.78, reanalysis2 = TRUE)
+microclimaforNicheMapR(lat, long, dstart, dfinish, l, x, hourlydata = NA,
+  dailyprecip = NA, dem = NA, albr = 0.15, resolution = 30, zmin = 0,
+  slope = NA, aspect = NA, windthresh = 4.5, emthresh = 0.78,
+  reanalysis2 = TRUE)
 }
 \arguments{
 \item{lat}{the latitude (in decimal degrees) of the location for point data are required.}
@@ -17,14 +18,20 @@ microclimaforNicheMapR(lat, long, dstart, dfinish, dem = NA, l, x,
 
 \item{dfinish}{end date as character of time period required in format DD/MM/YYYY}
 
-\item{dem}{optional raster object of elevations covering the location for which point
-data are required. If not provided, one is downloaded from the registry of Open
-Data on AWS.}
-
 \item{l}{a single numeric value of the leaf area index for location (see details).}
 
 \item{x}{a single numeric value representing the ratio of vertical to horizontal
 projections of leaf foliage for the location (see details).}
+
+\item{hourlydata}{an optional data frame of ourly weather and radiation data as returned
+by function \code{\link[=hourlyNCEP]{hourlyNCEP()}}. Function called if data not provided.}
+
+\item{dailyprecip}{an optional data frame of ourly weather and radiation data as returned
+by function \code{\link[=dailyprecipNCEP]{dailyprecipNCEP()}}. Function called if data not provided.}
+
+\item{dem}{optional raster object of elevations covering the location for which point
+data are required. If not provided, one is downloaded from the registry of Open
+Data on AWS.}
 
 \item{albr}{albedo of ground surface from which radiation is reflected (see details)}
 
@@ -72,7 +79,7 @@ of the 2.5º grid cell corresponding to that from which NCEP data were derived. 
 applying \code{\link[=lapserate]{lapserate()}}. (v) \code{tcad} the expected difference in temperature due to cold
 air drainage effects, determined using \code{\link[=pcad]{pcad()}} and \code{\link[=cadconditions]{cadconditions()}}.
 
-(4) \code{dailyrain} a vector of daily rainfalls derived from NCEP.
+(4) \code{dailyprecip} a vector of daily rainfalls derived from NCEP.
 }
 \description{
 Extract NCEP data and run microclima for use with NicheMapR
@@ -88,11 +95,11 @@ and canopy effects must be specified by the user, and their effect on radiation
 are more simplistically modelled than by \code{microclima}.
 }
 \examples{
-mnr <- microclimaforNicheMapR(50, -5.2, '15/01/2015', '15/02/2015', dem = NA, 1, 1)
+mnr <- microclimaforNicheMapR(50, -5.2, '15/01/2015', '15/02/2015', 1, 1)
 head(mnr$hourlydata)
 head(mnr$hourlyradwind)
 head(mnr$tref)
-head(mnr$dailyrain)
+head(mnr$dailyprecip)
 }
 \references{
 Kearney MR,  Porter WP (2016) NicheMapR – an R package for biophysical

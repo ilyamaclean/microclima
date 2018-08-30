@@ -18,13 +18,14 @@ Hourly data are returned irrespective of the time interval of \code{tme}.}
 from Reanalysis I (data prior to 1979).}
 }
 \value{
-a dataframe with the following variables: (i) obs_time:times in YYY-MM-DD HH:MM format (GMT),
+a dataframe with the following variables: (i) obs_time:times in YYY-MM-DD HH:MM format (UTC),
 (ii) Tk: mean temperatures at 2m (K), (iii) Tkmin:  minimum temperatures at 2m (K) (iv) Tkmax:
 maximum temperatures at 2m (K), (v) sh: specific humidity at 2m (Kg / Kg),
 (vi) pr: surface pressure (Pa), (vii) wu u wind vector at 10m (m/s) (viii) wv: v wind vector
 at 10m (m/s) (ix) dlw: downward longwave radiation flux (\ifelse{html}{\out{W m<sup>-2</sup>}}{\eqn{W m^-2}}),
 (x) ulw: upward longwave radiation flux (\ifelse{html}{\out{W m<sup>-2</sup>}}{\eqn{W m^-2}}), (xi)
-dsw: downward shortwave radiation flux (\ifelse{html}{\out{W m<sup>-2</sup>}}{\eqn{W m^-2}})
+dsw: downward shortwave radiation flux (\ifelse{html}{\out{W m<sup>-2</sup>}}{\eqn{W m^-2}}),
+(xii) tcdc: Total cloud cover for the entire atmosphere.
 }
 \description{
 Obtains NCEP data required to run microclima
@@ -39,8 +40,8 @@ and the downward shortwave flux at the surface. Data for days either side of \co
 interpolation by \code{\link[=hourlyNCEP]{hourlyNCEP()}}. Requires internet connection.
 }
 \examples{
-tme <- as.POSIXlt(c(1:15) * 24 * 3600, origin = "2015-01-15", tz = 'GMT')
-head(get_ncep(tme, 50, -5))
+tme <- as.POSIXlt(c(1:15) * 24 * 3600, origin = "2015-01-15", tz = 'UTC')
+head(get_NCEP(50, -5, tme))
 }
 \references{
 Kanamitsu M, Ebisuzaki W, Woollen J, Yang SK, Hnilo JJ, Fiorino M, Potter GL (2002)
