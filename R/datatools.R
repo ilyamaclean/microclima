@@ -290,7 +290,6 @@ siflat <- function(localtime, lat, long, julian, merid = 0, dst = 0){
 #' of the solar beam and airmass thickness using functions [siflat()] and [airmasscoef()].
 #' Hourly temperature are derived using [hourlytemp()] and longwave radiation by splining emissivity
 #' values.
-#'
 #' @examples
 #' tme <- as.POSIXlt(c(0:30) * 24 * 3600, origin ="2015-01-15 00:00", tz = "UTC")
 #' # NB takes a while to download data
