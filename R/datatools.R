@@ -494,6 +494,7 @@ dailyprecipNCEP <- function(lat, long, tme, reanalysis2 = TRUE) {
   wsheltatground <- 0
   for (i in 1:length(hourlydata$winddir)) {
     daz <- round(hourlydata$winddir[i] / 10, 0) + 1
+    daz <- daz%%36
     wshelt[i] <- wsc36[daz]
     wsheltatground[i] <- wsc36atground[daz]
   }
