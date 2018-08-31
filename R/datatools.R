@@ -545,8 +545,10 @@ dailyprecipNCEP <- function(lat, long, tme, reanalysis2 = TRUE) {
   fgd <- fd * trd
   fged <- fdf * trf * svf
   swrad <- fgd + fged
-  hourlyrad <- data.frame(swrad = swrad, skyviewfact = svf, canopyfact = fr,
-                          whselt = wsheltatground, windspeed = wshelt * hourlydata$windspeed,
+  windsp <- windheight(hourlydata$windspeed, 10, 1)
+  cfc <- ((1 - trd) * fd + fr * fdf) / (fd + fdf)
+  hourlyrad <- data.frame(swrad = swrad, skyviewfact = svf, canopyfact = cfc,
+                          whselt = wsheltatground, windspeed = wshelt *  windsp,
                           slope = slope, aspect = aspect)
   hourlyrad
 }
@@ -659,8 +661,8 @@ dailyprecipNCEP <- function(lat, long, tme, reanalysis2 = TRUE) {
 #' (i) `swrad`: total downward shortwave radiation as a funcion of slope, aspect and
 #' canopy shading (\ifelse{html}{\out{MJ m<sup>-2</sup> hr<sup>-1</sup>}}{\eqn{MJ m^-2 hr^{-1}}})
 #' as returned by [shortwaveveg()].(ii) `skyviewfact`: a topographic sky view correction factor
-#' as returned by [skyviewveg()]. (iii) `canopyfact` a canopy shading factor as returned
-#' by [canopy()]. (iv) `whselt`: a ground level wind shelter coefficient as returned by
+#' as returned by [skyviewveg()]. (iii) `canopyfact` a canopy shading factor.
+#' (iv) `whselt`: a ground level wind shelter coefficient as returned by
 #' [windcoef()]. (v) `windspeed`: wind speed (m /s) at 1 m, corrected for topographic
 #' sheltering. (vi) `slope`: the slope (decimal degrees) of the location specified
 #' by `lat` and `long`. Either the same as that input, or determined from `dem`.
