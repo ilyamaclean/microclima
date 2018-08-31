@@ -375,6 +375,7 @@ hourlyNCEP <- function(ncepdata = NA, lat, long, tme, reanalysis2 = TRUE) {
   h_od <- bound(spline(tme6, odif, n = n)$y)
   tmorad <- as.POSIXlt(tmo + 3600 * 3)
   jd <- julday(tmorad$year + 1900, tmorad$mon + 1, tmorad$mday)
+  szenith <- 90 - solalt(tmorad$hour, lat, long, jd)
   si <- siflat(tmorad$hour, lat, long, jd)
   am <- airmasscoef(tmorad$hour, lat, long, jd)
   afi <- exp(-am * h_oi) / exp(h_oi)
@@ -395,7 +396,6 @@ hourlyNCEP <- function(ncepdata = NA, lat, long, tme, reanalysis2 = TRUE) {
   tmin <- apply(tcmn, 1, min)
   tmax <- apply(tcmx, 1, max)
   jd <- julday(tme2$year + 1900, tme2$mon + 1, tme2$mday)
-  szenith <- 90 - solalt(tme2$hour, lat, long, jd)
   h_tc<-hourlytemp(julian = jd, em = em_h[thsel], dni = h_dni[thsel],
                    dif = h_dif[thsel], mintemp = tmin, maxtemp = tmax,
                    lat = lat, long = long)
@@ -411,7 +411,7 @@ hourlyNCEP <- function(ncepdata = NA, lat, long, tme, reanalysis2 = TRUE) {
   hourlyout <- data.frame(obs_time = tmorad[thsel], temperature = h_tc,
                           humidity = h_sh[thsel2], pressure = h_pr[thsel2],
                           windspeed = h_ws[thsel2], winddir = h_wd[thsel2],
-                          emissivity = em_h[thsel2], cloudcover = h_tc[thsel],
+                          emissivity = em_h[thsel2], cloudcover = h_cc[thsel],
                           netlong = h_nlw, uplong = hlwu, downlong = hlwd,
                           rad_dni = h_dni[thsel] * 0.0036,
                           rad_dif = h_dif[thsel] * 0.0036,
