@@ -703,10 +703,9 @@ microclimaforNMR <- function(lat, long, dstart, dfinish, l, x, hourlydata = NA,
                                    dailyprecip = NA, dem = NA, albr =0.15,
                                    resolution = 30, zmin = 0, slope = NA, aspect = NA,
                                    windthresh = 4.5, emthresh = 0.78, reanalysis2 = TRUE) {
-  tme <- seq(as.POSIXlt(dstart, format = "%d/%m/%Y", origin = "01/01/1900"),
-             as.POSIXlt(dfinish, format = "%d/%m/%Y", origin = "01/01/1900"),
+  tme <- seq(as.POSIXlt(dstart, format = "%d/%m/%Y", origin = "01/01/1900", tz = 'UTC'),
+             as.POSIXlt(dfinish, format = "%d/%m/%Y", origin = "01/01/1900", tz = 'UTC'),
              by = 'days')
-  tme <- as.POSIXlt(tme, tz = 'UTC')
   if (class(dem) == "logical") {
     cat("Downloading digital elevation data \n")
     dem <- get_dem(r = NA, lat = lat, long = long, resolution = resolution, zmin = zmin)
