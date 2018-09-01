@@ -159,8 +159,8 @@ get_NCEP <- function(lat, long, tme, reanalysis2 = TRUE) {
   sel <- sorttimes(tme)$sel
   # These variables are forecasts valid 6 hours after the reference time.
   Tk <- ncepget1('air.2m', tme2, ll, sel)
-  Tkmin <- ncepget1('tmax.2m', tme2, ll, sel)
-  Tkmax <- ncepget1('tmin.2m', tme2, ll, sel)
+  Tkmin <- ncepget1('tmin.2m', tme2, ll, sel)
+  Tkmax <- ncepget1('tmax.2m', tme2, ll, sel)
   sh <- ncepget1('shum.2m', tme2, ll, sel)
   pr <- ncepget1('pres.sfc', tme2, ll, sel)
   wu <- ncepget1('uwnd.10m', tme2, ll, sel)
@@ -699,11 +699,12 @@ dailyprecipNCEP <- function(lat, long, tme, reanalysis2 = TRUE) {
 #' @export
 #' @import raster
 #' @import sp
+#' @import zoo
 #'
 #' @examples
 #' mnr <- microclimaforNMR(50, -5.2, '15/01/2015', '15/02/2015', 1, 1)
 #' head(mnr$hourlydata)
-#' head(mnr$hourlyradwind)
+#' head(mnr$hour>microlyradwind)
 #' head(mnr$tref)
 #' head(mnr$dailyprecip)
 microclimaforNMR <- function(lat, long, dstart, dfinish, l, x, hourlydata = NA,
