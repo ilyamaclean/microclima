@@ -492,6 +492,7 @@ dailyprecipNCEP <- function(lat, long, tme, reanalysis2 = TRUE) {
   }
   wshelt <- 0
   wsheltatground <- 0
+  hourlydata$winddir <- hourlydata$winddir%%360
   for (i in 1:length(hourlydata$winddir)) {
     daz <- round(hourlydata$winddir[i] / 10, 0) + 1
     daz[daz > 36] <- daz[daz > 36] - 36
@@ -696,6 +697,8 @@ dailyprecipNCEP <- function(lat, long, tme, reanalysis2 = TRUE) {
 #' [hourlyNCEP()] for retrieving and processing hourly data from NCEP.
 
 #' @export
+#' @import raster
+#' @import sp
 #'
 #' @examples
 #' mnr <- microclimaforNMR(50, -5.2, '15/01/2015', '15/02/2015', 1, 1)
