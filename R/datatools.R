@@ -336,6 +336,7 @@ hourlyNCEP <- function(ncepdata = NA, lat, long, tme, reanalysis2 = TRUE) {
   for (i in 1:length(jd)) {
     dp[i] <- .difprop2(ncepdata$dsw[i], jd[i], tme6$hour[i], lat, long)
   }
+  am_m[am_m > 5] <- 5
   # Adjust direct and diffuse
   dp[ncepdata$dsw == 0] <- NA
   dnir <- (ncepdata$dsw * (1 - dp)) / si_m
@@ -352,11 +353,12 @@ hourlyNCEP <- function(ncepdata = NA, lat, long, tme, reanalysis2 = TRUE) {
   edni <- dnir / ((4.87 / 0.0036) * (1 - dp))
   edif <- difr / ((4.87 / 0.0036) * dp)
   #Calculate optical depths
-  odni <- bound(log(edni) / -am_m)
-  odif <- bound(log(edif) / -am_m)
-  # Adjust direct and diffuse by amc
-  dnir <- bound(difr / (exp(-am_m * odni) / exp(odni)), mx = 5000)
-  difr <- bound(difr / (exp(-am_m * odif) / exp(odif)), mx = 5000)
+  odni <- bound((log(edni) / -am_m))
+  odif <- bound((log(edif) / -am_m))
+  dnir <- dnir / exp(-am_m * odni)
+  difr <- difr / exp(-am_m * odif)
+  dnir <- ifelse(dnir > rmx, rmx, dnir)
+  difr <- ifelse(difr > rmx2, rmx2, difr)
   # Interpolate to hourly
   globr <- dnir * si_m + difr
   globr <- bound(globr, mx = 4.87 / 0.0036)
@@ -383,8 +385,8 @@ hourlyNCEP <- function(ncepdata = NA, lat, long, tme, reanalysis2 = TRUE) {
   szenith <- 90 - solalt(tmorad$hour, lat, long, jd)
   si <- siflat(tmorad$hour, lat, long, jd)
   am <- airmasscoef(tmorad$hour, lat, long, jd)
-  afi <- exp(-am * h_oi) / exp(h_oi)
-  afd <- exp(-am * h_od) / exp(h_od)
+  afi <- exp(-am * h_oi)
+  afd <- exp(-am * h_od)
   h_dni <- (1 - h_dp) * afi * h_gr
   h_dif <- h_dp * afd * h_gr
   h_dni[si == 0] <- 0
