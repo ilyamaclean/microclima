@@ -378,7 +378,7 @@ mean_slope <- function(dtm, steps = 36, res = 1) {
     ha <- ha + atan(horizonangle(dtm, s * 360 / steps, res))
   }
   ha <- ha / steps
-  ha <- ha * (180 / pi)
+  ha <- tan(ha) * (180 / pi)
   if_raster(ha, r)
 }
 #' calculates the proportion of sky in view

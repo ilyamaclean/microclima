@@ -97,7 +97,7 @@ are more simplistically modelled than by \code{microclima}.
 \examples{
 mnr <- microclimaforNMR(50, -5.2, '15/01/2015', '15/02/2015', 1, 1)
 head(mnr$hourlydata)
-head(mnr$hour>microlyradwind)
+head(mnr$hourlyradwind)
 head(mnr$tref)
 head(mnr$dailyprecip)
 }

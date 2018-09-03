@@ -339,8 +339,10 @@ hourlyNCEP <- function(ncepdata = NA, lat, long, tme, reanalysis2 = TRUE) {
   # Adjust direct and diffuse
   dp[ncepdata$dsw == 0] <- NA
   dnir <- (ncepdata$dsw * (1 - dp)) / si_m
+  dnir[si_m == 0] <- NA
   difr <- (ncepdata$dsw * dp)
   rmx <- 4.87 / 0.0036 * (1 - dp)
+  rmx2 <- 4.87 / 0.0036 * (dp)
   sdni <- dnir - rmx
   sdni[sdni < 0] <- 0
   sdni[si_m < 0.0348995] <- dnir[si_m < 0.0348995]
@@ -352,6 +354,9 @@ hourlyNCEP <- function(ncepdata = NA, lat, long, tme, reanalysis2 = TRUE) {
   #Calculate optical depths
   odni <- bound(log(edni) / -am_m)
   odif <- bound(log(edif) / -am_m)
+  # Adjust direct and diffuse by amc
+  dnir <- bound(difr / (exp(-am_m * odni) / exp(odni)), mx = 5000)
+  difr <- bound(difr / (exp(-am_m * odif) / exp(odif)), mx = 5000)
   # Interpolate to hourly
   globr <- dnir * si_m + difr
   globr <- bound(globr, mx = 4.87 / 0.0036)
@@ -704,7 +709,7 @@ dailyprecipNCEP <- function(lat, long, tme, reanalysis2 = TRUE) {
 #' @examples
 #' mnr <- microclimaforNMR(50, -5.2, '15/01/2015', '15/02/2015', 1, 1)
 #' head(mnr$hourlydata)
-#' head(mnr$hour>microlyradwind)
+#' head(mnr$hourlyradwind)
 #' head(mnr$tref)
 #' head(mnr$dailyprecip)
 microclimaforNMR <- function(lat, long, dstart, dfinish, l, x, hourlydata = NA,
