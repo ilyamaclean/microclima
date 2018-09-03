@@ -929,6 +929,7 @@ shortwaveveg <- function(dni, dif, julian, localtime, lat = NA, long = NA,
   refr <- 0.5 * albr * (1 - cos(sdi)) * dif
   fd <- dirr + cisr
   fdf <- isor + refr
+  saltitude <- solalt(localtime, lat, long, julian, merid, dst)
   kk <- ((x ^ 2 + 1 / (tan(saltitude * (pi / 180)) ^ 2)) ^ 0.5) /
         (x + 1.774 * (x + 1.182) ^ (-0.733))
   trd <- exp(-kk * l)

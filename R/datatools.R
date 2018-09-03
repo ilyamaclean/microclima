@@ -282,7 +282,7 @@ siflat <- function(localtime, lat, long, julian, merid = 0, dst = 0){
 #' @import zoo
 #'
 #' @seealso [get_NCEP()]
-#' @details If `ncepdata` is not provided, then [get_ncep()] and data are downloaded from NCEP Atmospheric
+#' @details If `ncepdata` is not provided, then [get_ncep()] is called and data are downloaded from NCEP Atmospheric
 #' Model Intercomparison Project (Kanamitso et al 2002). Six-hourly data are interpolated as follows.
 #' Pressure, humidity and the u and v wind vectors are converted to hourly using spline interpolation. Wind speeed and diretcion and then
 #' calculated and adjusted to give values at 1 m using [windheight()]. The diffuse radiation

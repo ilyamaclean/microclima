@@ -2,7 +2,7 @@
 title: "microclima: micro- and meso-scale climate modelling with R"
 author: "Ilya M. D. Maclean[aut, cre], Jonathan R. Mosedale[aut], Jonathan J. Bennie [aut]"
 date: "`r Sys.Date()`"
-output: rmarkdown::html_vignette
+output: rmarkdown::pdf_document
 vignette: >
   %\VignetteIndexEntry{Vignette Title}
   %\VignetteEngine{knitr::rmarkdown}
@@ -255,13 +255,13 @@ The overall coastal effects on temperature are derived using function `coastalTp
 # =========================================
 # Calculate land-sea temperature difference
 # =========================================
-temp <- tas[,,1]
-sst <- 10.665
+temp <- tas[,,1] # land temperature
+sst <- 10.665 # sea temperature
 dT <- if_raster(sst - temp, dtm1km)
 # ============================
 # Obtain coastal exposure data
 # ============================
-lsw <- landsearatios[,,7] # upwind (NNE wind)
+lsw <- landsearatios[,,7] # upwind (NNE wind) (dataset derived using invls function)
 lsa <- apply(landsearatios, c(1, 2), mean) # mean, all directions
 lsw <- if_raster(lsw, dtm100m)
 lsa <- if_raster(lsa, dtm100m)
@@ -302,7 +302,7 @@ rdni <- apply(dnirad[,,13:8724], 3, mean)
 rdif <- apply(difrad[,,13:8724], 3, mean)
 jd <- julday(2010, 2, 1)
 jd <- c(jd:(jd+362))
-tc <- hourlytemp(jd, h, n, p, rdni, rdif, tmin, tmax, 50.05, -5.19)
+tc <- hourlytemp(jd, em = NA, h, n, p, rdni, rdif, tmin, tmax, 50.05, -5.19)
 ws10m <- spline(wind2010$wind10m, n = 8755)$y[25:8736]
 ws1m <- windheight(ws10m, 10, 1)
 # =================================================================
@@ -319,28 +319,30 @@ In the example above, the proportion of the time in 2010 that cold air drainage 
 
 ![](C:/microclimatemodel/packageimages/cad.png)
 
-Prior to applying function `pcad`, flow accumulation must be calculated, and this itself necessitates that cold air drainage basins are delineated. In the example below, drainage basins are first delineated from a one m resolution dtm coarsened to 20m using function `basindelin`. The dtm is coarsened as the function is quite slow on large datasets. When working with large datasets, the `basindelin_big` should be used instead. Flow accumulated is then calculated using function `flowacc` to produce the plots shown below the example code.
+
+Prior to applying function `pcad`, cold air drainage basins must be delineated and flow accumulation calculated. In the example below, drainage basins are first delineated from a one m resolution dtm coarsened to 20m using function `basindelin`. The dtm is coarsened as the function is quite slow on large datasets. When working with large datasets, the `basindelin_big` should be used instead. Flow accumulated is then calculated using function `flowacc` to produce the plots shown below the example code.
 
 ```
 # = =   Example of calculating accumulated flow 
-dem <- aggregate(dtm1m, 20)
-basins <- basindelin(dem)
+# delineate basins
+basins <- basindelin(dtm100m) # takes a few seconds
 # Calculate flow accumulation
-fa <- flowacc(dem, basins)
+fa <- flowacc(dtm100m)
 par(mfrow=c(1,2))
 plot(basins, main = "Cold air drainage basins")
-plot(log(fa * 20^2), 
-     main = expression(paste("Log (accumulated flow ",~(m^{2}),")")))
+plot(fa, main = "Accumulated flow (cells)")
 ```
+
 ![](C:/microclimatemodel/packageimages/flowacc.png)
 
-Once flow accumulation has been calculated, cold air drainage potential can be calculated using function `pcad` as in the example below. Here, because cold air can often flow between shallow basins, those basins separated by a boundary of less than 2m are first merged using function `basinmerge`. The function `pcad` is then applied. The default is for this function to output the expected temperature difference in degrees C due to both the lapse rate and accumulated flow proportion, but the components parts can also be outputted individually as in the plots below.
+Once flow accumulation has been calculated, cold air drainage potential can be calculated using function `pcad` as in the example below. Here, because cold air can often flow between shallow basins, those basins separated by a boundary of less than 2 m are first merged using function `basinmerge`. The function `pcad` is then applied. The default is for this function to output the expected temperature difference in degrees C due to both the lapse rate and accumulated flow proportion, but the components parts can also be outputted individually as in the plots below.
 
 ```
 # = = = Example of how cold air drainage is calculated = = =
-basins <- basinmerge(dtm100m, basins100m, 2)
+# basins <- basindelin(dtm100m) # run if not already run
+basins <- basinmerge(dtm100m, basins, 2)
 h <- humidityconvert(50, intype = "relative", 20)$specific
-fa <- flowacc(dtm100m, basins)
+fa <- flowacc(dtm100m)
 cp1 <- pcad(dtm100m, basins, fa, 20, h)
 cp2 <- pcad(dtm100m, basins, fa, 20, h, out = "tempdif")
 cp3 <- pcad(dtm100m, basins, fa, 20, h, out = "pflow")
@@ -361,6 +363,7 @@ In the example below in which the microclimate model is run, the `fitmicro` func
 params <- fitmicro(microfitdata)
 netrad <- netshort1m - netlong1m
 tempanom <- runmicro(params, netrad, wind1m)
+tempanom <-if_raster(tempanom, dtm1m) # converts to raster
 reftemp <- raster(temp100[,,564])
 extent(reftemp) <- extent(dtm1m)
 reftemp <- resample(reftemp, dtm1m)
@@ -418,7 +421,7 @@ for (i in 1:19) {
   for (j in 1:22) {
     if (is.na(tmax[i,j]) == F)
     {
-      ht <- hourlytemp(jd, h[i, j, ], n[i, j, ], p[i, j, ], dni[i, j, ],
+      ht <- hourlytemp(jd, em = NA, h[i, j, ], n[i, j, ], p[i, j, ], dni[i, j, ],
                        dif[i, j, ], tmin[i,j], tmax[i,j], 50.02, -5.20)
       tc[i, j]<- ht[12]
       lr[i, j] <- lapserate(tc[i, j], h[i, j, 12], p[i, j, 12])
