@@ -59,15 +59,15 @@ humidityconvert <- function(h, intype = "relative", tc = 20, p = 101300) {
 #'
 #' @param landsea A raster object with NAs (representing sea) or any non-NA value (representing land). The object should have a larger extent than that for which land-sea ratio values are needed, as the calculation requires land / sea coverage to be assessed upwind outside the target area.
 #' @param e an extent object indicating the region for which land-sea ratios are required.
-#' @param direction a single numeric value specifying the direction (decimal degrees) from which the wind is blowing.
-#' @param maxdist The maximum distance (in the same units as `landsea`) over which land-sea ratios should be calculated.  If the maximum distance is greater than the extent of `landsea`, then the area outside `landsea` is ignored.
+#' @param direction an optional single numeric value specifying the direction (decimal degrees) from which the wind is blowing.
 #'
 #' @details This function calculates a coefficient of the ratio of land to
 #' sea pixels in a specified upwind direction, across all elements of a
 #' raster object, weighted using an inverse distance squared function,
 #' such that nearby pixels have a greater influence on the coefficient.
 #' It returns a raster object representing values ranging between zero
-#' (all upwind pixels sea) to one (all upwind pixels land).
+#' (all upwind pixels sea) to one (all upwind pixels land). Upwind
+#' direction is randomly varied by ± `jitter.amount` degrees.
 #'
 #' @return a raster object with distance-weighted proportions of upwind land pixels
 #' @import raster rgdal
@@ -80,10 +80,13 @@ humidityconvert <- function(h, intype = "relative", tc = 20, p = 101300) {
 #' par(mfrow=c(2,1))
 #' plot(ls1, main = "Land to sea weighting, southerly wind")
 #' plot(ls2, main = "Land to sea weighting, westerly wind")
-invls <- function(landsea, e, direction, maxdist = 2e+05) {
-  res <- xres(landsea)
+invls <- function(landsea, e, direction) {
+  e2 <- extent(landsea)
+  maxdist <- sqrt(xres(landsea) * (e2@xmax - e2@xmin) +
+                    yres(landsea) * (e2@ymax - e2@ymin))
+  resolution <- xres(landsea)
   slr <- landsea * 0 + 1
-  s <- c((8:1000) / 8) ^ 2 * res
+  s <- c((8:1000) / 8) ^ 2 * resolution
   s <- s[s <= maxdist]
   lss <- crop(slr, e)
   lsm <- getValues(lss, format = "matrix")
@@ -91,8 +94,8 @@ invls <- function(landsea, e, direction, maxdist = 2e+05) {
   for (yy in 1:dim(lsm)[1]) {
     for (xx in 1:dim(lsm)[2]) {
       if (is.na(lsm[yy, xx]) == F) {
-        x <- xx * res + e@xmin - res / 2
-        y <- e@ymax + res / 2 - yy * res
+        x <- xx * resolution + e@xmin - resolution / 2
+        y <- e@ymax + resolution / 2 - yy * resolution
         xdist <- round(s * sin(direction * pi / 180), 0)
         ydist <- round(s * cos(direction * pi / 180), 0)
         xy <- data.frame(x = x + xdist, y = y + ydist)

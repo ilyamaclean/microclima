@@ -4,16 +4,14 @@
 \alias{invls}
 \title{Calculates land to sea ratio in upwind direction}
 \usage{
-invls(landsea, e, direction, maxdist = 2e+05)
+invls(landsea, e, direction)
 }
 \arguments{
 \item{landsea}{A raster object with NAs (representing sea) or any non-NA value (representing land). The object should have a larger extent than that for which land-sea ratio values are needed, as the calculation requires land / sea coverage to be assessed upwind outside the target area.}
 
 \item{e}{an extent object indicating the region for which land-sea ratios are required.}
 
-\item{direction}{a single numeric value specifying the direction (decimal degrees) from which the wind is blowing.}
-
-\item{maxdist}{The maximum distance (in the same units as \code{landsea}) over which land-sea ratios should be calculated.  If the maximum distance is greater than the extent of \code{landsea}, then the area outside \code{landsea} is ignored.}
+\item{direction}{an optional single numeric value specifying the direction (decimal degrees) from which the wind is blowing.}
 }
 \value{
 a raster object with distance-weighted proportions of upwind land pixels
@@ -27,7 +25,8 @@ sea pixels in a specified upwind direction, across all elements of a
 raster object, weighted using an inverse distance squared function,
 such that nearby pixels have a greater influence on the coefficient.
 It returns a raster object representing values ranging between zero
-(all upwind pixels sea) to one (all upwind pixels land).
+(all upwind pixels sea) to one (all upwind pixels land). Upwind
+direction is randomly varied by ± \code{jitter.amount} degrees.
 }
 \examples{
 ls1 <- invls(dtm100m, extent(dtm1m), 180)
