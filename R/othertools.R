@@ -88,7 +88,7 @@ invls <- function(landsea, e, direction) {
   slr <- landsea * 0 + 1
   s <- c((8:1000) / 8) ^ 2 * resolution
   s <- s[s <= maxdist]
-  lss <- crop(slr, e)
+  lss <- crop(slr, e, snap = 'out')
   lsm <- getValues(lss, format = "matrix")
   lsw <- array(NA, dim = dim(lsm))
   for (yy in 1:dim(lsm)[1]) {
