@@ -29,7 +29,8 @@ Imports:
     dplyr(>= 0.7),
     RNCEP (>= 1.0.8),
     zoo (>= 1.8),
-    devtools
+    devtools,
+    rnoaa
 RoxygenNote: 6.0.1
 Roxygen: list(markdown = TRUE) 
 Suggests: knitr,

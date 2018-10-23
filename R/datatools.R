@@ -303,6 +303,10 @@ hourlyNCEP <- function(ncepdata = NA, lat, long, tme, reanalysis2 = TRUE) {
     x[x < mn] <- mn
     x
   }
+  if (class(ncepdata) != "logical") {
+    tme <- as.POSIXlt(ncepdata$obs_time)
+    tme <- tme[5:(length(tme) - 4)]
+  }
   int <- as.numeric(tme[2]) - as.numeric(tme[1])
   lgth <- (length(tme) * int) / (24 * 3600)
   tme2 <- as.POSIXlt(c(0:(lgth - 1)) * 3600 * 24, origin = min(tme), tz = 'UTC')
@@ -632,6 +636,227 @@ dailyprecipNCEP <- function(lat, long, tme, reanalysis2 = TRUE) {
                      tcad = cadt)
   tout
 }
+#' Calculates coastal exposure automatically
+.invls.auto <- function(r, steps = 8, use.raster = T, zmin = 0, plot.progress = T) {
+  adjust.lsr <- function(lsr, rs) {
+    m <- is_raster(lsr)
+    m[m < 0] <- 0
+    s <- c((8:10000) / 8) ^ 2 * 30
+    sl <- which(s <= rs)
+    mval <- length(sl) / 1453
+    m2 <- m * (1 - mval) + mval
+    m2
+  }
+  ll <- latlongfromraster(r)
+  xs <- seq(0, by = 1.875, length.out = 192)
+  ys <- seq(-88.542, by = 1.904129, length.out = 94)
+  xc <-xs[which.min(abs(xs - ll$long%%360))]
+  yc <-ys[which.min(abs(ys - ll$lat))]
+  rll <- raster(matrix(0, nrow = 3, ncol = 3))
+  extent(rll) <- extent(xc -  2.8125, xc +  2.8125,
+                        yc - 2.856193, yc + 2.856193)
+  crs(rll) <- "+init=epsg:4326"
+  rmer <- projectRaster(rll, crs = "+init=epsg:3395")
+  ress <- c(30, 90, 500, 1000, 10000)
+  ress <- ress[ress >= mean(res(r))]
+  ress <- rev(ress)
+  # Create a list of dems
+  cat("Downloading land sea data \n")
+  dem.list <- list()
+  rmet <- projectRaster(rll, crs = crs(r))
+  dem <- get_dem(rmet, resolution = ress[1], zmin = zmin)
+  dem.list[[1]] <- projectRaster(dem, crs = crs(r))
+  dc <- ceiling(max(dim(r)) / 2)
+  rres <- mean(res(r)[1:2])
+  for (i in 2:length(ress)) {
+    d <- 50
+    tst <- rres / ress[i] * dc * 2
+    if (ress[i] <= mean(res(r)[1:2]))
+      d <- dc
+    if (tst > 50) d <- tst
+    e <- extent(r)
+    xy <- c((e@xmin + e@xmax) / 2, (e@ymin + e@ymax) / 2)
+    e2 <- extent(c(xy[1] - d * ress[i], xy[1] + d * ress[i],
+                   xy[2] - d * ress[i], xy[2] + d * ress[i]))
+    rr <- raster()
+    extent(rr) <- e2
+    crs(rr) <- crs(r)
+    dem <- suppressWarnings(get_dem(rr, resolution = ress[i], zmin = zmin))
+    dem.list[[i]] <- projectRaster(dem, crs = crs(r))
+  }
+  cat("Computing coastal exposure \n")
+  lsa.array <- array(NA, dim = c(dim(r)[1:2], steps))
+  for (dct in 0:(steps - 1)) {
+    direction <- dct * (360 / steps)
+    cat(paste("Direction:", direction, "degrees"), "\n")
+    lsa.list <- list()
+    for (i in 1:length(ress)) {
+      dem <- dem.list[[i]]
+      m <- is_raster(dem)
+      m[m == zmin] <- NA
+      dem <- if_raster(m, dem)
+      lsa <- invls(dem, extent(r), direction)
+      lsm <- is_raster(lsa)
+      if (max(lsm, na.rm = T) > min(lsm, na.rm = T)) {
+        lsa.list[[i]] <- resample(lsa, r)
+      } else  {
+        lsa.list[[i]] <- if_raster(array(mean(lsm, na.rm = T),
+                                         dim = dim(r)[1:2]), r)
+      }
+    }
+    # find min vals
+    for (i in 1:length(ress))
+      lsa.list[[i]] <- adjust.lsr(lsa.list[[i]], ress[i])
+    lsa <- is_raster(lsa.list[[1]])
+    for (i in 2:length(ress))
+      lsa <- pmin(lsa, is_raster(lsa.list[[i]]))
+    lsa <- if_raster(lsa, r)
+    if (use.raster) lsa <- mask(lsa, r)
+    if (plot.progress) plot(lsa, main = paste("Direction:",direction))
+    lsa.array[,,dct + 1] <- is_raster(lsa)
+  }
+  # Compute land-sea ratio of ncep grid cell
+  cat("Computing mean coastal exposure of ncep grid cell \n")
+  cncep <-0
+  eone <- extent(xc - 1.875 / 2, xc + 1.875 / 2,
+                 yc - 1.904129 / 2, yc + 1.904129 / 2)
+  rllo <- crop(rll, eone)
+  rone <- projectRaster(rllo, crs = crs(r))
+  dem <- dem.list[[1]]
+  m <- is_raster(dem)
+  m[m == zmin] <- NA
+  dem <- if_raster(m, dem)
+  for (dct in 0:(steps - 1)) {
+    direction <- dct * (360 / steps)
+    lsa <- invls(dem, extent(rone), direction)
+    cncep[dct + 1] <- mean(is_raster(lsa), na.rm = T)
+  }
+  cat("Adjusting coastal exposure by ncep means \n")
+  for (i in 1:(steps-1)) lsa.array[,,i] <- lsa.array[,,i] / cncep[i]
+  return(lsa.array)
+}
+#' Downloads sea-surface temperature data
+.get_sst <- function(lat, long, tme) {
+  sel1 <- which(tme$year == min(tme$year))
+  sel2 <- which(tme$year == max(tme$year))
+  dms <- c(31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31)
+  amonth <- min(tme$mon[sel1])
+  amonth <- ifelse(amonth == 0, 12, amonth)
+  pmonth <- max(tme$mon[sel1]) + 2
+  pmonth <- ifelse(pmonth > 12, pmonth -12, pmonth)
+  dm <- dms[max(tme$mon[sel2]) + 1]
+  omn <- paste0(min(tme$year) + 1900, "-", min(tme$mon[sel1]) + 1, "-01 00:00:00")
+  omx <- paste0(max(tme$year) + 1900, "-", max(tme$mon[sel2]) + 1, "-", dm, " 23:59:59")
+  tmn <- as.POSIXlt(0, origin = omn, tz = "GMT") - dms[amonth] / 2 * 24 * 3600
+  tmx <- as.POSIXlt(1, origin = omx, tz = "GMT") + dms[pmonth] / 2 * 24 * 3600
+  tme2 <-  as.POSIXlt(seq(tmn, tmx, by = 'hour'))
+  yrs <- unique(tme2$year) + 1900
+  tmes <- as.POSIXlt(0, origin = "1900-01-01 00:00", tz = "GMT")
+  sstdf <- data.frame(obs_time = tmes, sst = -99)
+  for (yr in 1:length(yrs)) {
+    dms[2] <- 28
+    if (yrs[yr]%%4 == 0) dms[2] <- 29
+    if (yrs[yr]%%100 == 0 & yrs[yr]%%400 != 0) dms[2] <- 28
+    sel <- which(tme2$year + 1900 == yrs[yr])
+    mths <- unique(tme2$mon[sel]) + 1
+    for (mt in 1:length(mths)) {
+      nc <- ersst(yrs[yr], mths[mt])
+      sst <- ncvar_get(nc, 'sst')
+      sst <- t(sst)
+      sst <- apply(sst, 2, rev)
+      sst <- na.approx(sst, na.rm = F)
+      sstr <- raster(sst)
+      extent(sstr) <- extent(-1, 359, -89, 89)
+      long2 <- long%%360
+      long2 <- ifelse(long2 > 359, long2 - 360, long2)
+      s <- extract(sstr, data.frame(long2, lat))
+      orn <- paste0(yrs[yr], "-", mths[mt], "-01 00:00")
+      tmem <- as.POSIXlt(0 + 3600 * 24 * dms[mths[mt]] / 2, origin = orn, tz = "GMT")
+      sstdo <- data.frame(obs_time = tmem, sst = s)
+      sstdf <- rbind(sstdf, sstdo)
+    }
+  }
+  sstdf <- sstdf[-1,]
+  ssth <- spline(sstdf$sst~as.POSIXct(sstdf$obs_time), n = length(tme2))$y
+  tmeh <- spline(sstdf$sst~as.POSIXct(sstdf$obs_time), n = length(tme2))$x
+  tmeh <- as.POSIXlt(tmeh, origin = "1970-01-01 00:00", tz = "GMT")
+  sel <- which(tmeh >=min(tme) & tmeh <=max(tme))
+  return(ssth[sel])
+}
+#' Calculates coastal effects from NCEP data
+#'
+#' @param landsea landsea A raster object with NAs (representing sea) or any non-NA value and a projection system defined.
+#' @param ncephourly a dataframe of hourly climate data as returned by [hourlyNCEP()].
+#' @param steps  an optional integer. Coastal effects are calculated in specified directions upwind. Steps defines the total number of directions used. If the default 8 is specified, coastal effects are calculated at 45º intervals.
+#' @param use.raster an optional logical value indicating whether to mask the output values by `landsea`.
+#' @param zmin optional assumed sea-level height. Values below this are set to zmin
+#' @param plot.progress logical value indicating whether to produce plots to track progress.
+#'
+#' @details coastalNCEP downloads digital elevation and varying resolutions to calculate
+#' coastal effects by applying a variant of [invls()] over a greater extent then that specified by landsea, but the resulting outputs are
+#' cropped to the same extent as landsea. Land temperatyres as a function of coastal exposure
+#' and sea-surface temperature data are then calculated. Sea surface temperature data are
+#' automatically downloaded from the NOAA.
+#'
+#' @return a three-dimension array of hourly temperature values for each pixel of `landsea`
+#' @export
+#' @import raster
+#' @import sp
+#' @import zoo
+#' @import rnoaa
+#' @import ncdf4
+#' @examples
+#' # Download NCEP data
+#' ll <- latlongfromraster(dtm100m)
+#' tme <-as.POSIXlt(c(0:31) * 3600 * 24, origin = "2015-03-15", tz = "GMT")
+#' ncephourly<-hourlyNCEP(NA, ll$lat, ll$long, tme)
+#' aout <- coastalNCEP(dtm100m, ncephourly)
+#' # Calculate mean temperature and convert to raster
+#' mtemp <- if_raster(apply(aout, c(1, 2), mean), dtm100m)
+#' plot(mtemp, main = "Mean temperature")
+coastalNCEP <- function(landsea, ncephourly, steps = 8, use.raster = T, zmin = 0, plot.progress = T) {
+  bound <- function(x, mn = 0, mx = 1) {
+    x[x < mn] <- mn
+    x[x > mx] <- mx
+    x
+  }
+  lsr1 <- .invls.auto(landsea, steps, use.raster, zmin, plot.progress)
+  lsr2 <- lsr1
+  for (i in 1:steps) {
+    mn <- i - 1
+    mn <- ifelse(mn == 0, 8, mn)
+    mx <- i + 1
+    mx <- ifelse(mx >8, mx - 8, mx)
+    lsr2[,,i] <- 0.25 * lsr1[,,mn]  + 0.5 * lsr1[,,i] + 0.25 * lsr1[,,mx]
+  }
+  lsrm <- apply(lsr1, c(1,2), mean)
+  ll <- latlongfromraster(landsea)
+  tme <- as.POSIXlt(ncephourly$obs_time)
+  cat("Downloading sea-surface temperature data \n")
+  sst <- .get_sst(ll$lat, ll$long, tme)
+  wd <- round(ncephourly$winddir%%360 / (360 / 8), 0) + 1
+  wd <- ifelse(wd > 8, wd - 8, wd)
+  lws <- log(ncephourly$windspeed)
+  b1 <- 11.003 * lws - 9.357
+  b1[b1 < 0] <- 0
+  b2 <- 0.6253 * lws - 3.5185
+  dT <- sst - ncephourly$temperature
+  p1 <- 1.12399 - 0.39985 * dT - 0.73361 * lws
+  p2 <- -0.011142 + 0.01048 * dT + 0.043311 * lws
+  d2 <- bound((1 - lsrm + 2) / 3)
+  aout <- array(NA, dim = c(dim(landsea)[1:2], length(tme)))
+  cat("Applying coastal effects \n")
+  for (i in 1:length(tme)) {
+    d1 <- bound((1 - lsr2[,,wd[i]] + 2) / 3)
+    pdT <- dT[i] + p1[i] * d1^b1[i] + p2[i] * d2^b2[i]
+    aout[,,i] <- (pdT - sst[i]) * (-1)
+    if (plot.progress == T & i%%500 == 0) {
+      plot(if_raster(aout[,,i], landsea), main = tme[i])
+    }
+  }
+  return(aout)
+}
+
 #' Extract NCEP data and run microclima for use with NicheMapR
 #'
 #' @param lat the latitude (in decimal degrees) of the location for point data are required.
@@ -739,4 +964,3 @@ microclimaforNMR <- function(lat, long, dstart, dfinish, l, x, hourlydata = NA,
   elev <- .eleveffects(hourlydata, dem, lat, long, windthresh, emthresh)
   return(list(hourlydata = hourlydata, hourlyradwind = radwind, tref = elev, dailyprecip = dailyprecip))
 }
-
