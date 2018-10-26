@@ -26,6 +26,7 @@ units of x, y and z are identical. Use \code{\link[=projectRaster]{projectRaster
 projection to a Universal Transverse Mercator type projection system.
 }
 \examples{
+library(raster)
 ms <- mean_slope(dtm100m, res = 100)
 plot(ms, main = "Mean slope to horizon")
 }

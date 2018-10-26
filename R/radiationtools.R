@@ -619,7 +619,7 @@ longwaveveg <- function(h, tc, p = 101300, n, x, fr, svv = 1, albc = 0.23) {
   x <- is_raster(x)
   fr <- is_raster(fr)
   svv <- is_raster(svv)
-  albc <- is_raster(alb)
+  albc <- is_raster(albc)
   pk <- p / 1000
   e0 <- 0.6108 * exp(17.27 * tc / (tc + 237.3))
   ws <- 0.622 * e0 / pk

@@ -29,6 +29,7 @@ digital surface model, then the sheltering effects of vegetation are
 accounted for. If \code{res} is unspecified \code{dtm} is assumed to have a resolution of one m.
 }
 \examples{
+library(raster)
 dsm <- dtm1m + veg_hgt
 wc <- windcoef(dsm, 0)
 plot(mask(wc, dtm1m), main ="Northerly wind shelter coefficient")

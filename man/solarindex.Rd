@@ -53,6 +53,7 @@ Universal Transverse Mercator type projection system. If \code{dtm} is a raster 
 object is returned.
 }
 \examples{
+library(raster)
 jd <- julday (2010, 6, 21) # Julian day
 # slope, aspect, lat & long calculated from raster
 si1 <- solarindex(localtime = 8, julian = jd, dtm = dtm1m)

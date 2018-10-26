@@ -34,6 +34,7 @@ to merge is printed and processed basin is plotted.
 }
 }
 \examples{
+library(raster)
 basins <- basindelin_big(dtm1m)
 plot(basins, main = "Basins")
 }

@@ -44,6 +44,7 @@ boundaries, \code{basins} is best derived using \code{\link[=basinmerge]{basinme
 Warning: function is quite slow on large datasets.
 }
 \examples{
+library(raster)
 basins <- basinmerge(dtm100m, basins100m, 2)
 h <- humidityconvert(50, intype = "relative", 20)$specific
 fa <- flowacc(dtm100m, basins)

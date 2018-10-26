@@ -7,7 +7,7 @@
 hourlyNCEP(ncepdata = NA, lat, long, tme, reanalysis2 = TRUE)
 }
 \arguments{
-\item{ncepdata}{an optional  data frame of climate variables as returned by \code{\link[=get_ncep]{get_ncep()}}.}
+\item{ncepdata}{an optional  data frame of climate variables as returned by \code{\link[=get_NCEP]{get_NCEP()}}.}
 
 \item{lat}{the latitude of the location for which data are required. Ignored if \code{ncepdata} provided.}
 
@@ -35,7 +35,7 @@ atmosphere (0 - 1), (viii) netlong: Net longwave radiation (\ifelse{html}{\out{M
 required for running microclima and interpolates 4x daily data to hourly.
 }
 \details{
-If \code{ncepdata} is not provided, then \code{\link[=get_ncep]{get_ncep()}} is called and data are downloaded from NCEP Atmospheric
+If \code{ncepdata} is not provided, then \code{\link[=get_NCEP]{get_NCEP()}} is called and data are downloaded from NCEP Atmospheric
 Model Intercomparison Project (Kanamitso et al 2002). Six-hourly data are interpolated as follows.
 Pressure, humidity and the u and v wind vectors are converted to hourly using spline interpolation. Wind speeed and diretcion and then
 calculated and adjusted to give values at 1 m using \code{\link[=windheight]{windheight()}}. The diffuse radiation

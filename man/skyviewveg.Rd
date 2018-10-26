@@ -39,6 +39,7 @@ view expressed as a proportion of the integrated transmission over the
 entire hemisphere.
 }
 \examples{
+library(raster)
 l <- lai(aerial_image[,, 3], aerial_image[,, 4])
 x <- leaf_geometry(veg_hgt)
 sv <- skyviewveg(dtm1m, l, x)

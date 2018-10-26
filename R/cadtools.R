@@ -328,7 +328,7 @@ basindelin_big <- function(dem, dirout = NA, trace = TRUE) {
           }
           fo <- paste0(dirout, "b", i, "_", j, ".tif")
           fol <- c(fol, fo)
-          writeRaster(b, file = fo, overwrite = TRUE)
+          writeRaster(b, filename = fo, overwrite = TRUE)
         }
         ii <- ii + 1
       }

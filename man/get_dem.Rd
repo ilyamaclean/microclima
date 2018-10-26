@@ -45,6 +45,7 @@ Stereographic projections are used. X, y and Z units are all in metres. If \code
 specified, the Coordinate Reference System of \code{r} is used.
 }
 \examples{
+library(raster)
 dem50m <- get_dem(dtm100m, resolution = 50)
 plot(dem50m) # 50m raster, OSGB projection system
 

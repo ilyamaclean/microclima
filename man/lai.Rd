@@ -25,6 +25,7 @@ using data derived from a small area of Cornwall only. It is strongly recommende
 locally calibrated values are obtained.
 }
 \examples{
+library(raster)
 leaf <- lai(aerial_image[,,3], aerial_image[,,4])
 plot(if_raster(leaf, dtm1m), main = "Leaf area index")
 }

@@ -33,6 +33,7 @@ if_raster <- function(x, r) {
 #' @export
 #'
 #' @examples
+#' library(raster)
 #' r <- is_raster(dtm100m)
 #' class(dtm100m) # is a RasterLayer
 #' class(r) # is a matrix
@@ -211,6 +212,7 @@ solalt <- function(localtime, lat, long, julian, merid = 0, dst = 0) {
 #' projection system. If `dtm` is a raster object, a raster object is returned.
 
 #' @examples
+#' library(raster)
 #' ha <- horizonangle(dtm1m, 0)
 #' plot(ha, main = "Tangent of angle to horizon")
 horizonangle <- function(dtm, azimuth, res = 1) {
@@ -272,6 +274,7 @@ horizonangle <- function(dtm, azimuth, res = 1) {
 #' @seealso the raster package function [terrain()] can be used to derive slopes and aspects from `dtm` (see example).
 #'
 #' @examples
+#' library(raster)
 #' jd <- julday (2010, 6, 21) # Julian day
 #' # slope, aspect, lat & long calculated from raster
 #' si1 <- solarindex(localtime = 8, julian = jd, dtm = dtm1m)

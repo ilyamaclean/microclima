@@ -28,6 +28,7 @@ less than that specified by \code{boundary} the basin is merged with basin to wh
 water or air would pour.
 }
 \examples{
+library(raster)
 basins2 <- basinmerge(dtm100m, basins100m, 1)
 par(mfrow=c(1, 2))
 plot(basins100m, main = "Basins")

@@ -543,6 +543,8 @@ arrayspline <- function(a, tme, nfact = 24, out = NA) {
 #'   \item{P}{Two-tailed p-value}
 #' }
 #' @export
+#' @importFrom stats lm
+#' @importFrom stats median
 #' @details
 #' If modelling mesoclimate, it is assumed that altitudinal, coastal and cold-air
 #' drainage effects have already been accounted for in the calculation of `reftemp`.

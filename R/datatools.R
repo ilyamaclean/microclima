@@ -144,7 +144,7 @@ get_NCEP <- function(lat, long, tme, reanalysis2 = TRUE) {
     mths <- unique(tme2$mon + 1)
     v <- NCEP.gather(climvar, level = 'gaussian',
                      years.minmax = c(min(yrs),max(yrs)),
-                     months.minma = c(min(mths):max(mths)),
+                     months.minmax = c(min(mths):max(mths)),
                      lat.southnorth = c(ll$y,ll$y), lon.westeast = c(ll$x,ll$x),
                      reanalysis2 = reanalysis2, return.units = FALSE, status.bar = FALSE)
     if (is.null(dim(v)) == F) {
@@ -407,9 +407,9 @@ hourlyNCEP <- function(ncepdata = NA, lat, long, tme, reanalysis2 = TRUE) {
   tmin <- apply(tcmn, 1, min)
   tmax <- apply(tcmx, 1, max)
   jd <- julday(tme2$year + 1900, tme2$mon + 1, tme2$mday)
-  h_tc<-hourlytemp(julian = jd, em = em_h[thsel], dni = h_dni[thsel],
+  h_tc<-suppressWarnings(hourlytemp(julian = jd, em = em_h[thsel], dni = h_dni[thsel],
                    dif = h_dif[thsel], mintemp = tmin, maxtemp = tmax,
-                   lat = lat, long = long)
+                   lat = lat, long = long))
   hlwu <- 2.043e-10 * (h_tc + 273.15)^4
   hlwd <- em_h[thsel] *  hlwu
   h_nlw <- hlwu - hlwd
@@ -454,7 +454,7 @@ dailyprecipNCEP <- function(lat, long, tme, reanalysis2 = TRUE) {
   ll <- data.frame(x = long, y = lat)
   pre <- NCEP.gather('prate.sfc', level = 'gaussian',
                      years.minmax = c(min(yrs),max(yrs)),
-                     months.minma = c(min(mths):max(mths)),
+                     months.minmax = c(min(mths):max(mths)),
                      lat.southnorth = c(ll$y,ll$y), lon.westeast = c(ll$x,ll$x),
                      return.units = FALSE, status.bar = FALSE, reanalysis2 = reanalysis2)
   if (is.null(dim(pre)) == F) {
@@ -591,6 +591,7 @@ dailyprecipNCEP <- function(lat, long, tme, reanalysis2 = TRUE) {
 # Calculates elevation effects
 .eleveffects <- function(hourlydata, dem, lat, long, windthresh = 4.5,
                          emthresh = 0.78) {
+  load(demworld)
   xy <- data.frame(x = long, y = lat)
   elevncep <- extract(demworld, xy)
   coordinates(xy) = ~x + y

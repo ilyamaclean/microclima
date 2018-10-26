@@ -20,6 +20,7 @@ basin
 Accumulated flow is expressed in terms of number of cells.
 }
 \examples{
+library(raster)
 fa <- flowacc(dtm100m)
 plot(fa, main = 'Accumulated flow')
 }

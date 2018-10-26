@@ -33,6 +33,7 @@ units of x, y and z are identical. Use \code{\link[=projectRaster]{projectRaster
 projection to a Universal Transverse Mercator type projection system.
 }
 \examples{
+library(raster)
 x <- leaf_geometry(veg_hgt)
 plot(x, main = "Leaf geometry")
 }

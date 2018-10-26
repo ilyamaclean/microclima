@@ -28,6 +28,7 @@ units of x, y and z are identical. Use \code{\link[=projectRaster]{projectRaster
 projection to a Universal Transverse Mercator type projection system.
 }
 \examples{
+library(raster)
 sv <- skyviewtopo(dtm100m)
 plot(sv, main = "Sky view factor")
 }

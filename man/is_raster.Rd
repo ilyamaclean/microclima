@@ -16,6 +16,7 @@ if \code{r} is a raster, returns a matrix containing all values of \code{r}, oth
 \code{is_raster} is used to permit flexibility in the use of rasters, matrices or arrays in many functions.
 }
 \examples{
+library(raster)
 r <- is_raster(dtm100m)
 class(dtm100m) # is a RasterLayer
 class(r) # is a matrix

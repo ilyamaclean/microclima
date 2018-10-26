@@ -40,6 +40,7 @@ If no value for \code{svv} is provided then the entire hemisphere is assumed to
 be in view.
 }
 \examples{
+library(raster)
 # =================================
 # Extract data for 2010-05-24 11:00
 # =================================

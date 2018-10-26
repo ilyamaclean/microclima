@@ -26,6 +26,7 @@ height than at gorund level. This function enables the user to estimate
 leaf area for a specified height about the ground.
 }
 \examples{
+library(raster)
 l <- lai(aerial_image[,,3], aerial_image[,,4])
 la<-lai_adjust(l, veg_hgt)
 par(mfrow=c(2, 1))

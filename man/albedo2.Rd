@@ -31,6 +31,7 @@ canopy albedos are closer to the image-derived albedos in areas of high canopy c
 albedos closer to the image-derived albedo in areas with low canopy cover.
 }
 \examples{
+library(raster)
 # ======================
 # Calculate image albedo
 # ======================

@@ -40,6 +40,7 @@ varies as a function of a wind speed factor, such that different slope values
 are assumed under high and low wind conditions.
 }
 \examples{
+library(raster)
 # =======================================================================
 # Run microclimate model for 2010-05-24 11:00 (one of the warmest hours)
 # =======================================================================

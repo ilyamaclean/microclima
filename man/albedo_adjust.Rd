@@ -18,6 +18,7 @@ a raster object with numeric values representing the adjusted surface albedo val
 \code{albedo_adjust} is used to correct albedo derived from aerial imagery for image brightness and contrast using MODIS data.
 }
 \examples{
+library(raster)
 alb <- albedo(aerial_image[,,1], aerial_image[,,2], aerial_image[,,3],
               aerial_image[,,4])
 img <- if_raster(alb, dtm1m)

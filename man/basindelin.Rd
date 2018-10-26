@@ -30,6 +30,7 @@ boundaries >0. With large datasets, with > 160,000 pixels, calculations will
 be slow and \code{\link[=basindelin_big]{basindelin_big()}} should be used instead
 }
 \examples{
+library(raster)
 dem <- aggregate(dtm1m, 20)
 basins <- basindelin (dem)
 plot(basins, main = "Basins")

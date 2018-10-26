@@ -29,6 +29,7 @@ It returns a raster object representing values ranging between zero
 direction is randomly varied by ± \code{jitter.amount} degrees.
 }
 \examples{
+library(raster)
 ls1 <- invls(dtm100m, extent(dtm1m), 180)
 ls2 <- invls(dtm100m, extent(dtm1m), 270)
 par(mfrow=c(2,1))

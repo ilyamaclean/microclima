@@ -93,6 +93,7 @@ needed, and to ensure sub-divided blocks overlap in extent. Calculations are fas
 if values for all inputs are provided.
 }
 \examples{
+library(raster)
 # =================================
 # Extract data for 2010-05-24 11:00
 # =================================

@@ -21,6 +21,7 @@ a fine-resolution raster of sea - land temperature differences (ºC).
 the effects of coastal buffering of land-temperatures by the sea.
 }
 \examples{
+library(raster)
 # =========================================
 # Calculate land-sea temperature difference
 # =========================================

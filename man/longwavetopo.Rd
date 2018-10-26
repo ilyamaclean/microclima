@@ -37,6 +37,7 @@ provided, a single value is returned, and it is assumed that the entire
 hemisphere is in view.
 }
 \examples{
+library(raster)
 # =================================
 # Extract data for 2010-05-24 11:00
 # =================================

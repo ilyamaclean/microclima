@@ -25,6 +25,7 @@ applied (range 0 to 1). If \code{alb} is a raster object, then a raster object i
 and \code{e} can be determined from \code{alb}.
 }
 \examples{
+library(raster)
 alb <- albedo(aerial_image[,,1], aerial_image[,,2], aerial_image[,,3],
               aerial_image[,,4])
 alb <- alb[901:1000, 901:1000]

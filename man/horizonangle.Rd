@@ -27,6 +27,7 @@ The projection system used must be such that units of x, y and z are identical. 
 projection system. If \code{dtm} is a raster object, a raster object is returned.
 }
 \examples{
+library(raster)
 ha <- horizonangle(dtm1m, 0)
 plot(ha, main = "Tangent of angle to horizon")
 }

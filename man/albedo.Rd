@@ -38,6 +38,7 @@ The function assumes that image reflectance has been captured using four spectra
 If \code{blue} is a raster object, then a raster object is returned.
 }
 \examples{
+library(raster)
 alb <- albedo(aerial_image[,,1], aerial_image[,,2], aerial_image[,,3],
               aerial_image[,,4])
 plot(if_raster(alb, dtm1m), main = "Albedo", col = gray(0:255/255))

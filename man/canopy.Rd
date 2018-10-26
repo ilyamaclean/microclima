@@ -23,6 +23,7 @@ radiation transmitted through the canopy. If \code{l} is a raster object, a rast
 returned.
 }
 \examples{
+library(raster)
 l <- lai(aerial_image[,,3], aerial_image[,,4])
 l <- if_raster(l, dtm1m) # convert to raster
 x <- leaf_geometry(veg_hgt)
