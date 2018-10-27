@@ -221,6 +221,7 @@ basinsort <- function(dem, basins) {
 #' be slow and [basindelin_big()] should be used instead
 #'
 #' @examples
+#' library(raster)
 #' dem <- aggregate(dtm1m, 20)
 #' basins <- basindelin (dem)
 #' plot(basins, main = "Basins")
@@ -293,6 +294,7 @@ basindelin <- function(dem) {
 #' to merge is printed and processed basin is plotted.
 #'
 #' @examples
+#' library(raster)
 #' basins <- basindelin_big(dtm1m)
 #' plot(basins, main = "Basins")
 basindelin_big <- function(dem, dirout = NA, trace = TRUE) {
@@ -455,6 +457,7 @@ basindelin_big <- function(dem, dirout = NA, trace = TRUE) {
 #' water or air would pour.
 #'
 #' @examples
+#' library(raster)
 #' basins2 <- basinmerge(dtm100m, basins100m, 1)
 #' par(mfrow=c(1, 2))
 #' plot(basins100m, main = "Basins")
@@ -503,6 +506,7 @@ basinmerge <- function(dem, basins, boundary) {
 #' @export
 #'
 #' @examples
+#' library(raster)
 #' fa <- flowacc(dtm100m)
 #' plot(fa, main = 'Accumulated flow')
 flowacc <- function (dem)
@@ -648,6 +652,7 @@ cadconditions <- function(h, tc, n, p = 100346.13, wind, startjul, lat, long,
 #' Warning: function is quite slow on large datasets.
 #'
 #' @examples
+#' library(raster)
 #' basins <- basinmerge(dtm100m, basins100m, 2)
 #' h <- humidityconvert(50, intype = "relative", 20)$specific
 #' fa <- flowacc(dtm100m, basins)

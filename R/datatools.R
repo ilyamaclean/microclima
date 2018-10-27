@@ -34,6 +34,7 @@
 #' specified, the Coordinate Reference System of `r` is used.
 #'
 #' @examples
+#' library(raster)
 #' dem50m <- get_dem(dtm100m, resolution = 50)
 #' plot(dem50m) # 50m raster, OSGB projection system
 #'
@@ -258,7 +259,7 @@ siflat <- function(localtime, lat, long, julian, merid = 0, dst = 0){
 #' @description `hourlyNCEP` optionally downloads the required NCEP climate and radiation forcing data
 #' required for running microclima and interpolates 4x daily data to hourly.
 #'
-#' @param ncepdata an optional  data frame of climate variables as returned by [get_ncep()].
+#' @param ncepdata an optional  data frame of climate variables as returned by [get_NCEP()].
 #' @param tme a POSIXlt object covering the duration for which data are required. Ignored if `ncepdata``
 #' provided.
 #' Hourly data are returned irrespective of the time interval of `tme`.Ignored if `ncepdata` provided.
@@ -282,7 +283,7 @@ siflat <- function(localtime, lat, long, julian, merid = 0, dst = 0){
 #' @import zoo
 #'
 #' @seealso [get_NCEP()]
-#' @details If `ncepdata` is not provided, then [get_ncep()] is called and data are downloaded from NCEP Atmospheric
+#' @details If `ncepdata` is not provided, then [get_NCEP()] is called and data are downloaded from NCEP Atmospheric
 #' Model Intercomparison Project (Kanamitso et al 2002). Six-hourly data are interpolated as follows.
 #' Pressure, humidity and the u and v wind vectors are converted to hourly using spline interpolation. Wind speeed and diretcion and then
 #' calculated and adjusted to give values at 1 m using [windheight()]. The diffuse radiation
@@ -356,9 +357,8 @@ hourlyNCEP <- function(ncepdata = NA, lat, long, tme, reanalysis2 = TRUE) {
   # Calculate extinction coefficient
   edni <- dnir / ((4.87 / 0.0036) * (1 - dp))
   edif <- difr / ((4.87 / 0.0036) * dp)
-  #Calculate optical depths
-  odni <- bound((log(edni) / -am_m))
-  odif <- bound((log(edif) / -am_m))
+  odni <- bound((log(edni) / -am_m), mn = 0.1)
+  odif <- bound((log(edif) / -am_m), mn = 0.1)
   dnir <- dnir / exp(-am_m * odni)
   difr <- difr / exp(-am_m * odif)
   dnir <- ifelse(dnir > rmx, rmx, dnir)
@@ -382,8 +382,8 @@ hourlyNCEP <- function(ncepdata = NA, lat, long, tme, reanalysis2 = TRUE) {
   odif <- na.approx(odif, na.rm = F)
   h_gr <- bound(spline(tme6, globr, n = n)$y, mx = 4.87 / 0.0036)
   h_dp <- bound(spline(tme6, dp, n = n)$y)
-  h_oi <- bound(spline(tme6, odni, n = n)$y)
-  h_od <- bound(spline(tme6, odif, n = n)$y)
+  h_oi <- bound(spline(tme6, odni, n = n)$y, mn = 0.1)
+  h_od <- bound(spline(tme6, odif, n = n)$y, mn = 0.1)
   tmorad <- as.POSIXlt(tmo + 3600 * 3)
   jd <- julday(tmorad$year + 1900, tmorad$mon + 1, tmorad$mday)
   szenith <- 90 - solalt(tmorad$hour, lat, long, jd)
@@ -408,8 +408,8 @@ hourlyNCEP <- function(ncepdata = NA, lat, long, tme, reanalysis2 = TRUE) {
   tmax <- apply(tcmx, 1, max)
   jd <- julday(tme2$year + 1900, tme2$mon + 1, tme2$mday)
   h_tc<-suppressWarnings(hourlytemp(julian = jd, em = em_h[thsel], dni = h_dni[thsel],
-                   dif = h_dif[thsel], mintemp = tmin, maxtemp = tmax,
-                   lat = lat, long = long))
+                                    dif = h_dif[thsel], mintemp = tmin, maxtemp = tmax,
+                                    lat = lat, long = long))
   hlwu <- 2.043e-10 * (h_tc + 273.15)^4
   hlwd <- em_h[thsel] *  hlwu
   h_nlw <- hlwu - hlwd
@@ -591,7 +591,6 @@ dailyprecipNCEP <- function(lat, long, tme, reanalysis2 = TRUE) {
 # Calculates elevation effects
 .eleveffects <- function(hourlydata, dem, lat, long, windthresh = 4.5,
                          emthresh = 0.78) {
-  load(demworld)
   xy <- data.frame(x = long, y = lat)
   elevncep <- extract(demworld, xy)
   coordinates(xy) = ~x + y
@@ -807,6 +806,7 @@ dailyprecipNCEP <- function(lat, long, tme, reanalysis2 = TRUE) {
 #' @import rnoaa
 #' @import ncdf4
 #' @examples
+#' library(raster)
 #' # Download NCEP data
 #' ll <- latlongfromraster(dtm100m)
 #' tme <-as.POSIXlt(c(0:31) * 3600 * 24, origin = "2015-03-15", tz = "GMT")

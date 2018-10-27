@@ -75,6 +75,7 @@ humidityconvert <- function(h, intype = "relative", tc = 20, p = 101300) {
 #' @export
 #'
 #' @examples
+#' library(raster)
 #' ls1 <- invls(dtm100m, extent(dtm1m), 180)
 #' ls2 <- invls(dtm100m, extent(dtm1m), 270)
 #' par(mfrow=c(2,1))
@@ -122,6 +123,7 @@ invls <- function(landsea, e, direction) {
 #' @importFrom rgcvpack predict.Tps
 #'
 #' @examples
+#' library(raster)
 #' # =========================================
 #' # Calculate land-sea temperature difference
 #' # =========================================
@@ -260,6 +262,7 @@ windheight <- function(ui, zi, zo) {
 #' @export
 #'
 #' @examples
+#' library(raster)
 #' dsm <- dtm1m + veg_hgt
 #' wc <- windcoef(dsm, 0)
 #' plot(mask(wc, dtm1m), main ="Northerly wind shelter coefficient")
@@ -491,6 +494,7 @@ hourlytemp <- function(julian, em = NA, h, n, p = 100346.13, dni, dif,
 #' equal to `tme[1]`.
 #'
 #' @examples
+#' library(raster)
 #' tme <- as.POSIXct(c(0:364) * 24 * 3600, origin="2010-01-01", tz = "GMT")
 #' h <- arrayspline(huss, tme, out = "2010-05-01 11:00")
 #' plot(raster(h, template = dtm1km),
@@ -664,6 +668,7 @@ fitmicro <- function(microfitdata, alldata = FALSE, windthresh = NA,
 #' are assumed under high and low wind conditions.
 #'
 #' @examples
+#' library(raster)
 #' # =======================================================================
 #' # Run microclimate model for 2010-05-24 11:00 (one of the warmest hours)
 #' # =======================================================================

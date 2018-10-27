@@ -23,6 +23,7 @@
 #' @export
 #'
 #' @examples
+#' library(raster)
 #' alb <- albedo(aerial_image[,,1], aerial_image[,,2], aerial_image[,,3],
 #'               aerial_image[,,4])
 #' plot(if_raster(alb, dtm1m), main = "Albedo", col = gray(0:255/255))
@@ -71,6 +72,7 @@ albedo <- function(blue, green, red, nir, maxval = 255,
 #' @export
 #'
 #' @examples
+#' library(raster)
 #' alb <- albedo(aerial_image[,,1], aerial_image[,,2], aerial_image[,,3],
 #'               aerial_image[,,4])
 #' img <- if_raster(alb, dtm1m)
@@ -111,6 +113,7 @@ albedo_adjust <- function(alb_image, alb_modis) {
 #' locally calibrated values are obtained.
 
 #' @examples
+#' library(raster)
 #' leaf <- lai(aerial_image[,,3], aerial_image[,,4])
 #' plot(if_raster(leaf, dtm1m), main = "Leaf area index")
 lai <- function(red, nir, maxlai = 20) {
@@ -142,6 +145,7 @@ lai <- function(red, nir, maxlai = 20) {
 #' @return a raster object or a two-dimensional area of numeric values representing the Leaf Area Index values for a specified height above the ground
 #'
 #' @examples
+#' library(raster)
 #' l <- lai(aerial_image[,,3], aerial_image[,,4])
 #' la<-lai_adjust(l, veg_hgt)
 #' par(mfrow=c(2, 1))
@@ -184,6 +188,7 @@ lai_adjust <- function(l, veghgt, hgt = 0.05) {
 #' orientated.
 #'
 #' @examples
+#' library(raster)
 #' x <- leaf_geometry(veg_hgt)
 #' plot(x, main = "Leaf geometry")
 leaf_geometry <- function(veghgt, maxx = 20) {
@@ -210,6 +215,7 @@ leaf_geometry <- function(veghgt, maxx = 20) {
 #' returned.
 #'
 #' @examples
+#' library(raster)
 #' l <- lai(aerial_image[,,3], aerial_image[,,4])
 #' l <- if_raster(l, dtm1m) # convert to raster
 #' x <- leaf_geometry(veg_hgt)
@@ -260,6 +266,7 @@ canopy <- function(l, x) {
 #' albedos closer to the image-derived albedo in areas with low canopy cover.
 #'
 #' @examples
+#' library(raster)
 #' # ======================
 #' # Calculate image albedo
 #' # ======================
@@ -310,6 +317,7 @@ albedo2 <- function(alb, fr, ground = TRUE) {
 #' @return a raster object, two-dimensional array or matrix of values representing the mean albedo of surfaces surrounding each pixel of a two-dimension albedo array (range 0 - 1).
 #'
 #' @examples
+#' library(raster)
 #' alb <- albedo(aerial_image[,,1], aerial_image[,,2], aerial_image[,,3],
 #'               aerial_image[,,4])
 #' alb <- alb[901:1000, 901:1000]
@@ -367,6 +375,7 @@ albedo_reflected <- function(alb, e = extent(alb)) {
 #' projection to a Universal Transverse Mercator type projection system.
 #'
 #' @examples
+#' library(raster)
 #' ms <- mean_slope(dtm100m, res = 100)
 #' plot(ms, main = "Mean slope to horizon")
 mean_slope <- function(dtm, steps = 36, res = 1) {
@@ -404,6 +413,7 @@ mean_slope <- function(dtm, steps = 36, res = 1) {
 #' projection to a Universal Transverse Mercator type projection system.
 #
 #' @examples
+#' library(raster)
 #' sv <- skyviewtopo(dtm100m)
 #' plot(sv, main = "Sky view factor")
 skyviewtopo <- function(dtm, steps = 36, res = 100) {
@@ -448,6 +458,7 @@ skyviewtopo <- function(dtm, steps = 36, res = 100) {
 #' @return a raster object or a two-dimensional array of numeric values representing the proportion of isotropic radiation received by a surface partially obscured by topography relative to the full hemisphere underneath vegetation.
 #'
 #' @examples
+#' library(raster)
 #' l <- lai(aerial_image[,, 3], aerial_image[,, 4])
 #' x <- leaf_geometry(veg_hgt)
 #' sv <- skyviewveg(dtm1m, l, x)
@@ -508,6 +519,7 @@ skyviewveg <- function(dtm, l, x, steps = 36, res = 1) {
 #' @return a single numeric value, raster object, two-dimensional array pr matrix of values representing net longwave radiation (MJ per metre squared per hour).
 #'
 #' @examples
+#' library(raster)
 #' # =================================
 #' # Extract data for 2010-05-24 11:00
 #' # =================================
@@ -585,6 +597,7 @@ longwavetopo <- function(h, tc, p = 101300, n, svf = 1) {
 #' be in view.
 #'
 #' @examples
+#' library(raster)
 #' # =================================
 #' # Extract data for 2010-05-24 11:00
 #' # =================================
@@ -712,6 +725,7 @@ longwaveveg <- function(h, tc, p = 101300, n, x, fr, svv = 1, albc = 0.23) {
 #' @return If component is unspecified, then the default "sw" is returned.
 #'
 #' @examples
+#' library(raster)
 #' # =================================
 #' # Extract data for 2010-05-24 11:00
 #' # =================================
@@ -860,6 +874,7 @@ shortwavetopo <- function(dni, dif, julian, localtime, lat = NA, long = NA,
 #' The raster package function [terrain()] can be used to derive slopes and aspects from `dtm` (see example).
 #'
 #' @examples
+#' library(raster)
 #' # =================================
 #' # Extract data for 2010-05-24 11:00
 #' # =================================
