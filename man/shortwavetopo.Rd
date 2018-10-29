@@ -6,8 +6,8 @@
 \usage{
 shortwavetopo(dni, dif, julian, localtime, lat = NA, long = NA,
   dtm = array(0, dim = c(1, 1)), slope = NA, aspect = NA, svf = 1,
-  alb = 0.23, albr = 0.23, ha = 0, res = 100, merid = 0, dst = 0,
-  shadow = TRUE, component = "sw")
+  alb = 0.23, albr = 0.23, ha = 0, res = 100, merid = 0,
+  dst = 0, shadow = TRUE, component = "sw")
 }
 \arguments{
 \item{dni}{a single numeric value, raster object, two-dimensional array or matrix of coarse-resolution direct radiation perpendicular to the solar beam (\ifelse{html}{\out{MJ m<sup>-2</sup> hr<sup>-1</sup>}}{\eqn{MJ m^{-2} hr^{-1}}}).}

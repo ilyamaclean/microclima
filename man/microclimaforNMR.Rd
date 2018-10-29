@@ -5,9 +5,9 @@
 \title{Extract NCEP data and run microclima for use with NicheMapR}
 \usage{
 microclimaforNMR(lat, long, dstart, dfinish, l, x, hourlydata = NA,
-  dailyprecip = NA, dem = NA, albr = 0.15, resolution = 30, zmin = 0,
-  slope = NA, aspect = NA, windthresh = 4.5, emthresh = 0.78,
-  reanalysis2 = TRUE)
+  dailyprecip = NA, dem = NA, albr = 0.15, resolution = 30,
+  zmin = 0, slope = NA, aspect = NA, windthresh = 4.5,
+  emthresh = 0.78, reanalysis2 = TRUE)
 }
 \arguments{
 \item{lat}{the latitude (in decimal degrees) of the location for point data are required.}

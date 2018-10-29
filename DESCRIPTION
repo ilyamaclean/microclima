@@ -33,7 +33,7 @@ Imports:
     rnoaa,
     ncdf4,
     rgcvpack
-RoxygenNote: 6.0.1
+RoxygenNote: 6.1.0
 Roxygen: list(markdown = TRUE) 
 Suggests: knitr,
     NicheMapR,
