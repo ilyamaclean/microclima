@@ -589,6 +589,7 @@ dailyprecipNCEP <- function(lat, long, tme, reanalysis2 = TRUE) {
   cad
 }
 # Calculates elevation effects
+#' @export
 .eleveffects <- function(hourlydata, dem, lat, long, windthresh = 4.5,
                          emthresh = 0.78) {
   xy <- data.frame(x = long, y = lat)
@@ -637,6 +638,7 @@ dailyprecipNCEP <- function(lat, long, tme, reanalysis2 = TRUE) {
   tout
 }
 #' Calculates coastal exposure automatically
+#' @export
 .invls.auto <- function(r, steps = 8, use.raster = T, zmin = 0, plot.progress = T) {
   adjust.lsr <- function(lsr, rs) {
     m <- is_raster(lsr)
@@ -736,6 +738,7 @@ dailyprecipNCEP <- function(lat, long, tme, reanalysis2 = TRUE) {
   return(lsa.array)
 }
 #' Downloads sea-surface temperature data
+#' @export
 .get_sst <- function(lat, long, tme) {
   sel1 <- which(tme$year == min(tme$year))
   sel2 <- which(tme$year == max(tme$year))
