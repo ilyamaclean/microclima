@@ -700,7 +700,14 @@ dailyprecipNCEP <- function(lat, long, tme, reanalysis2 = TRUE) {
       lsa <- invls(dem, extent(r), direction)
       lsm <- is_raster(lsa)
       if (max(lsm, na.rm = T) > min(lsm, na.rm = T)) {
-        lsa.list[[i]] <- resample(lsa, r)
+        xx<- resample(lsa, r)
+        mx <- mean(is_raster(xx), na.rm =T)
+        if  (is.na(mx)) {
+          xx2 <- resample(lsa, r, method = 'ngb')
+          ff <- round(ress[i] / (res(r) * 10), 0)
+          xx3 <-  aggregate(xx2, ff)
+          lsa.list[[i]] <- resample(xx3, r)
+        }  else lsa.list[[i]] <- xx
       } else  {
         lsa.list[[i]] <- if_raster(array(mean(lsm, na.rm = T),
                                          dim = dim(r)[1:2]), r)
