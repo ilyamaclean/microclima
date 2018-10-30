@@ -5,7 +5,7 @@
 \title{Calculates coastal effects from NCEP data}
 \usage{
 coastalNCEP(landsea, ncephourly, steps = 8, use.raster = T, zmin = 0,
-  plot.progress = T)
+  plot.progress = T, tidyr = F)
 }
 \arguments{
 \item{landsea}{landsea A raster object with NAs (representing sea) or any non-NA value and a projection system defined.}
@@ -19,6 +19,9 @@ coastalNCEP(landsea, ncephourly, steps = 8, use.raster = T, zmin = 0,
 \item{zmin}{optional assumed sea-level height. Values below this are set to zmin}
 
 \item{plot.progress}{logical value indicating whether to produce plots to track progress.}
+
+\item{tidyr}{logical value indicating whether to download 30m resolution digital elevation data
+and use these data to improve the assignment of land and sea pixels in \code{landsea}.}
 }
 \value{
 a three-dimension array of hourly temperature values for each pixel of \code{landsea}

@@ -639,7 +639,22 @@ dailyprecipNCEP <- function(lat, long, tme, reanalysis2 = TRUE) {
 }
 #' Calculates coastal exposure automatically
 #' @export
-.invls.auto <- function(r, steps = 8, use.raster = T, zmin = 0, plot.progress = T) {
+.invls.auto <- function(r, steps = 8, use.raster = T, zmin = 0, plot.progress = T, tidyr = F) {
+  tidydems <- function(rfine, rc) {
+    rfine[is.na(rfine)] <- zmin
+    rc <- trim(rc)
+    aggf <- floor(mean(res(rc)[1:2]) / mean(res(rfine)))
+    if (aggf > 1) rfine2 <- aggregate(rfine, aggf, max)
+    rfine2 <- resample(rfine2, rc)
+    rfine2 <- crop(rfine2, extent(rfine))
+    a <- array(-999, dim = dim(rfine2)[1:2])
+    rc2 <- raster(a)
+    extent(rc2) <- extent(rfine2)
+    rc2 <- mosaic(rc, rc2, fun = min)
+    rc2 <- mosaic(rc2, rfine2, fun = max)
+    rc2[rc2 == zmin] <- NA
+    rc2
+  }
   adjust.lsr <- function(lsr, rs) {
     m <- is_raster(lsr)
     m[m < 0] <- 0
@@ -658,9 +673,9 @@ dailyprecipNCEP <- function(lat, long, tme, reanalysis2 = TRUE) {
   extent(rll) <- extent(xc -  2.8125, xc +  2.8125,
                         yc - 2.856193, yc + 2.856193)
   crs(rll) <- "+init=epsg:4326"
-  rmer <- projectRaster(rll, crs = "+init=epsg:3395")
   ress <- c(30, 90, 500, 1000, 10000)
-  ress <- ress[ress >= mean(res(r))]
+  ress <- ress[ress > mean(res(r))]
+  ress <- c(mean(res(r)), ress)
   ress <- rev(ress)
   # Create a list of dems
   cat("Downloading land sea data \n")
@@ -669,8 +684,8 @@ dailyprecipNCEP <- function(lat, long, tme, reanalysis2 = TRUE) {
   dem <- get_dem(rmet, resolution = ress[1], zmin = zmin)
   dem.list[[1]] <- projectRaster(dem, crs = crs(r))
   dc <- ceiling(max(dim(r)) / 2)
-  rres <- mean(res(r)[1:2])
-  for (i in 2:length(ress)) {
+  rres <- mean(res(r))
+  for (i in 2:(length(ress)-1)) {
     d <- 50
     tst <- rres / ress[i] * dc * 2
     if (ress[i] <= mean(res(r)[1:2]))
@@ -686,6 +701,17 @@ dailyprecipNCEP <- function(lat, long, tme, reanalysis2 = TRUE) {
     dem <- suppressWarnings(get_dem(rr, resolution = ress[i], zmin = zmin))
     dem.list[[i]] <- projectRaster(dem, crs = crs(r))
   }
+  if (tidyr & mean(res(r)) <= 30)
+    warning("raster tidying ignored as resolution <= 30")
+  if (tidyr & mean(res(r)) > 30) {
+    rx <- raster(extent(r))
+    res(rx) <- 30
+    crs(rx) <- crs(r)
+    rfine <- get_dem(rx, resolution = 30, zmin = zmin)
+    r <- tidydems(rfine, r)
+  }
+  dem.list[[i + 1]] <- r
+  for (j in 1:i) dem.list[[j]] <- tidydems(r, dem.list[[j]])
   cat("Computing coastal exposure \n")
   lsa.array <- array(NA, dim = c(dim(r)[1:2], steps))
   for (dct in 0:(steps - 1)) {
@@ -698,16 +724,13 @@ dailyprecipNCEP <- function(lat, long, tme, reanalysis2 = TRUE) {
       m[m == zmin] <- NA
       dem <- if_raster(m, dem)
       lsa <- invls(dem, extent(r), direction)
+      lsa[is.na(lsa)] <- 0
       lsm <- is_raster(lsa)
-      if (max(lsm, na.rm = T) > min(lsm, na.rm = T)) {
+      if (max(lsm) > min(lsm)) {
         xx<- resample(lsa, r)
-        mx <- mean(is_raster(xx), na.rm =T)
-        if  (is.na(mx)) {
-          xx2 <- resample(lsa, r, method = 'ngb')
-          ff <- round(ress[i] / (res(r) * 10), 0)
-          xx3 <-  aggregate(xx2, ff)
-          lsa.list[[i]] <- resample(xx3, r)
-        }  else lsa.list[[i]] <- xx
+        mx <- mean(is_raster(xx), na.rm = T)
+        if  (is.na(mx)) xx <- xx * 0 + mean(lsm, na.rm = T)
+        lsa.list[[i]] <- xx
       } else  {
         lsa.list[[i]] <- if_raster(array(mean(lsm, na.rm = T),
                                          dim = dim(r)[1:2]), r)
@@ -801,7 +824,8 @@ dailyprecipNCEP <- function(lat, long, tme, reanalysis2 = TRUE) {
 #' @param use.raster an optional logical value indicating whether to mask the output values by `landsea`.
 #' @param zmin optional assumed sea-level height. Values below this are set to zmin
 #' @param plot.progress logical value indicating whether to produce plots to track progress.
-#'
+#' @param tidyr logical value indicating whether to download 30m resolution digital elevation data
+#' and use these data to improve the assignment of land and sea pixels in `landsea`.
 #' @details coastalNCEP downloads digital elevation and varying resolutions to calculate
 #' coastal effects by applying a variant of [invls()] over a greater extent then that specified by landsea, but the resulting outputs are
 #' cropped to the same extent as landsea. Land temperatyres as a function of coastal exposure
@@ -825,13 +849,13 @@ dailyprecipNCEP <- function(lat, long, tme, reanalysis2 = TRUE) {
 #' # Calculate mean temperature and convert to raster
 #' mtemp <- if_raster(apply(aout, c(1, 2), mean), dtm100m)
 #' plot(mtemp, main = "Mean temperature")
-coastalNCEP <- function(landsea, ncephourly, steps = 8, use.raster = T, zmin = 0, plot.progress = T) {
+coastalNCEP <- function(landsea, ncephourly, steps = 8, use.raster = T, zmin = 0, plot.progress = T, tidyr = F) {
   bound <- function(x, mn = 0, mx = 1) {
     x[x < mn] <- mn
     x[x > mx] <- mx
     x
   }
-  lsr1 <- .invls.auto(landsea, steps, use.raster, zmin, plot.progress)
+  lsr1 <- .invls.auto(landsea, steps, use.raster, zmin, plot.progress, tidyr)
   lsr2 <- lsr1
   for (i in 1:steps) {
     mn <- i - 1

@@ -5,7 +5,7 @@
 \title{Calculates coastal exposure automatically}
 \usage{
 .invls.auto(r, steps = 8, use.raster = T, zmin = 0,
-  plot.progress = T)
+  plot.progress = T, tidyr = F)
 }
 \description{
 Calculates coastal exposure automatically
