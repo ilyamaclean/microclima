@@ -635,11 +635,11 @@ dailyprecipNCEP <- function(lat, long, tme, reanalysis2 = TRUE) {
                      elev = elev, elevncep = elevncep,
                      telev = lr * elev,
                      tcad = cadt)
-  tout
+  return(list(tout = tout, basins = basins, flowacc = flowacc))
 }
 #' Calculates coastal exposure automatically
 #' @export
-.invls.auto <- function(r, steps = 8, use.raster = T, zmin = 0, plot.progress = T, tidyr = F) {
+.invls.auto <- function(r, steps = 8, use.raster = T, zmin = 0, plot.progress = TRUE, tidyr = TRUE) {
   tidydems <- function(rfine, rc) {
     rfine[is.na(rfine)] <- zmin
     rc <- trim(rc)
