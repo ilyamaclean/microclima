@@ -639,12 +639,12 @@ dailyprecipNCEP <- function(lat, long, tme, reanalysis2 = TRUE) {
 }
 #' Calculates coastal exposure automatically
 #' @export
-.invls.auto <- function(r, steps = 8, use.raster = T, zmin = 0, plot.progress = TRUE, tidyr = TRUE) {
+.invls.auto <- function(r, steps = 8, use.raster = T, zmin = 0, plot.progress = TRUE, tidyr = FALSE) {
   tidydems <- function(rfine, rc) {
     rfine[is.na(rfine)] <- zmin
     rc <- trim(rc)
     aggf <- floor(mean(res(rc)[1:2]) / mean(res(rfine)))
-    if (aggf > 1) rfine2 <- aggregate(rfine, aggf, max)
+    if (aggf > 1) rfine2 <- suppressWarnings(aggregate(rfine, aggf, max))
     rfine2 <- resample(rfine2, rc)
     rfine2 <- crop(rfine2, extent(rfine))
     a <- array(-999, dim = dim(rfine2)[1:2])
@@ -727,7 +727,15 @@ dailyprecipNCEP <- function(lat, long, tme, reanalysis2 = TRUE) {
       lsa[is.na(lsa)] <- 0
       lsm <- is_raster(lsa)
       if (max(lsm) > min(lsm)) {
-        xx<- resample(lsa, r)
+        if (dim(lsm)[1] * dim(lsm)[2] < 5) {
+          r2 <- aggregate(r, 100)
+          xx<- resample(lsa, r2, method = "ngb")
+          xx <- resample(xx, r)
+          xx <- mask(xx, r)
+        } else {
+          xx <- resample(lsa, r)
+          x <- mask(xx, r)
+        }
         mx <- mean(is_raster(xx), na.rm = T)
         if  (is.na(mx)) xx <- xx * 0 + mean(lsm, na.rm = T)
         lsa.list[[i]] <- xx
