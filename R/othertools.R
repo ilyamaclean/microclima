@@ -102,7 +102,9 @@ invls <- function(landsea, e, direction) {
         xy <- data.frame(x = x + xdist, y = y + ydist)
         coordinates(xy) <- ~x + y
         lsc <- extract(slr, xy)
-        lsw[yy, xx] <- sum(lsc, na.rm = T) / length(lsc)
+        if(is.na(mean(lsc, na.rm = T))) {
+          lsw[yy, xx] <- 1
+        } else lsw[yy, xx] <- sum(lsc, na.rm = T) / length(lsc)
       }
     }
   }
