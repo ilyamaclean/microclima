@@ -645,8 +645,12 @@ dailyprecipNCEP <- function(lat, long, tme, reanalysis2 = TRUE) {
     rc <- trim(rc)
     aggf <- floor(mean(res(rc)[1:2]) / mean(res(rfine)))
     if (aggf > 1) rfine2 <- suppressWarnings(aggregate(rfine, aggf, max))
-    rfine2 <- resample(rfine2, rc)
+    rfine2 <- resample(rfine2, rc, method = 'ngb')
     rfine2 <- crop(rfine2, extent(rfine))
+    if (dim(rfine2)[1] * dim(rfine2)[2] == 1) {
+      xx <- mean(is_raster(rfine), na.rm = T)
+      rfine2 <- if_raster(as.matrix(xx), rfine2)
+    }
     a <- array(-999, dim = dim(rfine2)[1:2])
     rc2 <- raster(a)
     extent(rc2) <- extent(rfine2)
@@ -727,7 +731,7 @@ dailyprecipNCEP <- function(lat, long, tme, reanalysis2 = TRUE) {
       lsa[is.na(lsa)] <- 0
       lsm <- is_raster(lsa)
       if (max(lsm) > min(lsm)) {
-        if (dim(lsm)[1] * dim(lsm)[2] < 5) {
+        if (min(dim(lsm)) < 2) {
           r2 <- aggregate(r, 100)
           xx<- resample(lsa, r2, method = "ngb")
           xx <- resample(xx, r)

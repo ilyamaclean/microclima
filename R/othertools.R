@@ -87,6 +87,9 @@ invls <- function(landsea, e, direction) {
                     yres(landsea) * (e2@ymax - e2@ymin))
   resolution <- xres(landsea)
   slr <- landsea * 0 + 1
+  m <- is_raster(slr)
+  m[is.na(m)] <- 0
+  slr <- if_raster(m, slr)
   s <- c((8:1000) / 8) ^ 2 * resolution
   s <- s[s <= maxdist]
   lss <- crop(slr, e, snap = 'out')
@@ -94,7 +97,7 @@ invls <- function(landsea, e, direction) {
   lsw <- array(NA, dim = dim(lsm))
   for (yy in 1:dim(lsm)[1]) {
     for (xx in 1:dim(lsm)[2]) {
-      if (is.na(lsm[yy, xx]) == F) {
+      if (lsm[yy, xx] != 0) {
         x <- xx * resolution + e@xmin - resolution / 2
         y <- e@ymax + resolution / 2 - yy * resolution
         xdist <- round(s * sin(direction * pi / 180), 0)
@@ -102,9 +105,10 @@ invls <- function(landsea, e, direction) {
         xy <- data.frame(x = x + xdist, y = y + ydist)
         coordinates(xy) <- ~x + y
         lsc <- extract(slr, xy)
-        if(is.na(mean(lsc, na.rm = T))) {
-          lsw[yy, xx] <- 1
-        } else lsw[yy, xx] <- sum(lsc, na.rm = T) / length(lsc)
+        lsc <- lsc[is.na(lsc) == F]
+        if(length(lsc > 0)) {
+          lsw[yy, xx] <- sum(lsc, na.rm = T) / length(lsc)
+        } else lsw[yy, xx] <- 1
       }
     }
   }
