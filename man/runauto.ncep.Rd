@@ -122,7 +122,7 @@ it runs the microclimate model in hourly timesteps to generate an array oftemper
 }
 \examples{
 library(raster)
-library(NicheMapR) # Required - devtools:install_github('mrke/NicheMapR')
+require(NicheMapR) # Required - devtools:install_github('mrke/NicheMapR')
 # Get dem for Pico, Azores
 r <- get_dem(lat = 38.467429, long = -28.398995, resolution = 30)
 plot(r)

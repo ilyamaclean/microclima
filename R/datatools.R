@@ -1134,12 +1134,12 @@ microclimaforNMR <- function(lat, long, dstart, dfinish, l, x, coastal = TRUE, h
 #' (6) tmean: If `summarydata` is TRUE, a matrix of mean temperatures
 #' (7) frosthours: If `summarydata` is TRUE, a matrix of hours below 0 deg C.
 #'
-#' @import raster NicheMapR
+#' @import raster
 #' @export
 #'
 #' @examples
 #' library(raster)
-#' library(NicheMapR) # Required - devtools:install_github('mrke/NicheMapR')
+#' require(NicheMapR) # Required - devtools:install_github('mrke/NicheMapR')
 #' # Get dem for Pico, Azores
 #' r <- get_dem(lat = 38.467429, long = -28.398995, resolution = 30)
 #' plot(r)
@@ -2007,11 +2007,11 @@ runauto.ncep <- function(r, dstart, dfinish, hgt = 0.05, l, x, habitat = NA,
         hourlydata <- hourlyNCEP(ncepdata = ncepdata,
                                  lat, long, tme, TRUE)
         microclima.out <- microclimaforNMR(lat = longlat[2],
-                                            long = longlat[1], dstart = dstart, dfinish = dfinish,
-                                            l = mean(LAI), x = LOR, coastal = coastal, hourlydata = hourlydata,
-                                            dailyprecip = prate, dem = dem, demmeso = dem2, albr = REFL,
-                                            resolution = 30, zmin = 0, slope = slope, aspect = aspect,
-                                            windthresh = 4.5, emthresh = 0.78)
+                                           long = longlat[1], dstart = dstart, dfinish = dfinish,
+                                           l = mean(LAI), x = LOR, coastal = coastal, hourlydata = hourlydata,
+                                           dailyprecip = prate, dem = dem, demmeso = dem2, albr = REFL,
+                                           resolution = 30, zmin = 0, slope = slope, aspect = aspect,
+                                           windthresh = 4.5, emthresh = 0.78)
         dailyrain <- microclima.out$dailyprecip[-c(1:4)]
         dailyrain <- dailyrain[1:(length(dailyrain) -
                                     4)]
@@ -2019,11 +2019,11 @@ runauto.ncep <- function(r, dstart, dfinish, hgt = 0.05, l, x, habitat = NA,
                                                                                    nrow(hourlydata), 6)], "%Y-%m-%d")), sum)$x
       } else {
         microclima.out <- microclimaforNMR(lat = longlat[2],
-                                            long = longlat[1], dstart = dstart, dfinish = dfinish,
-                                            l = mean(LAI), x = LOR, coastal = coastal, hourlydata = NA, dailyprecip = NA,
-                                            dem = dem, demmeso = dem2, albr = REFL, resolution = 30, zmin = 0,
-                                            slope = slope, aspect = aspect, windthresh = 4.5,
-                                            emthresh = 0.78)
+                                           long = longlat[1], dstart = dstart, dfinish = dfinish,
+                                           l = mean(LAI), x = LOR, coastal = coastal, hourlydata = NA, dailyprecip = NA,
+                                           dem = dem, demmeso = dem2, albr = REFL, resolution = 30, zmin = 0,
+                                           slope = slope, aspect = aspect, windthresh = 4.5,
+                                           emthresh = 0.78)
         hourlydata <- microclima.out$hourlydata
         dailyrain <- microclima.out$dailyprecip
       }
