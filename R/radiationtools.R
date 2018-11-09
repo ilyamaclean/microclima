@@ -824,7 +824,7 @@ shortwavetopo <- function(dni, dif, julian, localtime, lat = NA, long = NA,
 #' @param svv an optional raster object, two-dimensional array or matrix of values representing the proportion of isotropic radiation received by a surface partially obscured by topography relative to the full hemisphere underneath vegetation as returned by [skyviewveg()].
 #' @param albg an optional single value, raster object, two-dimensional array or matrix of values representing the albedo(s) of the ground as returned by [albedo2()].
 #' @param fr a raster object, two-dimensional array or matrix of fractional canopy cover as returned by [canopy()].
-#' @param albr albr an optional single value, raster object, two-dimensional array or matrix of values representing the albedo(s) of adjacent surfaces as returned by [albedo_reflected()].
+#' @param albr an optional single value, raster object, two-dimensional array or matrix of values representing the albedo(s) of adjacent surfaces as returned by [albedo_reflected()].
 #' @param ha an optional raster object, two-dimensional array or matrix of values representing the mean slope to the horizon (decimal degrees) of surrounding surfaces from which radiation is reflected for each cell of `dtm` as returned by [mean_slope()].
 #' @param res a single numeric value representing the spatial resolution of `dtm` (m).
 #' @param merid an optional single numeric value representing the longitude (decimal degrees) of the local time zone meridian (0 for UK time).

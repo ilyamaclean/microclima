@@ -37,7 +37,8 @@ RoxygenNote: 6.1.0
 Roxygen: list(markdown = TRUE) 
 Suggests: knitr,
     NicheMapR,
-    rmarkdown
+    rmarkdown,
+    plotly
 VignetteBuilder: knitr
 URL: https://github.com/ilyamaclean/microclima
 BugReports: http://github.com/microclima/issues

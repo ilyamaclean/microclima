@@ -4,7 +4,7 @@
 \alias{runmicro}
 \title{Runs micro- or mesoclimate model}
 \usage{
-runmicro(params, netrad, wind)
+runmicro(params, netrad, wind, continious = FALSE)
 }
 \arguments{
 \item{params}{a data.frame of parameter estimates as produced by \code{\link[=fitmicro]{fitmicro()}}}
@@ -12,12 +12,14 @@ runmicro(params, netrad, wind)
 \item{netrad}{a raster object, two-dimensional array or matrix of downscaled net radiation as produced by \code{\link[=shortwaveveg]{shortwaveveg()}} - \code{\link[=longwaveveg]{longwaveveg()}} or \code{\link[=shortwavetopo]{shortwavetopo()}} - \code{\link[=longwavetopo]{longwavetopo()}}.}
 
 \item{wind}{a raster object, two-dimensional array or matrix of downscaled wind speed, as produced by reference wind speed x the output of \code{\link[=windcoef]{windcoef()}}.}
+
+\item{continious}{an optional logical value indicating whether the model was fitted by treating wind speed as a continious variable.}
 }
 \value{
 a raster object, two-dimensional array or matrix of temperature anomolies from reference temperature, normally in ºC, but units depend on those used in \code{\link[=fitmicro]{fitmicro()}}.
 }
 \description{
-\code{microrun} produces a high-resolution dataset of downscaled
+\code{runmicro} produces a high-resolution dataset of downscaled
 temperatures for one time interval
 }
 \details{
@@ -152,4 +154,7 @@ anom <- runmicro(params, netrad, ws)
 tc <- tc + anom
 plot(mask(tc, dtm100m), main =
      expression(paste("Mesoclimate temperature ",(~degree~C))))
+}
+\seealso{
+\code{\link[=fitmicro]{fitmicro()}}
 }

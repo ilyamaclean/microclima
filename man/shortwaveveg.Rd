@@ -34,7 +34,7 @@ shortwaveveg(dni, dif, julian, localtime, lat = NA, long = NA,
 
 \item{fr}{a raster object, two-dimensional array or matrix of fractional canopy cover as returned by \code{\link[=canopy]{canopy()}}.}
 
-\item{albr}{albr an optional single value, raster object, two-dimensional array or matrix of values representing the albedo(s) of adjacent surfaces as returned by \code{\link[=albedo_reflected]{albedo_reflected()}}.}
+\item{albr}{an optional single value, raster object, two-dimensional array or matrix of values representing the albedo(s) of adjacent surfaces as returned by \code{\link[=albedo_reflected]{albedo_reflected()}}.}
 
 \item{ha}{an optional raster object, two-dimensional array or matrix of values representing the mean slope to the horizon (decimal degrees) of surrounding surfaces from which radiation is reflected for each cell of \code{dtm} as returned by \code{\link[=mean_slope]{mean_slope()}}.}
 

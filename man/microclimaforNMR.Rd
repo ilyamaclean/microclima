@@ -4,10 +4,12 @@
 \alias{microclimaforNMR}
 \title{Extract NCEP data and run microclima for use with NicheMapR}
 \usage{
-microclimaforNMR(lat, long, dstart, dfinish, l, x, hourlydata = NA,
-  dailyprecip = NA, dem = NA, albr = 0.15, resolution = 30,
-  zmin = 0, slope = NA, aspect = NA, windthresh = 4.5,
-  emthresh = 0.78, reanalysis2 = TRUE)
+microclimaforNMR(lat, long, dstart, dfinish, l, x, coastal = TRUE,
+  hourlydata = NA, dailyprecip = NA, dem = NA, demmeso = dem,
+  albr = 0.15, resolution = 100, zmin = 0, slope = NA,
+  aspect = NA, windthresh = 4.5, emthresh = 0.78,
+  reanalysis2 = TRUE, steps = 8, use.raster = TRUE,
+  plot.progress = TRUE, tidyr = FALSE)
 }
 \arguments{
 \item{lat}{the latitude (in decimal degrees) of the location for point data are required.}
@@ -23,15 +25,20 @@ microclimaforNMR(lat, long, dstart, dfinish, l, x, hourlydata = NA,
 \item{x}{a single numeric value representing the ratio of vertical to horizontal
 projections of leaf foliage for the location (see details).}
 
+\item{coastal}{an optional logical value indicating whether to calculate coastal effects using \code{\link[=coastalNCEP]{coastalNCEP()}}.}
+
 \item{hourlydata}{an optional data frame of ourly weather and radiation data as returned
 by function \code{\link[=hourlyNCEP]{hourlyNCEP()}}. Function called if data not provided.}
 
 \item{dailyprecip}{an optional data frame of ourly weather and radiation data as returned
 by function \code{\link[=dailyprecipNCEP]{dailyprecipNCEP()}}. Function called if data not provided.}
 
-\item{dem}{optional raster object of elevations covering the location for which point
+\item{dem}{an ptional raster object of elevations covering the location for which point
 data are required. If not provided, one is downloaded from the registry of Open
-Data on AWS.}
+Data on AWS. Used to calculate coastal, wind and radiation effects}
+
+\item{demmeso}{an optional raster object of elevations covering the location for which point
+data are required. Used to calculate elevation and cold air drainage effects.}
 
 \item{albr}{albedo of ground surface from which radiation is reflected (see details)}
 
@@ -53,6 +60,14 @@ assumed not to occur}
 
 \item{reanalysis2}{Logical. Should data be obtained from the Reanalysis II dataset (default) or
 from Reanalysis I (data prior to 1979).}
+
+\item{steps}{an optional integer. Coastal effects are calculated in specified directions upwind. Steps defines the total number of directions used. If the default 8 is specified, coastal effects are calculated at 45º intervals.}
+
+\item{use.raster}{an optional logical value indicating whether to mask the output values by \code{landsea}.}
+
+\item{plot.progress}{logical value indicating whether to produce plots to track progress.}
+
+\item{tidyr}{logical value indicating whether to download 30m resolution digital elevation data.}
 }
 \value{
 a list with the following objects:
@@ -80,6 +95,13 @@ applying \code{\link[=lapserate]{lapserate()}}. (v) \code{tcad} the expected dif
 air drainage effects, determined using \code{\link[=pcad]{pcad()}} and \code{\link[=cadconditions]{cadconditions()}}.
 
 (4) \code{dailyprecip} a vector of daily rainfalls derived from NCEP.
+
+(5) \code{acoast} an array of temperatures that account for coastal effects for each
+pixel of \code{dem} and each hour of hourlydata.
+
+(6) \code{basins} a raster object of basins used for calculating cold air drainage.
+
+(7) \code{flowacc} a raster object of accumulated flow.
 }
 \description{
 Extract NCEP data and run microclima for use with NicheMapR
@@ -95,7 +117,7 @@ and canopy effects must be specified by the user, and their effect on radiation
 are more simplistically modelled than by \code{microclima}.
 }
 \examples{
-mnr <- microclimaforNMR(50, -5.2, '15/01/2015', '15/02/2015', 1, 1)
+mnr <- microclimaforNMR(50, -5.2, '15/01/2015', '15/02/2015', 1, 1, coastal = FALSE)
 head(mnr$hourlydata)
 head(mnr$hourlyradwind)
 head(mnr$tref)
@@ -107,5 +129,6 @@ modelling: the microclimate model. Ecography 40: 664-674.
 }
 \seealso{
 Function \code{\link[=get_dem]{get_dem()}} for retrieving digital elevation data and
-\code{\link[=hourlyNCEP]{hourlyNCEP()}} for retrieving and processing hourly data from NCEP.
+\code{\link[=hourlyNCEP]{hourlyNCEP()}} for retrieving and processing hourly data from NCEP and
+\code{\link[=coastalNCEP]{coastalNCEP()}} for retrieving and processing coastal effects.
 }

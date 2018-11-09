@@ -90,7 +90,7 @@ invls <- function(landsea, e, direction) {
   m <- is_raster(slr)
   m[is.na(m)] <- 0
   slr <- if_raster(m, slr)
-  s <- c((8:1000) / 8) ^ 2 * resolution
+  s <- c(0, (8:1000) / 8) ^ 2 * resolution
   s <- s[s <= maxdist]
   lss <- crop(slr, e, snap = 'out')
   lsm <- getValues(lss, format = "matrix")
@@ -105,6 +105,7 @@ invls <- function(landsea, e, direction) {
         xy <- data.frame(x = x + xdist, y = y + ydist)
         coordinates(xy) <- ~x + y
         lsc <- extract(slr, xy)
+        lsc[1] <- 1
         lsc <- lsc[is.na(lsc) == F]
         if(length(lsc > 0)) {
           lsw[yy, xx] <- sum(lsc, na.rm = T) / length(lsc)
@@ -544,6 +545,7 @@ arrayspline <- function(a, tme, nfact = 24, out = NA) {
 #' }
 #' @param alldata an optional logical value indicating whether to fit the model using all data (TRUE) or using a randomization procedure (FALSE). See details.
 #' @param windthresh an optional single numeric value indicating the threshold wind speed above which an alternative linear relationship between net radiation the microclimate temperature anomoly is fitted. See details.
+#' @param continious an optional logical value indicating whether to treat wind speed as a continious variable.
 #' @param iter a single integer specifying the iterations to perform during randomization. Ignored if `alldata` = TRUE.
 #'
 #' @return a data,frame with the following columns:
@@ -571,22 +573,25 @@ arrayspline <- function(a, tme, nfact = 24, out = NA) {
 #' to vegetation, assuming the canopy to act like a surface, while air density
 #' and the specific heat of air at constant pressure are constant, the slope
 #' varies as a function of a wind speed factor, such that different slope values
-#' are assumed under high and low wind conditions.  Hence, `fitmicro` fits a
-#' linear model of the form `lm((temperature - reftemp) ~ netrad * windfact)`
-#' where windfact is given by `ifelse(wind > windthresh, 1, 0)`. If all data is
-#' FALSE, random subsets of the data are selected and the analyses repeated
+#' are assumed under high and low wind conditions.  Hence, as a default, `fitmicro`
+#' fits a linear model of the form `lm((temperature - reftemp) ~ netrad * windfact)`
+#' where windfact is given by `ifelse(wind > windthresh, 1, 0)` If `continious` is
+#' set to TRUE, then a linear model of the form `lm((temperature - reftemp) ~ netrad * log(wind + 1)`
+#' is fitted. If `alldata` is FALSE, random subsets of the data are selected and the analyses repeated
 #' `iter` times to reduce the effects of of temporal autocorrelation. Parameter
-#' estimates are derived as the median of all runs. If no value is provided for `windthresh`,
-#' it is derived by iteratively trying out different values, and selecting that which
-#' yields the best fit. The gradient of the relationship is also dependent on
-#' vegetation structure, and in some circumstances it may therefore be advisable
-#' to fit seperate models for each vegetation type.
+#' estimates are derived as the median of all runs. If `continious` is set to FALSE
+#' and no value is provided for `windthresh`, it is derived by iteratively trying out
+#' different values, and selecting that which yields the best fit. The gradient of
+#' the relationship is also dependent on vegetation structure, and in some
+#' circumstances it may therefore be advisable to fit seperate models for each
+#' vegetation type.
 #'
 #' @examples
 #' fitmicro(microfitdata)
 #' fitmicro(mesofitdata, alldata = TRUE)
+#' fitmicro(mesofitdata, alldata = TRUE, continious = TRUE)
 fitmicro <- function(microfitdata, alldata = FALSE, windthresh = NA,
-                     iter = 999) {
+                     continious = FALSE, iter = 999) {
   pvals <- function(x) {
     iter <- length(x)
     d <- floor(log(iter, 10))
@@ -595,8 +600,9 @@ fitmicro <- function(microfitdata, alldata = FALSE, windthresh = NA,
     p <- round(p * 2, d)
     p
   }
+  wthresh <- NA
   microfitdata$anom <- microfitdata$temperature - microfitdata$reftemp
-  if (is.na(windthresh)) {
+  if (is.na(windthresh) & continious == FALSE) {
     wrange <- floor(max(microfitdata$wind) - min(microfitdata$wind))
     rsq <- 0
     for (i in 1:100 * wrange) {
@@ -607,13 +613,16 @@ fitmicro <- function(microfitdata, alldata = FALSE, windthresh = NA,
     wthresh <- which(rsq == max(rsq, na.rm = TRUE)) / 100
   }
   if (alldata) {
-    wf <- ifelse(microfitdata$wind > wthresh, 1, 0)
-    m1 <- summary(lm(microfitdata$anom ~ wf * microfitdata$netrad))
+    if (continious) {
+      m1 <- summary(lm(anom ~ log(wind + 1) * netrad, data = microfitdata))
+    } else {
+      wf <- ifelse(microfitdata$wind > wthresh, 1, 0)
+      m1 <- summary(lm(microfitdata$anom ~ wf * microfitdata$netrad))
+    }
     mdns <- as.vector(m1$coef[, 1])
     sds <-  as.vector(m1$coef[, 2]) * sqrt(dim(microfitdata)[1])
     pvs <- as.vector(m1$coef[, 4])
-  }
-  else {
+  } else {
     ln <- round(dim(microfitdata)[1] / 100, 0) * 10
     pint <- 0
     pwf <-0
@@ -622,8 +631,13 @@ fitmicro <- function(microfitdata, alldata = FALSE, windthresh = NA,
     for (i in 1:iter) {
       u <- round(runif(ln, 1, dim(microfitdata)[1]), 0)
       one.iter <- microfitdata[u, ]
-      wf <- ifelse(one.iter$wind > wthresh, 1, 0)
-      m1 <- lm(one.iter$anom ~ wf * one.iter$netrad)
+      if (continious == F) {
+        wf <- ifelse(one.iter$wind > wthresh, 1, 0)
+        m1 <- lm(one.iter$anom ~ wf * one.iter$netrad)
+      } else {
+        lw <- log(one.iter$wind + 1)
+        m1 <- lm(one.iter$anom ~ lw * one.iter$netrad)
+      }
       pint[i] <- m1$coef[1]
       pwf[i] <- m1$coef[2]
       pnr[i] <- m1$coef[3]
@@ -639,20 +653,28 @@ fitmicro <- function(microfitdata, alldata = FALSE, windthresh = NA,
                        P = c(pvs, ""))
   row.names(params) <- c("Intercept", "Wind factor", "Net radiation",
                          "Wind factor:Net radiation", "Wind threshold")
+  if (continious) {
+    row.names(params)[2] <- "wind"
+    row.names(params)[5] <- ""
+    params$Estimate[5] <- ""
+  }
+  params$Estimate <- as.numeric(params$Estimate)
   params
 }
 #' Runs micro- or mesoclimate model
 #'
-#' @description `microrun` produces a high-resolution dataset of downscaled
+#' @description `runmicro` produces a high-resolution dataset of downscaled
 #' temperatures for one time interval
 #'
 #' @param params a data.frame of parameter estimates as produced by [fitmicro()]
 #' @param netrad a raster object, two-dimensional array or matrix of downscaled net radiation as produced by [shortwaveveg()] - [longwaveveg()] or [shortwavetopo()] - [longwavetopo()].
 #' @param wind a raster object, two-dimensional array or matrix of downscaled wind speed, as produced by reference wind speed x the output of [windcoef()].
-#'
+#' @param continious an optional logical value indicating whether the model was fitted by treating wind speed as a continious variable.
+
 #' @return a raster object, two-dimensional array or matrix of temperature anomolies from reference temperature, normally in ºC, but units depend on those used in [fitmicro()].
 #' @import raster
 #' @export
+#' @seealso [fitmicro()]
 #'
 #' @details
 #' If `netrad` is a raster object, a raster object is returned.
@@ -786,12 +808,462 @@ fitmicro <- function(microfitdata, alldata = FALSE, windthresh = NA,
 #' tc <- tc + anom
 #' plot(mask(tc, dtm100m), main =
 #'      expression(paste("Mesoclimate temperature ",(~degree~C))))
-runmicro <- function(params, netrad, wind) {
+runmicro <- function(params, netrad, wind, continious = FALSE) {
   r <- netrad
   netrad <- is_raster(netrad)
   wind <- is_raster(wind)
-  wf <- ifelse(wind > params[5, 1], 1, 0)
-  temp <- params[1, 1] + params[2, 1] * wf + params[3, 1] * netrad +
-    params[4, 1] * wf * netrad
+  if (continious) {
+    temp <- params[1, 1] + params[2, 1] * log(wind + 1) + params[3, 1] * netrad +
+      params[4, 1] * log(wind + 1) * netrad
+  } else {
+    wf <- ifelse(wind > params[5, 1], 1, 0)
+    temp <- params[1, 1] + params[2, 1] * wf + params[3, 1] * netrad +
+      params[4, 1] * wf * netrad
+  }
   if_raster(temp, r)
 }
+#' Derives parameters for fitting soil temperatures
+#' @export
+.fitsoil <- function(soil0, soil200, nmrsoil) {
+  fitsoilone <- function(soil0, soil200, nmrsoil, x1, x2) {
+    pred <- nmrsoil[1]
+    for (i in 2:length(nmrsoil)) {
+      heatdown <-  (soil0[i - 1] - pred[i - 1])
+      heatup <-  (soil200 - pred[i -1])
+      pred[i] <- pred[i-1] + x1 * heatdown + x2 * heatup
+    }
+    difs <- abs(nmrsoil - pred)
+    sum(difs)
+  }
+  fitloop <- function(xs1, xs2, x1add, x2add) {
+    dfa <- data.frame(x1 = 0, x2 = 0, dif = 0)
+    for (ii in 1:length(xs1)) {
+      for (jj in 1:length(xs2)) {
+        x1 <- xs1[ii] + x1add
+        x2 <- xs2[jj] + x2add
+        dif <- fitsoilone(soil0, soil200, nmrsoil, x1, x2)
+        df1 <- data.frame(x1 = x1, x2 = x2, dif = dif)
+        dfa <- rbind(dfa, df1)
+      }
+    }
+    dfa <- dfa[-1,]
+    sel <- which(dfa$dif == min(dfa$dif, na.rm = T))
+    dfa[sel,]
+  }
+  xs1 <- c(0:10)
+  xs2 <- c(0:10)
+  dfo <- fitloop(xs1, xs2, 0, 0)
+  if (dfo$x1 > 0 ) {
+    xs1 <- c(-10:10) / 10
+  } else xs1 <- c(0:10) / 10
+  if (dfo$x2 > 0 ) {
+    xs2 <- c(-10:10) / 10
+  } else xs2 <- c(0:10) / 10
+  dfo <- fitloop(xs1, xs2, dfo$x1, dfo$x2)
+  if (dfo$x1 > 0 ) {
+    xs1 <- c(-10:10) / 100
+  } else xs1 <- c(0:10) / 100
+  if (dfo$x2 > 0 ) {
+    xs2 <- c(-10:10) / 100
+  } else xs2 <- c(0:10) / 100
+  dfo <- fitloop(xs1, xs2, dfo$x1, dfo$x2)
+  if (dfo$x1 > 0 ) {
+    xs1 <- c(-10:10) / 1000
+  } else xs1 <- c(0:10) / 1000
+  if (dfo$x2 > 0 ) {
+    xs2 <- c(-10:10) / 1000
+  } else xs2 <- c(0:10) / 1000
+  dfo <- fitloop(xs1, xs2, dfo$x1, dfo$x2)
+  if (dfo$x1 > 0 ) {
+    xs1 <- c(-10:10) / 10000
+  } else xs1 <- c(0:10) / 10000
+  if (dfo$x2 > 0 ) {
+    xs2 <- c(-10:10) / 10000
+  } else xs2 <- c(0:10) / 10000
+  dfo <- fitloop(xs1, xs2, dfo$x1, dfo$x2)
+  if (dfo$x1 > 0 ) {
+    xs1 <- c(-10:10) / 100000
+  } else xs1 <- c(0:10) / 100000
+  if (dfo$x2 > 0 ) {
+    xs2 <- c(-10:10) / 100000
+  } else xs2 <- c(0:10) / 100000
+  dfo <- fitloop(xs1, xs2, dfo$x1, dfo$x2)
+  dfo
+}
+#' Derives leaf area index, leaf geometry and canopy height from habitat
+#'
+#' @description `laifromhabitat` generates an hourly dataset for an entire year of
+#' leaf area index values, the ratio of vertical to horizontal projections of leaf
+#' foliage and canopy height from habitat.
+#'
+#' @param habitat a character string or numeric value indicating the habitat type. See [habitats()]
+#' @param lat a single numeric value representing the mean latitude of the location for which the solar index is required (decimal degrees, -ve south of the equator).
+#' @param long a single numeric value representing the mean longitude of the location for which the solar index is required (decimal degrees, -ve west of Greenwich meridian).
+#' @param meantemp an optional numeric value of mean annual temperature (ºC) at reference height.
+#' @param cvtemp an optional numeric value of the coefficient of variation in temperature (K per 0.25 days) at reference height.
+#' @param rainfall an optional numeric value mean annual rainfall (mm per year)
+#' @param cvrain an optional numeric value of the coefficient of variation in raifall (mm per 0.25 days) at reference height.
+#' @param wetmonth an optional numeric value indicating which month is wettest (1-12).
+#' @param year the year for which data are required.
+
+#' @return a list with the following items, (1) lai: hourly leaf area index values,
+#' (2) x: the ratio of vertical to horizontal projections of leaf foliage,
+#' (3) height: the heigbht of the canopy in metres and (4) obs_time: an object of
+#' class POSIXlt of dates and times coressponding to each value of lai.
+#' @export
+#' @seealso [lai()], [leaf_geometry()]
+#'
+#' @details
+#' If no values of `meantemp`, `cvtemp`, `rainfall`, `cvrain` or `wetmonth` are
+#' provided, values are obtained from [globalclimate()]. Variable `lai` is derived by fitting
+#' a Gaussian curve parameters of which are climate and location-dependent. Functional
+#' fits were calibrated using MODIS data (see https://modis.gsfc.nasa.gov/data/).
+#'
+#' @examples
+#' lxh <- laifromhabitat("Deciduous broadleaf forest", 50, -5.2, 2015)
+#' lxh$height
+#' lxh$x
+#' plot(lxh$lai ~ as.POSIXct(lxh$obs_time), type = "l", xlab = "Month",
+#'      ylab = "LAI", ylim = c(0, 6))
+
+laifromhabitat <- function(habitat, lat, long, year, meantemp = NA, cvtemp = NA,
+                           rainfall = NA, cvrain = NA, wetmonth = NA) {
+  laigaus <- function(minlai, maxlai, pkday, dhalf, yr) {
+    diy <- 365
+    sdev <- 0.0082 * dhalf^2 + 0.0717 * dhalf + 13.285
+    difv <- maxlai - minlai
+    x<-c(-diy:diy)
+    y <- 1 / (sdev * sqrt(2 * pi)) * exp(-0.5 * (((x - 0) / sdev) ^ 2))
+    y[(diy + ceiling(0.5 * diy)):(2 * diy + 1)] <- y[(diy - ceiling(0.5 * diy)):diy]
+    st <- diy + 1 - pkday
+    y <- y[st:(st + diy - 1)]
+    x <- c(1:diy)
+    x <- c(0, x, c(366:375))
+    y <- c(y[diy], y, y[1:10])
+    sel <-c(0:15) * 25 + 1
+    x<-x[sel]
+    y<-y[sel]
+    tme <- as.POSIXct((x * 24 * 3600), origin = paste0(yr - 1,"-12-31 12:00"), tz = "GMT")
+    xy <- spline(tme, y, n = diy * 24 + 241)
+    tme2 <- as.POSIXlt(xy$x, origin = "1970-01-01 00:00", tz = "GMT")
+    sel <- which(tme2$year + 1900 == yr)
+    y <- xy$y[sel]
+    dify <- max(y) - min(y)
+    y <- y * (difv / dify)
+    y <- y + minlai - min(y)
+    return(y)
+  }
+  long <- ifelse(long > 180.9375, long - 360, long)
+  long <- ifelse(long < -179.0625, long + 360, long)
+  ll <- SpatialPoints(data.frame(x = long, y = lat))
+  diy <- 366
+  if (year%%4 == 0) diy <- 366
+  if (year%%100 == 0 & year%%400 != 0) diy <- 365
+  mmonth <-c(16, 45.5, 75, 105.5, 136, 166.5, 197, 228, 258.5, 289, 319.5, 350)
+  if (diy == 365) mmonth[2:12] <- mmonth[2:12] + 0.5
+  e <- extent(c(-179.0625, 180.9375, -89.49406, 89.49406))
+  clim <- c(meantemp, cvtemp, rainfall, cvrain, wetmonth)
+  for (i in 1:5) {
+    if (is.na(clim[i])) {
+      r <- raster(globalclimate[,,i])
+      extent(r) <- e
+      clim[i] <- extract(r, ll)
+    }
+  }
+  wgts <- function(x1, x2, ll, lmn, lmx) {
+    ll <- ifelse(ll < lmn, lmn, lat)
+    ll <- ifelse(ll > lmx, lmx, lat)
+    w <- 1 - (abs(ll - lmn)  / (abs(ll - lmn)  + abs(ll - lmx)))
+    y <- w * x1 + (1 - w) * x2
+    y
+  }
+  # By habitat type
+  if (habitat == "Evergreen needleleaf forest" | habitat == 1) {
+    h2 <- 74.02 + 5.35 * clim[1]
+    h1 <-  203.22 - 35.63 * clim[4]
+    hperiod <- wgts(h1, h2, abs(lat), 0, 20)
+    hperiod <- ifelse(hperiod < 50, 50, hperiod)
+    p2 <- 216.71 - 2.65 * clim[1]
+    p2 <- ifelse(p2 > 244, 244, p2)
+    if (lat < 0) p2 <- (p2 + diy / 2)%%diy
+    p1 <- mmonth[round(clim[5], 0)]
+    peakdoy <- wgts(p1, p2, abs(lat), 0, 30)
+    if (clim[1] <= 20) {
+      maxlai <- 2.33 + 0.0132 * clim[1]
+    } else maxlai <- 2.33 + 0.0132 * 20
+    minlai <- 1.01
+    x <- 0.4
+    hgt <- 10
+  }
+  if (habitat == "Evergreen Broadleaf forest" | habitat == 2) {
+    hperiod <-  154.505 + 2.040 * clim[1]
+    hperiod <- ifelse(hperiod < 50, 50, hperiod)
+    peakdoy <- peakdoy <- mmonth[round(clim[5], 0)]
+    maxlai <- 1.83 + 0.22 * log(clim[3])
+    minlai <- (-1.09) + 0.4030 * log(clim[3])
+    minlai <- ifelse(minlai < 1, 1, minlai)
+    x <- 1.2
+    hgt <- 20
+  }
+  if (habitat == "Deciduous needleleaf forest" | habitat == 3) {
+    h2 <- 51.18 + 3.77  * clim[1]
+    h1 <- 152
+    hperiod <- wgts(h1, h2, abs(lat), 0, 20)
+    p2 <- 204.97 - 1.08 * clim[1]
+    p2 <- ifelse(p2 > 244, 244, p2)
+    if (lat < 0) p2 <- (p2 + diy / 2)%%diy
+    p1 <- mmonth[round(clim[5], 0)]
+    peakdoy <- wgts(p1, p2, abs(lat), 0, 30)
+    if (clim[1] <= 20) {
+      maxlai <-  2.62 + 0.05 * clim[1]
+    } else maxlai <- 2.62 + 0.05 * 20
+    minlai <- 0.39
+    x <- 0.4
+    hgt <- 10
+  }
+  if (habitat == "Deciduous broadleaf forest" | habitat == 4) {
+    h2 <- 47.6380 + 2.9232 * clim[1]
+    h1 <- 220.06 - 79.19 * clim[4]
+    hperiod <- wgts(h1, h2, abs(lat), 0, 20)
+    hperiod <- ifelse(hperiod < 32.5, 32.5, hperiod)
+    p2 <- 209.760 - 1.208 * clim[1]
+    p2 <- ifelse(p2 > 244, 244, p2)
+    if (lat < 0) p2 <- (p2 + diy / 2)%%diy
+    p1 <- mmonth[round(clim[5], 0)]
+    peakdoy <- wgts(p1, p2, abs(lat), 0, 30)
+    if (clim[1] <= 20) {
+      maxlai <- 3.98795 + 0.03330 * clim[1]
+    } else maxlai <- 3.98795 * 0.03330 * 20
+    minlai <- 0.4808
+    x <- 1.2
+    hgt <- 15
+  }
+  if (habitat == "Mixed forest" | habitat == 5) {
+    warning("Results highly sensitive to forest composition. Suggest running
+            seperately for constituent forest types and weighting output")
+    h2 <- 74.02 + 5.35 * clim[1]
+    h1 <-  203.22 - 35.63 * clim[4]
+    hperiod1 <- wgts(h1, h2, abs(lat), 0, 20)
+    h2 <- 51.18 +  3.77  * clim[1]
+    h1 <-  152
+    hperiod2 <- wgts(h1, h2, abs(lat), 0, 20)
+    hperiod <- (hperiod1 + hperiod2) / 2
+    hperiod <- ifelse(hperiod < 30.5, 30.5, hperiod)
+    p2 <- 216.71 - 2.65 * clim[1]
+    p2 <- ifelse(p2 > 244, 244, p2)
+    if (lat < 0) p2 <- (p2 + diy / 2)%%diy
+    p1 <- mmonth[round(clim[5], 0)]
+    peakdoy1 <- wgts(p1, p2, abs(lat), 0, 30)
+    p2 <-  204.97 - -1.08 * clim[1]
+    p2 <- ifelse(p2 > 244, 244, p2)
+    if (lat < 0) p2 <- (p2 + diy / 2)%%diy
+    peakdoy2 <- wgts(p1, p2, abs(lat), 0, 30)
+    peakdoy <- (peakdoy1 + peakdoy2) / 2
+    if (clim[1] <= 20) {
+      maxlai1 <- 2.33 + 0.0132 * clim[1]
+      maxlai2 <-  2.62 + 0.05 * clim[1]
+      maxlai <- (maxlai1 + maxlai2) / 2
+    } else maxlai <- 3.107
+    minlai <- 0.7
+    x <- 0.8
+    hgt <- 10
+  }
+  if (habitat == "Closed shrublands" | habitat == 6) {
+    h2 <- 33.867 + 6.324 * clim[1]
+    h1 <-  284.20 - 102.51 * clim[4]
+    hperiod <- wgts(h1, h2, abs(lat), 0, 20)
+    hperiod <- ifelse(hperiod < 30.5, 30.5, hperiod)
+    p2 <- 223.55 - 3.125 * clim[1]
+    p2 <- ifelse(p2 > 244, 244, p2)
+    if (lat < 0) p2 <- (p2 + diy / 2)%%diy
+    p1 <- mmonth[round(clim[5], 0)]
+    peakdoy <- wgts(p1, p2, abs(lat), 0, 30)
+    maxlai <- 2.34
+    minlai <- -0.4790 + 0.1450 * log(clim[3])
+    minlai <- ifelse(minlai < 0.001, 0.001, minlai)
+    x <- 1
+    hgt <- 2
+  }
+  if (habitat == "Open shrublands" | habitat == 7) {
+    h2 <- 8.908 + 4.907 * clim[1]
+    h1 <-  210.09 - 28.62 * clim[4]
+    hperiod <- wgts(h1, h2, abs(lat), 0, 20)
+    hperiod <- ifelse(hperiod < 38.3, 38.3, hperiod)
+    p2 <- 211.7 - 4.085 * clim[1]
+    p2 <- ifelse(p2 > 244, 244, p2)
+    if (lat < 0) p2 <- (p2 + diy / 2)%%diy
+    p1 <- mmonth[round(clim[5], 0)]
+    peakdoy <- wgts(p1, p2, abs(lat), 0, 30)
+    maxlai <- -0.7206 + 0.272 * log(clim[3])
+    minlai <- -0.146 +  0.059 * log(clim[3])
+    minlai <- ifelse(minlai < 0.001, 0.001, minlai)
+    x <- 0.7
+    hgt <- 1.5
+  }
+  if (habitat == "Woody savannas" | habitat == 8) {
+    hperiod1 <-  47.6380 + 2.9232 * clim[1]
+    hperiod1 <- ifelse(hperiod1 < 32.5, 32.5, hperiod1)
+    hperiod2 <- 71.72 + 3.012 * clim[1]
+    h1 <- (hperiod1 + hperiod2) / 2
+    h2 <- 282.04 - 92.28 * clim[4]
+    h2 <- ifelse(hperiod1 < 31.9, 31.9, hperiod1)
+    hperiod <- wgts(h1, h2, abs(lat), 25, 35)
+    peakdoy1 <- 209.760 - 1.208 * clim[1]
+    peakdoy1 <- ifelse(peakdoy1 > 244, 244, peakdoy1)
+    if (lat < 0)  peakdoy1 <- ( peakdoy1 + diy / 2)%%diy
+    peakdoy2 <- 211.98 - 3.4371 * clim[1]
+    peakdoy2 <- ifelse(peakdoy2 > 244, 244, peakdoy2)
+    if (lat < 0)  peakdoy2 <- (peakdoy2 + diy / 2)%%diy
+    p2 <- (peakdoy1 + peakdoy2) / 2
+    p1 <- mmonth[round(clim[5], 0)]
+    peakdoy <- wgts(p1, p2, abs(lat), 10, 40)
+    if (clim[1] <= 20) {
+      maxlai1 <- 3.98795 + 0.03330 * clim[1]
+      maxlai2 <- 1.0532 * 0.016 * clim[1]
+    } else {
+      maxlai1 <- 3.98795 + 0.03330 * 20
+      maxlai2 <- 1.0532 * 0.016 * 20
+    }
+    mx2 <- (maxlai1 + maxlai2) / 2
+    minlai1 <- 0.4808
+    minlai2 <- 0.0725 * 0.011 * clim[1]
+    mn2 <- (minlai1 + minlai2) / 2
+    mx1 <- 1.298 + 0.171 * log(clim[3])
+    mn1 <- -2.9458 + 0.5889 * log(clim[3])
+    maxlai <- wgts(mx1, mx2, abs(lat), 10, 40)
+    minlai <- wgts(mn1, mn2, abs(lat), 10, 40)
+    minlai <- ifelse(minlai < 0.0362, 0.0362, minlai)
+    x <- 0.7
+    hgt <- 3
+  }
+  if (habitat == "Savannas" | habitat == 9 |
+      habitat == "Short grasslands" | habitat == 10 |
+      habitat == "Tall grasslands" | habitat == 11) {
+    h2 <- 71.72 + 3.012 * clim[1]
+    h1 <- 269.22 -  89.79 * clim[4]
+    hperiod <- wgts(h1, h2, abs(lat), 0, 20)
+    hperiod <- ifelse(hperiod < 31.9, 31.9, hperiod)
+    p2 <- 211.98 - 3.4371 * clim[1]
+    p2 <- ifelse(p2 > 244, 244, p2)
+    if (lat < 0) p2 <- (p2 + diy / 2)%%diy
+    p1 <- mmonth[round(clim[5], 0)]
+    peakdoy <- wgts(p1, p2, abs(lat), 0, 30)
+    mx2 <- 1.48
+    mn2 <- 0.0725 * 0.011 * clim[1]
+    mx1 <- 0.1215 + 0.2662 * log(clim[3])
+    mn1 <- 0.331 + 0.0575 * log(clim[3])
+    maxlai <- wgts(mx1, mx2, abs(lat), 10, 40)
+    minlai <- wgts(mn1, mn2, abs(lat), 10, 40)
+    minlai <- ifelse(minlai < 0.762, 0.762, minlai)
+    x <- 0.15
+    if (habitat == "Savannas" | habitat == 9) hgt <- 1.5
+    if (habitat == "Short grasslands" | habitat == 10) hgt <- 0.25
+    if (habitat == "Tall grasslands" | habitat == 11) hgt <- 1.5
+  }
+  if (habitat == "Permanent wetlands" | habitat == 12) {
+    h2 <- 76 + 4.617 * clim[1]
+    h1 <- 246.68 - 66.82 * clim[4]
+    hperiod <- wgts(h1, h2, abs(lat), 0, 20)
+    hperiod <- ifelse(hperiod < 40, 40, hperiod)
+    p2 <- 219.64 - 2.793 * clim[1]
+    p2 <- ifelse(p2 > 244, 244, p2)
+    if (lat < 0) p2 <- (p2 + diy / 2)%%diy
+    p1 <- mmonth[round(clim[5], 0)]
+    peakdoy <- wgts(p1, p2, abs(lat), 0, 30)
+    maxlai <- -0.1782 + 0.2608 * log(clim[3])
+    maxlai <- ifelse(maxlai < 1.12, 1.12, maxlai)
+    minlai <-  -0.1450 + 0.1440 * log(clim[3])
+    minlai <- ifelse(minlai < 0.001, 0.001, minlai)
+    x <- 1.4
+    hgt <- 0.5
+  }
+  if (habitat == "Croplands" | habitat == 13) {
+    h2 <- 54.893 +  1.785 * clim[1]
+    h1 <- 243 - 112.18 * clim[4]
+    hperiod <- wgts(h1, h2, abs(lat), 10, 30)
+    hperiod <- ifelse(hperiod < 43.5, 43.5, hperiod)
+    p2 <- 212.95 - 5.627 * clim[1]
+    p2 <- ifelse(p2 > 244, 244, p2)
+    if (lat < 0) p2 <- (p2 + diy / 2)%%diy
+    p1 <- mmonth[round(clim[5], 0)]
+    peakdoy <- wgts(p1, p2, abs(lat), 0, 30)
+    if (clim[1] <= 20) {
+      maxlai <- 3.124 - 0.0886 * clim[1]
+    } else maxlai <- 3.124 - 0.0886 * 20
+    maxlai <- ifelse(maxlai > 3.14, 3.14, maxlai)
+    minlai <- 0.13
+    x <- 0.2
+    hgt <- 0.5
+  }
+  if (habitat == "Urban and built-up" | habitat == 14) {
+    h2 <- 66.669 +  5.618 * clim[1]
+    h1 <- 283.44 - 86.11 * clim[4]
+    hperiod <- wgts(h1, h2, abs(lat), 0, 20)
+    hperiod <- ifelse(hperiod < 43.5, 43.5, hperiod)
+    p2 <- 215.998 - 4.2806 * clim[1]
+    p2 <- ifelse(p2 > 244, 244, p2)
+    if (lat < 0) p2 <- (p2 + diy / 2)%%diy
+    p1 <- mmonth[round(clim[5], 0)]
+    peakdoy <- wgts(p1, p2, abs(lat), 10, 30)
+    if (clim[1] <= 20) {
+      maxlai <- 1.135 - 0.0244 * clim[1]
+    } else maxlai <- 1.135 - 0.0244 * 20
+    maxlai <- ifelse(maxlai > 1.15, 1.15, maxlai)
+    minlai <- 0.28
+    x <- 1
+    hgt <- 0.8
+  }
+  if (habitat == "Cropland/Natural vegetation mosaic" | habitat == 15) {
+    warning("Results highly sensitive to habitat composition. Suggest running
+            seperately for constituent habitat types and weighting output")
+    h2 <- 29.490 +  8.260 * clim[1]
+    h1 <- 326.46 - 161.70 * clim[4]
+    hperiod <- wgts(h1, h2, abs(lat), 10, 30)
+    hperiod <- ifelse(hperiod < 43.5, 43.5, hperiod)
+    p2 <- 210.867 - 3.5464 * clim[1]
+    p2 <- ifelse(p2 > 244, 244, p2)
+    if (lat < 0) p2 <- (p2 + diy / 2)%%diy
+    p1 <- mmonth[round(clim[5], 0)]
+    peakdoy <- wgts(p1, p2, abs(lat), 10, 30)
+    if (clim[1] <= 20) {
+      maxlai <- 3.5485 - 0.09481 * clim[1]
+    } else maxlai <- 3.5485 - 0.09481 * 20
+    maxlai <- ifelse(maxlai > 3.14, 3.14, maxlai)
+    if (clim[1] <= 20) {
+      minlai <- -0.072815 - 0.044546 * clim[1]
+    } else minlai <- -0.072815 - 0.044546 * 20
+    minlai <- ifelse(minlai < 0.001, 0.001, minlai)
+    x <- 0.5
+    hgt <- 1
+  }
+  if (habitat == "Barren or sparsely vegetated" | habitat == 16) {
+    h2 <- 80.557 +  6.440 * clim[1]
+    h1 <- 344.65 -  -191.94 * clim[4]
+    hperiod <- wgts(h1, h2, abs(lat), 0, 20)
+    hperiod <- ifelse(hperiod < 43.5, 43.5, hperiod)
+
+    p2 <- 236.0143 - 3.4726 * clim[1]
+    p2 <- ifelse(p2 > 244, 244, p2)
+    if (lat < 0) p2 <- (p2 + diy / 2)%%diy
+    p1 <- mmonth[round(clim[5], 0)]
+    peakdoy <- wgts(p1, p2, abs(lat), 10, 30)
+    maxlai <- -0.05491 + 0.05991 * log(clim[4])
+    maxlai <- ifelse(maxlai < 0.81, 0.81, maxlai)
+    minlai <- 0.08
+    x <- 0.6
+    hgt <- 0.15
+  }
+  if (habitat == "Open water" | habitat == 17) {
+    hperiod <- 100
+    peakdoy <- 50
+    maxlai <- 0
+    minlai <- 0
+    hgt <- 0
+  }
+  lai <- laigaus(minlai, maxlai, peakdoy, hperiod, year)
+  if (habitat ==  "Short grasslands" | habitat == 10) lai <- lai / 2
+  tme <- c(1:length(lai)) - 1
+  tme <- as.POSIXlt(tme * 3600, origin = paste0(year,"-01-01 00:00"), tz = "UTC")
+  return(list(lai = lai, x = x, height = hgt, obs_time = tme))
+}
+
