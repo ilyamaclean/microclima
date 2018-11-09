@@ -1258,10 +1258,10 @@ runauto.ncep <- function(r, dstart, dfinish, hgt = 0.05, l, x, habitat = NA,
     if (is.na(mean(x, na.rm = TRUE))) y <- NA
     y
   }
-  if (!requireNamespace("NicheMapR", quietly = TRUE)) {
-    stop("package 'NicheMapR' is needed. Please install it from Github: 'mrke/NicheMapR'",
-         call. = FALSE)
-  }
+  #if (!requireNamespace("NicheMapR", quietly = TRUE)) {
+  #  stop("package 'NicheMapR' is needed. Please install it from Github: 'mrke/NicheMapR'",
+  #       call. = FALSE)
+  #}
   # Lat long and time
   lat <- latlongfromraster(r)$lat
   long <- latlongfromraster(r)$long
