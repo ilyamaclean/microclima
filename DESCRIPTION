@@ -36,7 +36,6 @@ Imports:
 RoxygenNote: 6.1.0
 Roxygen: list(markdown = TRUE) 
 Suggests: knitr,
-    NicheMapR,
     rmarkdown,
     plotly
 VignetteBuilder: knitr
