@@ -1269,9 +1269,9 @@ runauto.ncep <- function(r, dstart, dfinish, hgt = 0.05, l, x, habitat = NA,
   tme <- seq(as.POSIXlt(dstart, format = "%d/%m/%Y", origin = "01/01/1900", tz = 'UTC'),
              as.POSIXlt(dfinish, format = "%d/%m/%Y", origin = "01/01/1900", tz = 'UTC'),
              by = 'hours')
-  tme <- as.POSIXlt(tme)
-  tme2 <- as.POSIXlt(c(1:23) * 3600, format = "%d/%m/%Y", origin = dfinish, tz = 'UTC')
+  tme2 <- as.POSIXct(c(1:23) * 3600, format = "%d/%m/%Y", origin = dfinish, tz = 'UTC')
   tme <- c(tme, tme2)
+  tme<-as.POSIXlt(tme)
   # l and x
   l <- is_raster(l)
   x <- is_raster(x)
@@ -1441,7 +1441,7 @@ runauto.ncep <- function(r, dstart, dfinish, hgt = 0.05, l, x, habitat = NA,
                           fr = fr, albr = albr, ha = ha, res = reso, merid = 0,
                           x = x, l = la)
     radlw <- longwaveveg2(hourlydata$uplong[i], hourlydata$downlong[i], x, fr,
-                          svv, albc)
+                          svv, is_raster(albc))
     nr <- is_raster(radsw) - 0.98 * radlw
     nr <- if_raster(nr, r2)
     wi <- round(hourlydata$winddir[i] / 22.5, 0) + 1
