@@ -677,6 +677,7 @@ longwaveveg <- function(h, tc, p = 101300, n, x, fr, svv = 1, albc = 0.23) {
 #' @param dst an optional numeric value representing the local summer time adjustment (hours in 24 hour clock)  (+1 for BST, +0 for GMT).
 #' @param shadow an optional logical value indicating whether topographic shading should be considered (False = No, True = Yes).
 #' @param component an optional character string of the component of radiation to be returned. One of "sw" (net shortwave radiation, i.e. accounting for albedo), "sw2" (total incoming shortwave radiation), "dir" (direct), "dif" (diffuse), "iso" (isotropic diffuse), "ani" (anistopic diffuse), "ref" (reflected).
+#' @param difani an optinional logical indicating whether to treat a proportion of the diffuse radiation as anistropic (see details).
 #' @import raster
 #' @export
 #'
@@ -706,8 +707,13 @@ longwaveveg <- function(h, tc, p = 101300, n, x, fr, svv = 1, albc = 0.23) {
 #' surfaces specified in `slope` and `aspect` and topographic shadowing is
 #' ignored. If single values are provided for `slope` and `aspect` single
 #' values of components of shortwave radiation for an inclined surface are
-#' returned. Only single values of `lat` and `long` are taken as inputs. If
-#' `dtm` covers a large extent, the `dtm` is best divided into blocks and
+#' returned. Only single values of `lat` and `long` are taken as inputs. Under partially
+#' cloudy conditions, a proportion of diffuse radiation is typically anistropic
+#' (directional). If `difani` is TRUE (the default), then the assumption is made that
+#' hourly direct radiation transmission can define the portions of the diffuse
+#' radiation to be treated as anistropic and isotropic.
+#' If `difani` is FALSE, all diffuse radiation is treated as isotropic.
+#' If `dtm` covers a large extent, the `dtm` is best divided into blocks and
 #' seperate calculations performed on each block. Since horizon angles,
 #' topographic shading and sky view correction factors may be influenced by
 #' locations beyond the extent of `dtm`, it is best to ensure `dtm` covers a
@@ -756,7 +762,7 @@ shortwavetopo <- function(dni, dif, julian, localtime, lat = NA, long = NA,
                           dtm = array(0, dim = c(1, 1)), slope = NA,
                           aspect = NA, svf = 1, alb = 0.23, albr = 0.23,
                           ha = 0, res = 100, merid = 0, dst = 0, shadow = TRUE,
-                          component = "sw") {
+                          component = "sw", difani = TRUE) {
   r <- dtm
   if (class(slope) == "logical" & class(r) == "RasterLayer") {
     slope <- terrain(r, opt = "slope", unit = "degrees")
@@ -786,7 +792,9 @@ shortwavetopo <- function(dni, dif, julian, localtime, lat = NA, long = NA,
                    merid, dst, shadow)
   dirr <- si * dni
   a <- slope * (pi / 180)
-  k <- dni / 4.87
+  if (difani) {
+    k <- dni / 4.87
+  } else k <- 0
   k <- ifelse(k > 1, 1, k)
   isor <- 0.5 * dif * (1 + cos(a)) * (1 - k) * svf
   cisr <- k * dif * si
@@ -832,6 +840,7 @@ shortwavetopo <- function(dni, dif, julian, localtime, lat = NA, long = NA,
 #' @param shadow an optional logical value indicating whether topographic shading should be considered (False = No, True = Yes).
 #' @param x a raster object, two-dimensional array or matrix of numeric values representing the ratio of vertical to horizontal projections of leaf foliage as returned by [leaf_geometry()].
 #' @param l a raster object, two-dimensional array or matrix of leaf area index values as returned by [lai()].
+#' @param difani an optinional logical indicating whether to treat a proportion of the diffuse radiation as anistropic (see details).
 #' @import raster
 #' @export
 #'
@@ -860,7 +869,11 @@ shortwavetopo <- function(dni, dif, julian, localtime, lat = NA, long = NA,
 #' specified in `slope` and `aspect` and topographic shadowing is ignored. If
 #' single values are provided for `slope` and `aspect`, the entire extent
 #' covered by `fr` is assumed to have the same slope and aspect. Only single
-#' values of `lat` and `long` are taken as inputs. If `dtm` covers a large
+#' values of `lat` and `long` are taken as inputs. Under partially
+#' cloudy conditions, a proportion of diffuse radiation is typically anistropic
+#' (directional). If `difani` is TRUE (the default), then the assumption is made that
+#' hourly direct radiation transmission can define the portions of the diffuse
+#' radiation to be treated as anistropic and isotropic. If `dtm` covers a large
 #' extent, the `dtm` is best divided into blocks and seperate calculations
 #' performed on each block. Since horizon angles, topographic shading and
 #' sky view correction factors may be influenced by locations beyond the extent of `dtm`, it is best to ensure
@@ -903,7 +916,7 @@ shortwaveveg <- function(dni, dif, julian, localtime, lat = NA, long = NA,
                          dtm = array(0, dim = c(1, 1)), slope = NA, aspect = NA,
                          svv = 1, albg = 0.23, fr, albr = 0.23, ha = 0,
                          res = 1, merid = 0, dst = 0, shadow = TRUE, x,
-                         l) {
+                         l, difani = TRUE) {
   r <- dtm
   if (class(slope) == "logical" & class(r) == "RasterLayer") {
     slope <- terrain(r, opt = "slope", unit = "degrees")
@@ -936,7 +949,9 @@ shortwaveveg <- function(dni, dif, julian, localtime, lat = NA, long = NA,
                    merid, dst, shadow)
   dirr <- si * dni
   a <- slope * (pi / 180)
-  k <- dni / 4.87
+  if (difani) {
+    k <- dni / 4.87
+  } else k <- 0
   k <- ifelse(k > 1, 1, k)
   isor <- 0.5 * dif * (1 + cos(a)) * (1 - k)
   cisr <- k * dif * si

@@ -138,7 +138,7 @@ solartime <- function(localtime, long, julian, merid = 0, dst = 0) {
 #' @param merid an optional numeric value representing the longitude (decimal degrees) of the local time zone meridian (0 for UK time).
 #' @param dst an optional numeric value representing the local summer time adjustment (hours, e.g. +1 for BST).
 #'
-#' @return a numeric value representing the solar azimuth (decimal degrees).
+#' @return a numeric value or vector of values representing the solar azimuth (decimal degrees).
 #' @export
 #'
 #' @examples
@@ -160,9 +160,8 @@ solazi <- function(localtime, lat, long, julian, merid = 0, dst = 0) {
   sqt <- 1 - sinazi * sinazi
   sqt[sqt < 0] <- 0
   solz <- 180 + (180 * atan(sinazi / sqrt(sqt))) / pi
-  if (cosazi < 0) {
-    if (sinazi < 0) solz <- 180 - solz else solz <- 540 - solz
-  }
+  solz[cosazi < 0 & sinazi < 0] <- 180 - solz[cosazi < 0 & sinazi < 0]
+  solz[cosazi < 0 & sinazi >= 0] <- 540 - solz[cosazi < 0 & sinazi >= 0]
   solz
 }
 #' Calculates the solar altitude
