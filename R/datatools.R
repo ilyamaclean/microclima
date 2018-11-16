@@ -1341,7 +1341,7 @@ runauto.ncep <- function(r, dstart, dfinish, hgt = 0.05, l, x, habitat = NA,
   #####################
   nmrout <- as.data.frame(micronmr$metout)
   rwind <- ma$hourlyradwind
-  netrad = (1 - albg ) * rwind$swrad - 0.98 * hourlydata$netlong * rwind$skyviewfact * (1 - rwind$canopyfact)
+  netrad = (1 - 0.15) * rwind$swrad - 0.98 * hourlydata$netlong * rwind$skyviewfact * (1 - rwind$canopyfact)
   cat("Paramaterising model using NicheMapR \n")
   if (hgt > 0) {
     mft <- data.frame(temperature = nmrout$TALOC,
