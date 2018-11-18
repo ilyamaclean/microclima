@@ -779,7 +779,9 @@ dailyprecipNCEP <- function(lat, long, tme, reanalysis2 = TRUE) {
   for (dct in 0:(steps - 1)) {
     direction <- dct * (360 / steps)
     lsa <- invls(dem, extent(rone), direction)
-    mncep <- mean(is_raster(lsa), na.rm = T) / extract(lsa, xy)
+    f1 <- extract(lsa, xy)
+    if (is.na(f1)) f1 <- mean(is_raster(lsa), na.rm = T)
+    mncep <- mean(is_raster(lsa), na.rm = T) / f1
     cncep[dct + 1] <- mncep
   }
   cat("Adjusting coastal exposure by ncep means \n")
