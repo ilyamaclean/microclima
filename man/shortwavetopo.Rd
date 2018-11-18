@@ -7,7 +7,7 @@
 shortwavetopo(dni, dif, julian, localtime, lat = NA, long = NA,
   dtm = array(0, dim = c(1, 1)), slope = NA, aspect = NA, svf = 1,
   alb = 0.23, albr = 0.23, ha = 0, res = 100, merid = 0,
-  dst = 0, shadow = TRUE, component = "sw")
+  dst = 0, shadow = TRUE, component = "sw", difani = TRUE)
 }
 \arguments{
 \item{dni}{a single numeric value, raster object, two-dimensional array or matrix of coarse-resolution direct radiation perpendicular to the solar beam (\ifelse{html}{\out{MJ m<sup>-2</sup> hr<sup>-1</sup>}}{\eqn{MJ m^{-2} hr^{-1}}}).}
@@ -45,6 +45,8 @@ shortwavetopo(dni, dif, julian, localtime, lat = NA, long = NA,
 \item{shadow}{an optional logical value indicating whether topographic shading should be considered (False = No, True = Yes).}
 
 \item{component}{an optional character string of the component of radiation to be returned. One of "sw" (net shortwave radiation, i.e. accounting for albedo), "sw2" (total incoming shortwave radiation), "dir" (direct), "dif" (diffuse), "iso" (isotropic diffuse), "ani" (anistopic diffuse), "ref" (reflected).}
+
+\item{difani}{an optinional logical indicating whether to treat a proportion of the diffuse radiation as anistropic (see details).}
 }
 \value{
 If component is "sw", a raster object or two-dimensional array of numeric values representing net shortwave radiation (MJ m^-2 hr^-1).
@@ -90,8 +92,13 @@ provided, radiation is downscaled by deriving values on the inclined
 surfaces specified in \code{slope} and \code{aspect} and topographic shadowing is
 ignored. If single values are provided for \code{slope} and \code{aspect} single
 values of components of shortwave radiation for an inclined surface are
-returned. Only single values of \code{lat} and \code{long} are taken as inputs. If
-\code{dtm} covers a large extent, the \code{dtm} is best divided into blocks and
+returned. Only single values of \code{lat} and \code{long} are taken as inputs. Under partially
+cloudy conditions, a proportion of diffuse radiation is typically anistropic
+(directional). If \code{difani} is TRUE (the default), then the assumption is made that
+hourly direct radiation transmission can define the portions of the diffuse
+radiation to be treated as anistropic and isotropic.
+If \code{difani} is FALSE, all diffuse radiation is treated as isotropic.
+If \code{dtm} covers a large extent, the \code{dtm} is best divided into blocks and
 seperate calculations performed on each block. Since horizon angles,
 topographic shading and sky view correction factors may be influenced by
 locations beyond the extent of \code{dtm}, it is best to ensure \code{dtm} covers a

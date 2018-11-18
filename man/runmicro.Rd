@@ -103,7 +103,7 @@ for (i in 1:19) {
   for (j in 1:22) {
     if (is.na(tmax[i,j]) == F)
     {
-      ht <- hourlytemp(jd, h[i, j, ], n[i, j, ], p[i, j, ], dni[i, j, ],
+      ht <- hourlytemp(jd, em = NA, h[i, j, ], n[i, j, ], p[i, j, ], dni[i, j, ],
                        dif[i, j, ], tmin[i,j], tmax[i,j], 50.02, -5.20)
       tc[i, j]<- ht[12]
       lr[i, j] <- lapserate(tc[i, j], h[i, j, 12], p[i, j, 12])

@@ -20,7 +20,7 @@ solazi(localtime, lat, long, julian, merid = 0, dst = 0)
 \item{dst}{an optional numeric value representing the local summer time adjustment (hours, e.g. +1 for BST).}
 }
 \value{
-a numeric value representing the solar azimuth (decimal degrees).
+a numeric value or vector of values representing the solar azimuth (decimal degrees).
 }
 \description{
 \code{solazi} is used to calculate the solar azimuth at any given location from the local time.

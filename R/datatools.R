@@ -1042,9 +1042,11 @@ microclimaforNMR <- function(lat, long, dstart, dfinish, l, x, coastal = TRUE, h
     pr <- crs(dem, asText = T)
     xy <- spTransform(xy, CRS(pr))
     e <- extent(dem)
-    xi <- round((xy$x - e@xmin) / res(dem)[1] + 0.5 * res(dem)[1], 0)
-    yi <- round((xy$y - e@ymin) / res(dem)[2] + 0.5 * res(dem)[2], 0)
-    elev$tref <- acoast[xi, yi, ] + elev$telev
+    xi <- round((xy$x - e@xmin) / res(dem)[1] + 0.5, 0)
+    yi <- round((xy$y - e@ymin) / res(dem)[2] + 0.5, 0)
+    ce <- acoast[xi, yi, ]
+    if (is.na(ce[1])) ce <- apply(acoast, 3, mean, na.rm = T)
+    elev$tref <- ce + elev$telev
   }  else acoast <- NA
   return(list(hourlydata = hourlydata, hourlyradwind = radwind, tref = elev,
               dailyprecip = dailyprecip, acoast = acoast, basins = info$basins,
