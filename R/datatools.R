@@ -1376,7 +1376,10 @@ runauto.ncep <- function(r, dstart, dfinish, hgt = 0.05, l, x, habitat = NA,
     tref <- array(tref, dim = c(dim(r)[1:2], length(tme)))
   }
   tout <- array(NA, dim = dim(tref))
-  if (hgt < 0) tout <- abind(tout, tout[,,1])
+  if (hgt < 0) {
+    tout <- abind(tout, tout[,,1])
+    tout[,,1] <- pred0[1]
+  }
   jd <- julday(tme$year + 1900, tme$mon + 1, tme$mday)
   m <- is_raster(dem)
   m[is.na(m)] <- zmin
@@ -1459,9 +1462,9 @@ runauto.ncep <- function(r, dstart, dfinish, hgt = 0.05, l, x, habitat = NA,
     tea <- runmicro(params, nr, ws, continious = TRUE)
     tea <- mask(tea, r)
     if (hgt < 0) {
-      soil0 <- tea + tr
-      heatdown <-  is_raster(soil0) - tout[,,i]
-      heatup <-  mean(soiltemps$D200cm) - pred[,,i]
+      soil0 <- is_raster(tea) + tr
+      heatdown <-  soil0 - tout[,,i]
+      heatup <-  mean(soiltemps$D200cm) - tout[,,i]
       xx <- tout[,,i] + dfsoil$x1 * heatdown + dfsoil$x2 * heatup
       if (save.memory) xx <- round(xx * 1000, 0)
       tout[,,i + 1] <- xx
@@ -1475,6 +1478,10 @@ runauto.ncep <- function(r, dstart, dfinish, hgt = 0.05, l, x, habitat = NA,
       if (save.memory) tempr <- tempr / 1000
       plot(tempr, main = tme[i], col = mypal)
     }
+  }
+  if (hgt < 0) {
+    dtr <- dim(tout)[3]
+    tout <- tout[,,-dtr]
   }
   tmax <- NA
   tmin <- NA
