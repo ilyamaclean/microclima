@@ -1367,7 +1367,7 @@ runauto.ncep <- function(r, dstart, dfinish, hgt = 0.05, l, x, habitat = NA,
       params$Estimate[2] * log(rwind$windspeed + 1) +
       params$Estimate[4] * netrad * log(rwind$windspeed + 1)
     soiltemp <- soiltemps[,selsoil+3]
-    dfsoil <- fitsoil(pred0, mean(soiltemps$D200cm), soiltemp)
+    dfsoil <- .fitsoil(pred0, mean(soiltemps$D200cm), soiltemp)
   }
   if (coastal) {
     tref <- ma$acoast
