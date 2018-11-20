@@ -124,7 +124,7 @@ julday <- function(year, month, day, hour = 12, min = 0, sec = 0, tz = 0) {
 solartime <- function(localtime, long, julian, merid = 0, dst = 0) {
   m <- 6.24004077 + 0.01720197 * (julian -  2451545)
   eot <- -7.659 * sin(m) + 9.863 * sin (2 * m + 3.5932)
-  st <- localtime + (4 * (long + merid) + eot) / 60 - dst
+  st <- localtime + (4 * (long - merid) + eot) / 60 - dst
   st
 }
 #' Calculates the solar azimuth
