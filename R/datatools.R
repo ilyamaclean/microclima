@@ -40,7 +40,7 @@
 #'
 #' dem5m <- get_dem(lat = 49.97, long = -5.22, resolution = 5)
 #' plot(dem5m) # 5m raster, Mercator projection system
-get_dem <- function(r = NA, lat, long, resolution = 30, zmin = 0) {
+get_dem <- function(r = NA, lat, long, resolution = 30, zmin = 0, xdims = 200, ydims = 200) {
   if (resolution < 30) {
     warning("Higher resolution data only available for some locations. DEM
             may be derived by interpolation")
@@ -55,8 +55,8 @@ get_dem <- function(r = NA, lat, long, resolution = 30, zmin = 0) {
       xy <- as.data.frame(spTransform(xy, CRS("+init=epsg:3413")))
     if (lat < -80)
       xy <- as.data.frame(spTransform(xy, CRS("+init=epsg:3976")))
-    e <- extent(c(xy$x - 100 * resolution, xy$x + 100 * resolution,
-                  xy$y - 100 * resolution, xy$y + 100 * resolution))
+    e <- extent(c(xy$x - floor(xdims / 2) * resolution, xy$x + ceiling(xdims / 2) * resolution,
+                  xy$y - floor(ydims / 2) * resolution, xy$y + ceiling(ydims / 2) * resolution))
     r <- raster(e)
     res(r) <- resolution
     if (lat >= -80 & lat <= 84)
@@ -149,9 +149,9 @@ get_NCEP <- function(lat, long, tme, reanalysis2 = TRUE) {
                      lat.southnorth = c(ll$y,ll$y), lon.westeast = c(ll$x,ll$x),
                      reanalysis2 = reanalysis2, return.units = FALSE, status.bar = FALSE)
     if (is.null(dim(v)) == F) {
-      latdif <- ((ll$y - as.numeric(rownames(v)))^2)^0.5
-      londif <- ((ll$x%%360 - as.numeric(colnames(v)))^2)^0.5
-      v <- v[which.min(londif), which.min(latdif),]
+      latdif <- abs(ll$y - as.numeric(rownames(v)))
+      londif <- abs(ll$x%%360 - as.numeric(colnames(v)))
+      v <- v[which.min(latdif), which.min(londif),]
     }
     v[sel]
   }
@@ -308,6 +308,7 @@ hourlyNCEP <- function(ncepdata = NA, lat, long, tme, reanalysis2 = TRUE) {
     tme <- as.POSIXlt(ncepdata$obs_time)
     tme <- tme[5:(length(tme) - 4)]
   }
+  long <- ifelse(long > 180, long - 360, long)
   int <- as.numeric(tme[2]) - as.numeric(tme[1])
   lgth <- (length(tme) * int) / (24 * 3600)
   tme2 <- as.POSIXlt(c(0:(lgth - 1)) * 3600 * 24, origin = min(tme), tz = 'UTC')
@@ -446,6 +447,7 @@ hourlyNCEP <- function(ncepdata = NA, lat, long, tme, reanalysis2 = TRUE) {
 #' tme <- as.POSIXlt(c(1:15) * 24 * 3600, origin = "2015-01-15", tz = 'UTC')
 #' dailyprecipNCEP(50, -5, tme)
 dailyprecipNCEP <- function(lat, long, tme, reanalysis2 = TRUE) {
+  long <- ifelse(long > 180, long - 360, long)
   int <- as.numeric(tme[2]) - as.numeric(tme[1])
   lgth <- (length(tme) * int) / (24 * 3600)
   tme <- as.POSIXlt(c(0:(lgth - 1)) * 3600 * 24, origin = min(tme), tz = 'UTC')
