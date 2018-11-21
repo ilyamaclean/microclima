@@ -4,7 +4,8 @@
 \alias{get_dem}
 \title{Gets raster of elevations}
 \usage{
-get_dem(r = NA, lat, long, resolution = 30, zmin = 0)
+get_dem(r = NA, lat, long, resolution = 30, zmin = 0, xdims = 200,
+  ydims = 200)
 }
 \arguments{
 \item{r}{optional raster object covering the location for which elevations are
@@ -19,6 +20,10 @@ are required. Not used if \code{r} is a raster}
 \item{resolution}{the resolution (in metres) of the required dem (see details).}
 
 \item{zmin}{assumed sea-level height. Values below this are set to zmin.}
+
+\item{xdims}{optional numeric value specifying the number of longitudinal grid cells}
+
+\item{ydims}{optional numeric value specifying the number of latitudinal grid cells}
 }
 \value{
 a raster object of elevations in metres.
@@ -35,7 +40,7 @@ resolution of the data available vary by location
 (see https://mapzen.com/documentation/terrain-tiles/data-sources/ for details).
 Global coverage is ~30m resolution and if the resolution of data requested is
 higher than that available, elevations are derived by interpolation. If \code{r} is
-unspecified, then \code{lat} and \code{long} are used to retrieve a 200 x 200 cell raster
+unspecified, then \code{lat} and \code{long} are used to retrieve a xdims x ydims cell raster
 centred on \code{lat} and \code{long}. Bathymetry is also returned automatically form AWS,
 so \code{zmin} allows the user to specify a sea-level height. Elevations below \code{zmin}
 are set at \code{zmin}. For use with \code{microclima} the returned raster has a Mercator

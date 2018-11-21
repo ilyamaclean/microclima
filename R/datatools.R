@@ -12,6 +12,8 @@
 #' are required. Not used if `r` is a raster
 #' @param resolution the resolution (in metres) of the required dem (see details).
 #' @param zmin assumed sea-level height. Values below this are set to zmin.
+#' @param xdims optional numeric value specifying the number of longitudinal grid cells
+#' @param ydims optional numeric value specifying the number of latitudinal grid cells
 #'
 #' @return a raster object of elevations in metres.
 #' @import raster
@@ -24,7 +26,7 @@
 #' (see https://mapzen.com/documentation/terrain-tiles/data-sources/ for details).
 #' Global coverage is ~30m resolution and if the resolution of data requested is
 #' higher than that available, elevations are derived by interpolation. If `r` is
-#' unspecified, then `lat` and `long` are used to retrieve a 200 x 200 cell raster
+#' unspecified, then `lat` and `long` are used to retrieve a xdims x ydims cell raster
 #' centred on `lat` and `long`. Bathymetry is also returned automatically form AWS,
 #' so `zmin` allows the user to specify a sea-level height. Elevations below `zmin`
 #' are set at `zmin`. For use with `microclima` the returned raster has a Mercator
