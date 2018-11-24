@@ -4,7 +4,8 @@
 \alias{solartime}
 \title{Calculates the solar time}
 \usage{
-solartime(localtime, long, julian, merid = 0, dst = 0)
+solartime(localtime, long, julian, merid = round(long/15, 0) * 15,
+  dst = 0)
 }
 \arguments{
 \item{localtime}{local time (decimal hour, 24 hour clock).}
@@ -13,9 +14,9 @@ solartime(localtime, long, julian, merid = 0, dst = 0)
 
 \item{julian}{Julian day expressed as an integer as returned by \code{\link[=julday]{julday()}}.}
 
-\item{merid}{an optional numeric value representing the longitude (decimal degrees) of the local time zone meridian (0 for UK time).}
+\item{merid}{an optional numeric value representing the longitude (decimal degrees) of the local time zone meridian (0 for GMT).}
 
-\item{dst}{an optional numeric value representing the local summer time adjustment (hours, e.g. +1 for BST).}
+\item{dst}{an optional numeric value representing the time difference from the timezone meridian (hours, e.g. +1 for BST if \code{merid} = 0).}
 }
 \value{
 the solar time. I.e. the times that would be measured by a sundial (hours).
@@ -28,7 +29,8 @@ the solar time. I.e. the times that would be measured by a sundial (hours).
 the angular offset of the Sun from its mean position on the celestial sphere as viewed from
 Earth due the eccentricity of the Earth's orbit and the obliquity due to tilt of the Earth's
 rotational axis. These two factors have different wavelengths, amplitudes and phases,
-that vary over geological timescales. The equations used here are those derived by Milne.
+that vary over geological timescales. The equations used here are those derived by Milne. BY default,
+local are used, with the meridian set to round(long / 15, 0) * 15.
 }
 \examples{
 jd <- julday (2010, 6, 21) # Julian day

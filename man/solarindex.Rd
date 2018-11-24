@@ -5,8 +5,8 @@
 \title{Calculates the solar index}
 \usage{
 solarindex(slope = NA, aspect, localtime, lat = NA, long, julian,
-  dtm = array(0, dim = c(1, 1)), res = 1, merid = 0, dst = 0,
-  shadow = TRUE)
+  dtm = array(0, dim = c(1, 1)), res = 1, merid = round(long/15, 0) *
+  15, dst = 0, shadow = TRUE)
 }
 \arguments{
 \item{slope}{a single value, raster object, two-dimensional array or matrix of slopes (º). If an array or matrix, then orientated as if derived using \code{\link[=is_raster]{is_raster()}}. I.e. \code{[1, 1]} is the NW corner.}
@@ -25,9 +25,9 @@ solarindex(slope = NA, aspect, localtime, lat = NA, long, julian,
 
 \item{res}{a single numeric value representing the spatial resolution of \code{dtm} (m).}
 
-\item{merid}{an optional single numeric value representing the longitude (decimal degrees) of the local time zone meridian (0 for UK time).}
+\item{merid}{an optional numeric value representing the longitude (decimal degrees) of the local time zone meridian (0 for GMT). Default is \code{round(long / 15, 0) * 15}}
 
-\item{dst}{an optional single numeric value representing the local summer time adjustment (hours, e.g. +1 for BST).}
+\item{dst}{an optional numeric value representing the time difference from the timezone meridian (hours, e.g. +1 for BST if \code{merid} = 0).}
 
 \item{shadow}{an optional logical value indicating whether topographic shading should be considered (TRUE = Yes, FALSE = No).}
 }

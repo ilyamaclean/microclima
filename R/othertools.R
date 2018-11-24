@@ -306,8 +306,8 @@ windcoef <- function(dsm, direction, hgt = 1, res = 1) {
 #' @param julian the Julian day as returned by [julday()].
 #' @param lat latitude of the location for which `suntime` is required (decimal degrees, -ve south of equator).
 #' @param long longitude of the location for which `suntime` is required (decimal degrees, -ve west of Greenwich meridian).
-#' @param tz an optional numeric value specifying the time zones expressed as hours different from GMT (-ve to west).
-#' @param dst an optional numeric value representing the local summer time adjustment (hours, e.g. +1 for BST).
+#' @param merid an optional numeric value representing the longitude (decimal degrees) of the local time zone meridian (0 for GMT). Default is `round(long / 15, 0) * 15`
+#' @param dst an optional numeric value representing the time difference from the timezone meridian (hours, e.g. +1 for BST if `merid` = 0).
 #'
 #' @return a data.frame with three components:
 #' @return `sunrise` a vector of sunrise (hours in 24 hour clock).
@@ -322,11 +322,10 @@ windcoef <- function(dsm, direction, hgt = 1, res = 1) {
 #' @examples
 #' jd <- julday(2018, 1, 16)
 #' suntimes(jd, 50.17, -5.12) # Cornwall, UK
-#' suntimes(jd, 78.22, 15.64, 1) # Longyearbyen, Svalbad
-#' suntimes(-54.94, -67.61, -3) # Puerto Williams, Cabo de Hornos, Chile
-suntimes <- function(julian, lat, long, tz = 0, dst = 0) {
-  tz <- tz + dst
-  lw <- long * -1
+#' suntimes(jd, 78.22, 15.64) # Longyearbyen, Svalbad
+#' suntimes(jd, -54.94, -67.61, merid = -60, dst = 1) # Puerto Williams, Cabo de Hornos, Chile
+suntimes <- function(julian, lat, long, merid = round(long / 15, 0) * 15, dst = 0) {
+  lw <- (long - merid) * -1
   n <- julian - 2451545 - 0.0009 - (lw / 360)
   n <- floor (n) + 0.5
   sn <- 2451545 + 0.0009 + (lw / 360) + n
@@ -341,29 +340,29 @@ suntimes <- function(julian, lat, long, tz = 0, dst = 0) {
     (cos(lat * pi / 180) * cos(d))
   if (max(coshas) > 1) {
     coshas <- ifelse(coshas > 1, 1, coshas)
-    warning("sun above horizon for 24 hours on some days")
+    warning("sun below horizon for 24 hours on some days")
   }
   if (min(coshas) < -1) {
     coshas <- ifelse(coshas < -1, -1, coshas)
-    warning("sun below horizon for 24 hours on some days")
+    warning("sun above horizon for 24 hours on some days")
   }
   has <- acos(coshas)
   jset <- 2451545 + 0.0009 + (((has * 180 / pi + lw) / 360) + n +
                                 0.0053 * sin(msa * pi / 180)) - 0.0069 *
                                 sin(2 * ecl * pi / 180)
   jrise <- st - (jset - st)
-  hset <- jset%%1 * 24 + tz
-  hrise <- jrise%%1 * 24 + tz
-  dl <- (jset - jrise) * 24
+  hset <- jset%%1 * 24 + dst
+  hrise <- jrise%%1 * 24 + dst
+  dl <- round((jset - jrise) * 24, 5)
   sunvars <- data.frame(sunrise = hrise, sunset = hset, daylight = dl)
   sunvars
 }
 #' derived fraction of solar day
-.solarday <- function(julian, localtime, lat, long, tz = 0, dst = 0) {
-  src <- suntimes(julian, lat, long, tz, dst)$sunrise
-  ssc <- suntimes(julian, lat, long, tz, dst)$sunset
-  ssp <- suntimes(julian - 1, lat, long, tz, dst)$sunset
-  srn <- suntimes(julian + 1, lat, long, tz, dst)$sunrise
+.solarday <- function(julian, localtime, lat, long, merid, dst = 0) {
+  src <- suntimes(julian, lat, long, merid, dst)$sunrise
+  ssc <- suntimes(julian, lat, long, merid, dst)$sunset
+  ssp <- suntimes(julian - 1, lat, long, merid, dst)$sunset
+  srn <- suntimes(julian + 1, lat, long, merid, dst)$sunrise
   st <- ifelse(localtime >= src & localtime <= ssc,
                ((localtime - src) / (ssc - src)) * 12 + 6, localtime)
   st <- ifelse(localtime > ssc, ((localtime - ssc) / (srn + 24 - ssc)) *
@@ -410,9 +409,8 @@ suntimes <- function(julian, lat, long, tz = 0, dst = 0) {
 #' @param maxtemp a bector of daily maximum temperatures (ºC).
 #' @param lat a single numeric value representing the latitude of the location for which hourly temperatures are required (decimal degrees, -ve south of equator).
 #' @param long a single numeric value representing the longitude of the location for which hourly temperatures are required (decimal degrees, -ve west of Greenwich meridian).
-#' @param merid an optional numeric value representing the longitude of the local time zone meridian (º) (0 for UK time).
-#' @param tz an optional single  numeric value or vector of values specifying the time zones expressed as hours different from GMT for each day (-ve to west).
-#' @param dst a single numeric value or vector of values representing the local summer time adjustment for each day (hours, e.g. +1 for BST).
+#' @param merid an optional numeric value representing the longitude (decimal degrees) of the local time zone meridian (0 for GMT). Default is `round(long / 15, 0) * 15`
+#' @param dst an optional numeric value representing the time difference from the timezone meridian (hours, e.g. +1 for BST if `merid` = 0).
 #'
 #' @return a vector of hourly temperatures (ºC).
 #' @export
@@ -432,7 +430,7 @@ suntimes <- function(julian, lat, long, tz = 0, dst = 0) {
 #' plot(ht ~ c(0:47),type="l", xlab = "Hour", ylab = "Temperature",
 #'      main = paste("tmins:", 7.2, 7.5, "tmaxs:", 14.6, 15.2))
 hourlytemp <- function(julian, em = NA, h, n, p = 100346.13, dni, dif,
-                       mintemp, maxtemp, lat, long, merid=0, tz=0, dst=0) {
+                       mintemp, maxtemp, lat, long, merid = round(long / 15, 0) * 15, dst=0) {
   l1 <- unlist(lapply(list(dni, dif), length))
   l2 <- unlist(lapply(list(julian, mintemp, maxtemp), length))
   if (length(unique(l1)) != 1) {
@@ -448,7 +446,7 @@ hourlytemp <- function(julian, em = NA, h, n, p = 100346.13, dni, dif,
   o <- order(rep(c(1:length(julian)), 24))
   jd <- rep(julian, 24)[o]
   localtime <- rep(c(0:23), length(mintemp))
-  solfrac <- .solarday(julian, localtime, lat, long, tz, dst)
+  solfrac <- .solarday(julian, localtime, lat, long, merid, dst)
   am <- airmasscoef(localtime, lat, long, julian, merid, dst)
   dct <- dni * siflat(localtime, lat, long, jd, merid, dst)
   pr <- .propmaxrad(dif, dct, am)
@@ -797,7 +795,7 @@ fitmicro <- function(microfitdata, alldata = FALSE, windthresh = NA,
 #' # Downscale wind
 #' # ------------------
 #' ws <- array(windheight(wind2010$wind10m, 10, 1), dim = c(1, 1, 8760))
-#' wh <- arrayspline(ws, as.POSIXct(wind2010$obs_time), 6, "2010-05-01 11:00")
+#' wh <- arrayspline(ws, as.POSIXct(wind2010$obs_time + 0, tz = "GMT"), 6, "2010-05-01 11:00")
 #' ws <- windcoef(dtm100m, 270, res = 100) * wh
 #'
 #' # ------------------

@@ -4,7 +4,7 @@
 \alias{julday}
 \title{Calculates the astronomical Julian day}
 \usage{
-julday(year, month, day, hour = 12, min = 0, sec = 0, tz = 0)
+julday(year, month, day, hour = 12, min = 0, sec = 0, dst = 0)
 }
 \arguments{
 \item{year}{year (AD).}
@@ -19,7 +19,7 @@ julday(year, month, day, hour = 12, min = 0, sec = 0, tz = 0)
 
 \item{sec}{seconds (decimal, 0-59).}
 
-\item{tz}{an optional numeric value specifying the time zones expressed as hours different from GMT (-ve to west).}
+\item{dst}{an optional numeric value specifying the time zone expressed as hours different from GMT (-ve to west).}
 }
 \value{
 Julian Day. I.e. the number of days since January 1, 4713 BCE at noon UTC.

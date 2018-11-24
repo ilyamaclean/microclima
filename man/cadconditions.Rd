@@ -6,7 +6,7 @@
 \usage{
 cadconditions(h, tc, n, p = 100346.13, wind, startjul, lat, long,
   starttime = 0, hourint = 1, windthresh = 4.5, emthresh = 0.5,
-  tz = 0, dst = 0, con = TRUE)
+  merid = round(long/15, 0) * 15, dst = 0, con = TRUE)
 }
 \arguments{
 \item{h}{a vector of hourly specific humidities (\ifelse{html}{\out{kg kg<sup>-1</sup> }}{\eqn{kg kg^{-1}}}).}
@@ -33,9 +33,9 @@ cadconditions(h, tc, n, p = 100346.13, wind, startjul, lat, long,
 
 \item{emthresh}{an optional threshold value of emissivity below which cold air conditions can occur (range 0 - 1)}
 
-\item{tz}{an optional numeric value specifying the time zones expressed as hours different from GMT (-ve to west).}
+\item{merid}{an optional numeric value representing the longitude (decimal degrees) of the local time zone meridian (0 for GMT). Default is \code{round(long / 15, 0) * 15}}
 
-\item{dst}{an optional numeric value representing the local summer time adjustment (hours, e.g. +1 for BST).}
+\item{dst}{an optional numeric value representing the time difference from the timezone meridian (hours, e.g. +1 for BST if \code{merid} = 0).}
 
 \item{con}{an optional logical value indicating whether or not to allow cold air drainage conditions to occur only if conditions are right for three or more consecutive hours. Ignored if hourint != 1.}
 }

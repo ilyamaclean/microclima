@@ -4,7 +4,7 @@
 \alias{suntimes}
 \title{Calculates sunrise, sunset and daylength}
 \usage{
-suntimes(julian, lat, long, tz = 0, dst = 0)
+suntimes(julian, lat, long, merid = round(long/15, 0) * 15, dst = 0)
 }
 \arguments{
 \item{julian}{the Julian day as returned by \code{\link[=julday]{julday()}}.}
@@ -13,9 +13,9 @@ suntimes(julian, lat, long, tz = 0, dst = 0)
 
 \item{long}{longitude of the location for which \code{suntime} is required (decimal degrees, -ve west of Greenwich meridian).}
 
-\item{tz}{an optional numeric value specifying the time zones expressed as hours different from GMT (-ve to west).}
+\item{merid}{an optional numeric value representing the longitude (decimal degrees) of the local time zone meridian (0 for GMT). Default is \code{round(long / 15, 0) * 15}}
 
-\item{dst}{an optional numeric value representing the local summer time adjustment (hours, e.g. +1 for BST).}
+\item{dst}{an optional numeric value representing the time difference from the timezone meridian (hours, e.g. +1 for BST if \code{merid} = 0).}
 }
 \value{
 a data.frame with three components:
@@ -37,6 +37,6 @@ appoximate times at which that the sun is closest to the horizon.
 \examples{
 jd <- julday(2018, 1, 16)
 suntimes(jd, 50.17, -5.12) # Cornwall, UK
-suntimes(jd, 78.22, 15.64, 1) # Longyearbyen, Svalbad
-suntimes(-54.94, -67.61, -3) # Puerto Williams, Cabo de Hornos, Chile
+suntimes(jd, 78.22, 15.64) # Longyearbyen, Svalbad
+suntimes(jd, -54.94, -67.61, merid = -60, dst = 1) # Puerto Williams, Cabo de Hornos, Chile
 }

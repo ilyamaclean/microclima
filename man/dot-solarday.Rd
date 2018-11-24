@@ -4,7 +4,7 @@
 \alias{.solarday}
 \title{derived fraction of solar day}
 \usage{
-.solarday(julian, localtime, lat, long, tz = 0, dst = 0)
+.solarday(julian, localtime, lat, long, merid, dst = 0)
 }
 \description{
 derived fraction of solar day

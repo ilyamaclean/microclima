@@ -673,8 +673,8 @@ longwaveveg <- function(h, tc, p = 101300, n, x, fr, svv = 1, albc = 0.23) {
 #' @param albr an optional single value, raster object, two-dimensional array or matrix of values of albedo(s) of adjacent surfaces (range 0 - 1) as returned by [albedo_reflected()].
 #' @param ha an optional raster object, two-dimensional array or matrix of values representing the mean slope to the horizon (decimal degrees) of surrounding surfaces from which radiation is reflected for each cell of `dtm` as returned by [mean_slope()].
 #' @param res a single numeric value representing the spatial resolution of `dtm` (m).
-#' @param merid an optional single numeric value representing the longitude (decimal degrees) of the local time zone meridian (0 for UK time).
-#' @param dst an optional numeric value representing the local summer time adjustment (hours in 24 hour clock)  (+1 for BST, +0 for GMT).
+#' @param merid an optional numeric value representing the longitude (decimal degrees) of the local time zone meridian (0 for GMT). Default is `round(long / 15, 0) * 15`
+#' @param dst an optional numeric value representing the time difference from the timezone meridian (hours, e.g. +1 for BST if `merid` = 0).
 #' @param shadow an optional logical value indicating whether topographic shading should be considered (False = No, True = Yes).
 #' @param component an optional character string of the component of radiation to be returned. One of "sw" (net shortwave radiation, i.e. accounting for albedo), "sw2" (total incoming shortwave radiation), "dir" (direct), "dif" (diffuse), "iso" (isotropic diffuse), "ani" (anistopic diffuse), "ref" (reflected).
 #' @param difani an optinional logical indicating whether to treat a proportion of the diffuse radiation as anistropic (see details).
@@ -761,8 +761,8 @@ longwaveveg <- function(h, tc, p = 101300, n, x, fr, svv = 1, albc = 0.23) {
 shortwavetopo <- function(dni, dif, julian, localtime, lat = NA, long = NA,
                           dtm = array(0, dim = c(1, 1)), slope = NA,
                           aspect = NA, svf = 1, alb = 0.23, albr = 0.23,
-                          ha = 0, res = 100, merid = 0, dst = 0, shadow = TRUE,
-                          component = "sw", difani = TRUE) {
+                          ha = 0, res = 100, merid = round(long / 15, 0) * 15, dst = 0,
+                          shadow = TRUE, component = "sw", difani = TRUE) {
   r <- dtm
   if (class(slope) == "logical" & class(r) == "RasterLayer") {
     slope <- terrain(r, opt = "slope", unit = "degrees")
@@ -835,8 +835,8 @@ shortwavetopo <- function(dni, dif, julian, localtime, lat = NA, long = NA,
 #' @param albr an optional single value, raster object, two-dimensional array or matrix of values representing the albedo(s) of adjacent surfaces as returned by [albedo_reflected()].
 #' @param ha an optional raster object, two-dimensional array or matrix of values representing the mean slope to the horizon (decimal degrees) of surrounding surfaces from which radiation is reflected for each cell of `dtm` as returned by [mean_slope()].
 #' @param res a single numeric value representing the spatial resolution of `dtm` (m).
-#' @param merid an optional single numeric value representing the longitude (decimal degrees) of the local time zone meridian (0 for UK time).
-#' @param dst an optional numeric value representing the local summer time adjustment (hours in 24 hour clock)  (+1 for BST, +0 for GMT).
+#' @param merid an optional numeric value representing the longitude (decimal degrees) of the local time zone meridian (0 for GMT). Default is `round(long / 15, 0) * 15`
+#' @param dst an optional numeric value representing the time difference from the timezone meridian (hours, e.g. +1 for BST if `merid` = 0).
 #' @param shadow an optional logical value indicating whether topographic shading should be considered (False = No, True = Yes).
 #' @param x a raster object, two-dimensional array or matrix of numeric values representing the ratio of vertical to horizontal projections of leaf foliage as returned by [leaf_geometry()].
 #' @param l a raster object, two-dimensional array or matrix of leaf area index values as returned by [lai()].
@@ -915,8 +915,8 @@ shortwavetopo <- function(dni, dif, julian, localtime, lat = NA, long = NA,
 shortwaveveg <- function(dni, dif, julian, localtime, lat = NA, long = NA,
                          dtm = array(0, dim = c(1, 1)), slope = NA, aspect = NA,
                          svv = 1, albg = 0.23, fr, albr = 0.23, ha = 0,
-                         res = 1, merid = 0, dst = 0, shadow = TRUE, x,
-                         l, difani = TRUE) {
+                         res = 1, merid = round(long / 15, 0) * 15, dst = 0, shadow = TRUE,
+                         x, l, difani = TRUE) {
   r <- dtm
   if (class(slope) == "logical" & class(r) == "RasterLayer") {
     slope <- terrain(r, opt = "slope", unit = "degrees")
@@ -980,8 +980,8 @@ shortwaveveg <- function(dni, dif, julian, localtime, lat = NA, long = NA,
 #' @param long a single numeric value representing the longitude of the location for which partitioned radiation is required (decimal degrees, -ve west of Greenwich meridian).
 #' @param hourly species whether values of `rad` are hourly (see details).
 #' @param watts a logical value indicating  whether the units of `rad` are \ifelse{html}{\out{W m<sup>-2</sup>}}{\eqn{W m^{-2}}} (TRUE) or \ifelse{html}{\out{MJ m<sup>-2</sup> hr<sup>-1</sup>}}{\eqn{MJ m^{-2} hr^{-1}}} (FALSE).
-#' @param merid an optional single numeric value representing the longitude (decimal degrees) of the local time zone meridian (0 for UK time).
-#' @param dst an optional numeric value representing the local summer time adjustment (hours in 24 hour clock)  (+1 for BST, +0 for GMT).
+#' @param merid an optional numeric value representing the longitude (decimal degrees) of the local time zone meridian (0 for GMT). Default is `round(long / 15, 0) * 15`
+#' @param dst an optional numeric value representing the time difference from the timezone meridian (hours, e.g. +1 for BST if `merid` = 0).
 #'
 #' @return a vector of diffuse fractions (either \ifelse{html}{\out{MJ m<sup>-2</sup> hr<sup>-1</sup>}}{\eqn{MJ m^{-2} hr^{-1}}} or \ifelse{html}{\out{W m<sup>-2</sup>}}{\eqn{W m^{-2}}}).
 #' @export
@@ -1002,7 +1002,7 @@ shortwaveveg <- function(dni, dif, julian, localtime, lat = NA, long = NA,
 #' plot(dfr ~ rad, type = "l", lwd = 2, xlab = "Incoming shortwave radiation",
 #'      ylab = "Diffuse fraction")
 difprop <- function(rad, julian, localtime, lat, long, hourly = FALSE,
-                  watts = TRUE, merid = 0, dst = 0) {
+                  watts = TRUE, merid = round(long / 15, 0) * 15, dst = 0) {
   if (watts) rad <- rad * 0.0036
   sa <- solalt(localtime, lat, long, julian, merid, dst)
   alt <- sa * (pi / 180)

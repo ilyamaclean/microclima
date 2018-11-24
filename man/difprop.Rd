@@ -5,7 +5,7 @@
 \title{Calculates the diffuse fraction from incoming shortwave radiation}
 \usage{
 difprop(rad, julian, localtime, lat, long, hourly = FALSE,
-  watts = TRUE, merid = 0, dst = 0)
+  watts = TRUE, merid = round(long/15, 0) * 15, dst = 0)
 }
 \arguments{
 \item{rad}{a vector of incoming shortwave radiation values (either \ifelse{html}{\out{MJ m<sup>-2</sup> hr<sup>-1</sup>}}{\eqn{MJ m^{-2} hr^{-1}}} or \ifelse{html}{\out{W m<sup>-2</sup>}}{\eqn{W m^{-2}}})}
@@ -22,9 +22,9 @@ difprop(rad, julian, localtime, lat, long, hourly = FALSE,
 
 \item{watts}{a logical value indicating  whether the units of \code{rad} are \ifelse{html}{\out{W m<sup>-2</sup>}}{\eqn{W m^{-2}}} (TRUE) or \ifelse{html}{\out{MJ m<sup>-2</sup> hr<sup>-1</sup>}}{\eqn{MJ m^{-2} hr^{-1}}} (FALSE).}
 
-\item{merid}{an optional single numeric value representing the longitude (decimal degrees) of the local time zone meridian (0 for UK time).}
+\item{merid}{an optional numeric value representing the longitude (decimal degrees) of the local time zone meridian (0 for GMT). Default is \code{round(long / 15, 0) * 15}}
 
-\item{dst}{an optional numeric value representing the local summer time adjustment (hours in 24 hour clock)  (+1 for BST, +0 for GMT).}
+\item{dst}{an optional numeric value representing the time difference from the timezone meridian (hours, e.g. +1 for BST if \code{merid} = 0).}
 }
 \value{
 a vector of diffuse fractions (either \ifelse{html}{\out{MJ m<sup>-2</sup> hr<sup>-1</sup>}}{\eqn{MJ m^{-2} hr^{-1}}} or \ifelse{html}{\out{W m<sup>-2</sup>}}{\eqn{W m^{-2}}}).

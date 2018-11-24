@@ -6,8 +6,9 @@
 \usage{
 shortwaveveg(dni, dif, julian, localtime, lat = NA, long = NA,
   dtm = array(0, dim = c(1, 1)), slope = NA, aspect = NA, svv = 1,
-  albg = 0.23, fr, albr = 0.23, ha = 0, res = 1, merid = 0,
-  dst = 0, shadow = TRUE, x, l, difani = TRUE)
+  albg = 0.23, fr, albr = 0.23, ha = 0, res = 1,
+  merid = round(long/15, 0) * 15, dst = 0, shadow = TRUE, x, l,
+  difani = TRUE)
 }
 \arguments{
 \item{dni}{a single numeric value, raster object, two-dimensional array or matrix of coarse-resolution direct radiation perpendicular to the solar beam (\ifelse{html}{\out{MJ m<sup>-2</sup> hr<sup>-1</sup>}}{\eqn{MJ m^{-2} hr^{-1}}}).}
@@ -40,9 +41,9 @@ shortwaveveg(dni, dif, julian, localtime, lat = NA, long = NA,
 
 \item{res}{a single numeric value representing the spatial resolution of \code{dtm} (m).}
 
-\item{merid}{an optional single numeric value representing the longitude (decimal degrees) of the local time zone meridian (0 for UK time).}
+\item{merid}{an optional numeric value representing the longitude (decimal degrees) of the local time zone meridian (0 for GMT). Default is \code{round(long / 15, 0) * 15}}
 
-\item{dst}{an optional numeric value representing the local summer time adjustment (hours in 24 hour clock)  (+1 for BST, +0 for GMT).}
+\item{dst}{an optional numeric value representing the time difference from the timezone meridian (hours, e.g. +1 for BST if \code{merid} = 0).}
 
 \item{shadow}{an optional logical value indicating whether topographic shading should be considered (False = No, True = Yes).}
 

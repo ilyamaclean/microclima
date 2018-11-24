@@ -143,7 +143,7 @@ netrad <- netshort - netlong
 # Downscale wind
 # ------------------
 ws <- array(windheight(wind2010$wind10m, 10, 1), dim = c(1, 1, 8760))
-wh <- arrayspline(ws, as.POSIXct(wind2010$obs_time), 6, "2010-05-01 11:00")
+wh <- arrayspline(ws, as.POSIXct(wind2010$obs_time + 0, tz = "GMT"), 6, "2010-05-01 11:00")
 ws <- windcoef(dtm100m, 270, res = 100) * wh
 
 # ------------------

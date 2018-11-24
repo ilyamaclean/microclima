@@ -16,9 +16,9 @@ microclimaforNMR(lat, long, dstart, dfinish, l, x, coastal = TRUE,
 
 \item{long}{the longitude (in decimal degrees) of the location for point data are required.}
 
-\item{dstart}{start date as character of time period required in format DD/MM/YYYY}
+\item{dstart}{start date as character of time period required in format DD/MM/YYYY (UTC timezones assumed)}
 
-\item{dfinish}{end date as character of time period required in format DD/MM/YYYY}
+\item{dfinish}{end date as character of time period required in format DD/MM/YYYY (UTC timezones assumed)}
 
 \item{l}{a single numeric value of the leaf area index for location (see details).}
 

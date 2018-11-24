@@ -4,7 +4,8 @@
 \alias{airmasscoef}
 \title{Calculates the airmass coefficient}
 \usage{
-airmasscoef(localtime, lat, long, julian, merid = 0, dst = 0)
+airmasscoef(localtime, lat, long, julian, merid = round(long/15, 0) * 15,
+  dst = 0)
 }
 \arguments{
 \item{localtime}{local time (decimal hour, 24 hour clock).}
@@ -15,9 +16,9 @@ airmasscoef(localtime, lat, long, julian, merid = 0, dst = 0)
 
 \item{julian}{a numeric value representing the Julian day as returned by \code{\link[=julday]{julday()}}.}
 
-\item{merid}{an optional numeric value representing the longitude (decimal degrees) of the local time zone meridian (0 for UK time).}
+\item{merid}{an optional numeric value representing the longitude (decimal degrees) of the local time zone meridian (0 for GMT). Default is \code{round(long / 15, 0) * 15}}
 
-\item{dst}{an optional numeric value representing the local summer time adjustment (hours, e.g. +1 for BST).}
+\item{dst}{an optional numeric value representing the time difference from the timezone meridian (hours, e.g. +1 for BST if \code{merid} = 0).}
 }
 \value{
 the airmass coefficient, i.e. the direct optical path length of a solar beam through the Earth’s atmosphere, expressed as a ratio relative to the path length vertically upwards for a given location and time.

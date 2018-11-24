@@ -4,7 +4,8 @@
 \alias{solazi}
 \title{Calculates the solar azimuth}
 \usage{
-solazi(localtime, lat, long, julian, merid = 0, dst = 0)
+solazi(localtime, lat, long, julian, merid = round(long/15, 0) * 15,
+  dst = 0)
 }
 \arguments{
 \item{localtime}{local time (decimal hour, 24 hour clock).}
@@ -15,9 +16,9 @@ solazi(localtime, lat, long, julian, merid = 0, dst = 0)
 
 \item{julian}{Julian day expressed as an integer as returned by \code{\link[=julday]{julday()}}.}
 
-\item{merid}{an optional numeric value representing the longitude (decimal degrees) of the local time zone meridian (0 for UK time).}
+\item{merid}{an optional numeric value representing the longitude (decimal degrees) of the local time zone meridian (0 for GMT). Default is \code{round(long / 15, 0) * 15}}
 
-\item{dst}{an optional numeric value representing the local summer time adjustment (hours, e.g. +1 for BST).}
+\item{dst}{an optional numeric value representing the time difference from the timezone meridian (hours, e.g. +1 for BST if \code{merid} = 0).}
 }
 \value{
 a numeric value or vector of values representing the solar azimuth (decimal degrees).

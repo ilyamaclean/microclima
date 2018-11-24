@@ -5,7 +5,7 @@
 \title{Derives hourly temperatures from daily data}
 \usage{
 hourlytemp(julian, em = NA, h, n, p = 100346.13, dni, dif, mintemp,
-  maxtemp, lat, long, merid = 0, tz = 0, dst = 0)
+  maxtemp, lat, long, merid = round(long/15, 0) * 15, dst = 0)
 }
 \arguments{
 \item{julian}{vector of julian days expressed as integers for every day for which \code{mintemp} and \code{maxtemp} are provided, as returned by function \code{\link[=julday]{julday()}}.}
@@ -30,11 +30,9 @@ hourlytemp(julian, em = NA, h, n, p = 100346.13, dni, dif, mintemp,
 
 \item{long}{a single numeric value representing the longitude of the location for which hourly temperatures are required (decimal degrees, -ve west of Greenwich meridian).}
 
-\item{merid}{an optional numeric value representing the longitude of the local time zone meridian (º) (0 for UK time).}
+\item{merid}{an optional numeric value representing the longitude (decimal degrees) of the local time zone meridian (0 for GMT). Default is \code{round(long / 15, 0) * 15}}
 
-\item{tz}{an optional single  numeric value or vector of values specifying the time zones expressed as hours different from GMT for each day (-ve to west).}
-
-\item{dst}{a single numeric value or vector of values representing the local summer time adjustment for each day (hours, e.g. +1 for BST).}
+\item{dst}{an optional numeric value representing the time difference from the timezone meridian (hours, e.g. +1 for BST if \code{merid} = 0).}
 }
 \value{
 a vector of hourly temperatures (ºC).

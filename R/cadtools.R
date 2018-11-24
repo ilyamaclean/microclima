@@ -544,8 +544,8 @@ flowacc <- function (dem)
 #' @param hourint the interval (in hours) between successive observations
 #' @param windthresh an optional threshold value of wind speed below which cold air conditions can occur (\ifelse{html}{\out{m s<sup>-1</sup> }}{\eqn{m s^{-1}}})
 #' @param emthresh an optional threshold value of emissivity below which cold air conditions can occur (range 0 - 1)
-#' @param tz an optional numeric value specifying the time zones expressed as hours different from GMT (-ve to west).
-#' @param dst an optional numeric value representing the local summer time adjustment (hours, e.g. +1 for BST).
+#' @param merid an optional numeric value representing the longitude (decimal degrees) of the local time zone meridian (0 for GMT). Default is `round(long / 15, 0) * 15`
+#' @param dst an optional numeric value representing the time difference from the timezone meridian (hours, e.g. +1 for BST if `merid` = 0).
 #' @param con an optional logical value indicating whether or not to allow cold air drainage conditions to occur only if conditions are right for three or more consecutive hours. Ignored if hourint != 1.
 #'
 #' @return a vector of binary values indicating whether cold air drainage conditions occur (1) or not (0)
@@ -598,7 +598,7 @@ flowacc <- function (dem)
 #'      main = "", xlab = "Cold air drainage conditions (1 = Y)")
 cadconditions <- function(h, tc, n, p = 100346.13, wind, startjul, lat, long,
                           starttime = 0, hourint = 1, windthresh = 4.5, emthresh = 0.5,
-                          tz = 0, dst = 0, con = TRUE) {
+                          merid = round(long / 15, 0) * 15, dst = 0, con = TRUE) {
   pk <- p / 1000
   e0 <- 0.6108 * exp(17.27 * tc / (tc + 237.3))
   ws <- 0.622 * e0 / pk
@@ -609,7 +609,7 @@ cadconditions <- function(h, tc, n, p = 100346.13, wind, startjul, lat, long,
   em <- emcs * (1 - n ^ 2) + 0.976 * n ^ 2
   jd <- floor(c(1:length(em)) * hourint / 24 - hourint / 24 + startjul +
                 starttime / 24)
-  st <- suntimes(jd, lat, long, tz, dst)
+  st <- suntimes(jd, lat, long, merid, dst)
   hrs <- (c(1:length(em)) * hourint - hourint + starttime)%%24
   dn <- ifelse(hrs > (st$sunrise + 3) & hrs < st$sunset, 1, 0)
   cad <- ifelse(dn < 1 & wind < windthresh & em < emthresh, 1, 0)

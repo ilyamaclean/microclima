@@ -79,7 +79,7 @@ latlongfromraster <- function(r) {
 #' @param hour hours (decimal, 0-23).
 #' @param min minutes (decimal, 0-59).
 #' @param sec seconds (decimal, 0-59).
-#' @param tz an optional numeric value specifying the time zones expressed as hours different from GMT (-ve to west).
+#' @param dst an optional numeric value specifying the time zone expressed as hours different from GMT (-ve to west).
 #'
 #' @return Julian Day. I.e. the number of days since January 1, 4713 BCE at noon UTC.
 #' @export
@@ -88,8 +88,8 @@ latlongfromraster <- function(r) {
 #' jd1 <- julday(2010, 1, 31)
 #' jd2 <- julday(2010, 1, 31, 11, 0, 0)
 #' jd1 - jd2
-julday <- function(year, month, day, hour = 12, min = 0, sec = 0, tz = 0) {
-  day_decimal <- day + (hour - tz + (min + sec / 60) / 60) / 24
+julday <- function(year, month, day, hour = 12, min = 0, sec = 0, dst = 0) {
+  day_decimal <- day + (hour - dst + (min + sec / 60) / 60) / 24
   monthadj <- month + (month < 3) * 12
   yearadj <- year + (month < 3) * -1
   julian_day <- trunc(365.25 * (yearadj + 4716)) + trunc(30.6001 *
@@ -105,8 +105,8 @@ julday <- function(year, month, day, hour = 12, min = 0, sec = 0, tz = 0) {
 #' @param localtime local time (decimal hour, 24 hour clock).
 #' @param long longitude of the location for which the solar time is required (decimal degrees, -ve west of Greenwich meridian).
 #' @param julian Julian day expressed as an integer as returned by [julday()].
-#' @param merid an optional numeric value representing the longitude (decimal degrees) of the local time zone meridian (0 for UK time).
-#' @param dst an optional numeric value representing the local summer time adjustment (hours, e.g. +1 for BST).
+#' @param merid an optional numeric value representing the longitude (decimal degrees) of the local time zone meridian (0 for GMT).
+#' @param dst an optional numeric value representing the time difference from the timezone meridian (hours, e.g. +1 for BST if `merid` = 0).
 #'
 #' @return the solar time. I.e. the times that would be measured by a sundial (hours).
 #' @export
@@ -116,12 +116,14 @@ julday <- function(year, month, day, hour = 12, min = 0, sec = 0, tz = 0) {
 #' the angular offset of the Sun from its mean position on the celestial sphere as viewed from
 #' Earth due the eccentricity of the Earth's orbit and the obliquity due to tilt of the Earth's
 #' rotational axis. These two factors have different wavelengths, amplitudes and phases,
-#' that vary over geological timescales. The equations used here are those derived by Milne.
+#' that vary over geological timescales. The equations used here are those derived by Milne. BY default,
+#' local are used, with the meridian set to round(long / 15, 0) * 15.
+#'
 #'
 #' @examples
 #' jd <- julday (2010, 6, 21) # Julian day
 #' solartime(12, -5, jd) # solartime at noon on 21 June 2010, 5ºW
-solartime <- function(localtime, long, julian, merid = 0, dst = 0) {
+solartime <- function(localtime, long, julian, merid = round(long / 15, 0) * 15, dst = 0) {
   m <- 6.24004077 + 0.01720197 * (julian -  2451545)
   eot <- -7.659 * sin(m) + 9.863 * sin (2 * m + 3.5932)
   st <- localtime + (4 * (long - merid) + eot) / 60 - dst
@@ -135,9 +137,8 @@ solartime <- function(localtime, long, julian, merid = 0, dst = 0) {
 #' @param lat latitude of the location for which the solar azimuth is required (decimal degrees, -ve south of the equator).
 #' @param long longitude of the location for which the solar azimuth is required (decimal degrees, -ve west of Greenwich meridian).
 #' @param julian Julian day expressed as an integer as returned by [julday()].
-#' @param merid an optional numeric value representing the longitude (decimal degrees) of the local time zone meridian (0 for UK time).
-#' @param dst an optional numeric value representing the local summer time adjustment (hours, e.g. +1 for BST).
-#'
+#' @param merid an optional numeric value representing the longitude (decimal degrees) of the local time zone meridian (0 for GMT). Default is `round(long / 15, 0) * 15`
+#' @param dst an optional numeric value representing the time difference from the timezone meridian (hours, e.g. +1 for BST if `merid` = 0).
 #' @return a numeric value or vector of values representing the solar azimuth (decimal degrees).
 #' @export
 #'
@@ -145,7 +146,7 @@ solartime <- function(localtime, long, julian, merid = 0, dst = 0) {
 #' # solar azimuth at noon on 21 June 2010, Porthleven, Cornwall, UK
 #' jd <- julday (2010, 6, 21) # Julian day
 #' solazi(12, 50.08, -5.31, jd)
-solazi <- function(localtime, lat, long, julian, merid = 0, dst = 0) {
+solazi <- function(localtime, lat, long, julian, merid = round(long / 15, 0) * 15, dst = 0) {
   stime <- solartime(localtime, long, julian, merid, dst)
   tt <- 0.261799 * (stime - 12)
   declin <- (pi * 23.5 / 180) * cos(2 * pi * ((julian - 171) / 365.25))
@@ -172,8 +173,8 @@ solazi <- function(localtime, lat, long, julian, merid = 0, dst = 0) {
 #' @param lat latitude of the location for which the solar altitude is required (decimal degrees, -ve south of the equator).
 #' @param long longitude of the location for which the solar altitude is required (decimal degrees, -ve west of Greenwich meridian).
 #' @param julian Julian day expressed as an integer as returned by [julday()].
-#' @param merid an optional numeric value representing the longitude (decimal degrees) of the local time zone meridian (0 for UK time).
-#' @param dst an optional numeric value representing the local summer time adjustment (hours, e.g. +1 for BST).
+#' @param merid an optional numeric value representing the longitude (decimal degrees) of the local time zone meridian (0 for GMT). Default is `round(long / 15, 0) * 15`
+#' @param dst an optional numeric value representing the time difference from the timezone meridian (hours, e.g. +1 for BST if `merid` = 0).
 #'
 #' @return a numeric value representing the solar altitude (º).
 #' @export
@@ -182,7 +183,7 @@ solazi <- function(localtime, lat, long, julian, merid = 0, dst = 0) {
 #' # solar altitude at noon on 21 June 2010, Porthleven, Cornwall
 #' jd <- julday (2010, 6, 21) # Julian day
 #' solalt(12, 50.08, -5.31, jd)
-solalt <- function(localtime, lat, long, julian, merid = 0, dst = 0) {
+solalt <- function(localtime, lat, long, julian, merid = round(long / 15, 0) * 15, dst = 0) {
   stime <- solartime(localtime, long, julian, merid, dst)
   tt <- 0.261799 * (stime - 12)
   declin <- (pi * 23.5 / 180) * cos(2 * pi * ((julian - 171) / 365.25))
@@ -248,8 +249,8 @@ horizonangle <- function(dtm, azimuth, res = 1) {
 #' @param julian a single integer representing the Julian day as returned by [julday()].
 #' @param dtm an optional raster object, two-dimensional array or matrix of elevations (m). If not a raster, orientated as if derived from a raster using [is_raster()]. I.e. `[1, 1]` is the NW corner.
 #' @param res a single numeric value representing the spatial resolution of `dtm` (m).
-#' @param merid an optional single numeric value representing the longitude (decimal degrees) of the local time zone meridian (0 for UK time).
-#' @param dst an optional single numeric value representing the local summer time adjustment (hours, e.g. +1 for BST).
+#' @param merid an optional numeric value representing the longitude (decimal degrees) of the local time zone meridian (0 for GMT). Default is `round(long / 15, 0) * 15`
+#' @param dst an optional numeric value representing the time difference from the timezone meridian (hours, e.g. +1 for BST if `merid` = 0).
 #' @param shadow an optional logical value indicating whether topographic shading should be considered (TRUE = Yes, FALSE = No).
 #'
 #' @return If shadow is `TRUE`, a raster object or a two-dimensional array of numeric values representing the proportion of direct beam radiation incident on an inclined surface, accounting for topographic shading.
@@ -284,7 +285,7 @@ horizonangle <- function(dtm, azimuth, res = 1) {
 #' ll <- latlongfromraster(dtm1m)
 #' solarindex(0, 0, 8, lat = ll$lat, long = ll$long, jd)
 solarindex <- function(slope = NA, aspect, localtime, lat = NA, long, julian,
-                      dtm = array(0, dim = c(1, 1)), res = 1, merid = 0,
+                      dtm = array(0, dim = c(1, 1)), res = 1, merid = round(long / 15, 0) * 15,
                       dst = 0, shadow = TRUE) {
   r <- dtm
   if (class(slope) == "logical" & class(r) == "RasterLayer") {
@@ -328,8 +329,8 @@ solarindex <- function(slope = NA, aspect, localtime, lat = NA, long, julian,
 #' @param lat latitude of the location for which the airmass coefficient is required (decimal degrees, -ve south of equator).
 #' @param long longitude of the location for which the airmass coefficient is required (decimal degrees, -ve west of Greenwich meridian).
 #' @param julian a numeric value representing the Julian day as returned by [julday()].
-#' @param merid an optional numeric value representing the longitude (decimal degrees) of the local time zone meridian (0 for UK time).
-#' @param dst an optional numeric value representing the local summer time adjustment (hours, e.g. +1 for BST).
+#' @param merid an optional numeric value representing the longitude (decimal degrees) of the local time zone meridian (0 for GMT). Default is `round(long / 15, 0) * 15`
+#' @param dst an optional numeric value representing the time difference from the timezone meridian (hours, e.g. +1 for BST if `merid` = 0).
 #'
 #' @return the airmass coefficient, i.e. the direct optical path length of a solar beam through the Earth’s atmosphere, expressed as a ratio relative to the path length vertically upwards for a given location and time.
 #' @export
@@ -338,7 +339,7 @@ solarindex <- function(slope = NA, aspect, localtime, lat = NA, long, julian,
 #' # airmass coefficient at noon on 21 June 2010, Porthleven, Cornwall
 #' jd <- julday (2010, 6, 21) # Julian day
 #' airmasscoef(12, 50.08, -5.31, jd)
-airmasscoef <- function(localtime, lat, long, julian, merid = 0, dst = 0) {
+airmasscoef <- function(localtime, lat, long, julian, merid = round(long / 15, 0) * 15, dst = 0) {
   sa <- solalt(localtime, lat, long, julian, merid, dst)
   z <- 90 - sa
   thickness <- 1 / (cos(z * pi / 180) + 0.50572 * (96.07995 - z) ^ (-1.6364))

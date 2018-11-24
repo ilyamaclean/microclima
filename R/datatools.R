@@ -157,6 +157,7 @@ get_NCEP <- function(lat, long, tme, reanalysis2 = TRUE) {
     }
     v[sel]
   }
+  tme <- as.POSIXlt(tme + 0, tz = "UTC")
   ll <- data.frame(x = long, y = lat)
   tme2 <- sorttimes(tme)$tme
   sel <- sorttimes(tme)$sel
@@ -173,7 +174,7 @@ get_NCEP <- function(lat, long, tme, reanalysis2 = TRUE) {
   ulw <- ncepget1('ulwrf.sfc', tme2, ll, sel)
   dsw <- ncepget1('dswrf.sfc', tme2, ll, sel)
   tcdc <- ncepget1('tcdc.eatm', tme2, ll, sel)
-  dfout <- data.frame(obs_time = tme2[sel], Tk, Tkmin, Tkmax, sh, pr, wu, wv, dlw, ulw, dsw, tcdc)
+  dfout <- data.frame(obs_time = tme2[sel], timezone = "UTC", Tk, Tkmin, Tkmax, sh, pr, wu, wv, dlw, ulw, dsw, tcdc)
   rownames(dfout) <- NULL
   return(dfout)
 }
@@ -184,18 +185,18 @@ get_NCEP <- function(lat, long, tme, reanalysis2 = TRUE) {
 #' @param lat latitude of the location for which the solar altitude is required (decimal degrees, -ve south of the equator).
 #' @param long longitude of the location for which the solar altitude is required (decimal degrees, -ve west of Greenwich meridian).
 #' @param julian Julian day expressed as an integer as returned by [julday()].
-#' @param merid an optional numeric value representing the longitude (decimal degrees) of the local time zone meridian (0 for UK time).
-#' @param dst an optional numeric value representing the local summer time adjustment (hours, e.g. +1 for BST).
+#' @param merid an optional numeric value representing the longitude (decimal degrees) of the local time zone meridian (0 for GMT). Default is `round(long / 15, 0) * 15`
+#' @param dst an optional numeric value representing the time difference from the timezone meridian (hours, e.g. +1 for BST if `merid` = 0).
 #'
 #' @return a numeric value representing the solar altitude (º).
 #' @export
 #'
 #' @examples
-#' # solar index at noon on 21 June 2010, Porthleven, Cornwall
+#' # solar index at noon GMT on 21 June 2010, Porthleven, Cornwall
 #' jd <- julday (2010, 6, 21) # Julian day
 #' siflat(12, 50.08, -5.31, jd)
 #'
-siflat <- function(localtime, lat, long, julian, merid = 0, dst = 0){
+siflat <- function(localtime, lat, long, julian, merid = round(long / 15, 0) * 15, dst = 0){
   saltitude <- solalt(localtime, lat, long, julian, merid, dst)
   alt <- saltitude * (pi/180)
   index <- cos(pi/2 - alt)
@@ -256,6 +257,24 @@ siflat <- function(localtime, lat, long, julian, merid = 0, dst = 0){
   d[d > 1] <- 1
   mean(d, na.rm = T)
 }
+# time sort out
+#' @export
+.tme.sort <- function(tme, UTC = TRUE) {
+  zero <- function(x) ifelse(x < 10, paste0("0", x), paste0("", x))
+  pasted <- function(tme, i) {
+    paste0(tme$year[i] + 1900, "-", zero(tme$mon[i] + 1), "-", zero(tme$mday[i]))
+  }
+  tmeseq <- function(dstart, dfinish, tz) {
+    seq(as.POSIXlt(dstart, format = "%Y-%m-%d", origin = "1900-01-01", tz = tz),
+        as.POSIXlt(dfinish, format = "%Y-%m-%d", origin = "1900-01-01", tz = tz),
+        by = 'days')
+  }
+  if (UTC) {
+    tme <- as.POSIXlt(tme + 0, tz = "UTC")
+    tme <- tmeseq(pasted(tme, 1), pasted(tme, length(tme)), "UTC")
+  } else tme <- tmeseq(pasted(tme, 1), pasted(tme, length(tme)), "")
+  tme
+}
 #' Interpolate NCEP data for running microclima to hourly
 #'
 #' @description `hourlyNCEP` optionally downloads the required NCEP climate and radiation forcing data
@@ -306,6 +325,9 @@ hourlyNCEP <- function(ncepdata = NA, lat, long, tme, reanalysis2 = TRUE) {
     x[x < mn] <- mn
     x
   }
+  tmeout <- tme
+  tme <- .tme.sort(tme)
+  tme <- c(tme, tme[length(tme)] + 24 * 3600)
   if (class(ncepdata) != "logical") {
     tme <- as.POSIXlt(ncepdata$obs_time)
     tme <- tme[5:(length(tme) - 4)]
@@ -317,8 +339,8 @@ hourlyNCEP <- function(ncepdata = NA, lat, long, tme, reanalysis2 = TRUE) {
   if (class(ncepdata) == "logical") {
     ncepdata <- get_NCEP(lat, long, tme2, reanalysis2)
   }
-  # *** NB sort out times (take form tme6 rather than tme)
   tme6 <- as.POSIXlt(ncepdata$obs_time)
+  tme6 <- as.POSIXlt(tme6 + 0, tz = "UTC")
   n <- (length(tme6) - 1) * 6 + 1
   h_pr <- spline(tme6, ncepdata$pr, n = n)$y
   h_sh <- spline(tme6, ncepdata$sh, n = n)$y
@@ -328,8 +350,8 @@ hourlyNCEP <- function(ncepdata = NA, lat, long, tme, reanalysis2 = TRUE) {
                     tz = "UTC")
   tmo2 <- as.POSIXlt(seq(0,(length(tme6) / 4), by = 1/24) * 3600 * 24, origin = min(tme6), tz = 'UTC')
   jd <- julday(tmo2$year + 1900,  tmo2$mon + 1, tmo2$mday)
-  si <- siflat(tmo2$hour, lat, long, jd)
-  am <- airmasscoef(tmo2$hour, lat, long, jd)
+  si <- siflat(tmo2$hour, lat, long, jd, merid = 0)
+  am <- airmasscoef(tmo2$hour, lat, long, jd, merid = 0)
   si_m <- 0
   am_m <- 0
   for (i in 1:(length(tme6))) {
@@ -338,14 +360,12 @@ hourlyNCEP <- function(ncepdata = NA, lat, long, tme, reanalysis2 = TRUE) {
     si_m[i] <- mean(si[st:ed], na.rm = T)
     am_m[i] <- mean(am[st:ed], na.rm = T)
   }
-  # Calculate diffuse proportion
   jd <- julday(tme6$year + 1900, tme6$mon + 1, tme6$mday)
   dp <- 0
   for (i in 1:length(jd)) {
     dp[i] <- .difprop2(ncepdata$dsw[i], jd[i], tme6$hour[i], lat, long)
   }
   am_m[am_m > 5] <- 5
-  # Adjust direct and diffuse
   dp[ncepdata$dsw == 0] <- NA
   dnir <- (ncepdata$dsw * (1 - dp)) / si_m
   dnir[si_m == 0] <- NA
@@ -357,7 +377,6 @@ hourlyNCEP <- function(ncepdata = NA, lat, long, tme, reanalysis2 = TRUE) {
   sdni[si_m < 0.0348995] <- dnir[si_m < 0.0348995]
   dnir <- dnir - sdni
   difr <- difr + sdni
-  # Calculate extinction coefficient
   edni <- dnir / ((4.87 / 0.0036) * (1 - dp))
   edif <- difr / ((4.87 / 0.0036) * dp)
   odni <- bound((log(edni) / -am_m), mn = 0.24, mx = 1.7)
@@ -389,9 +408,9 @@ hourlyNCEP <- function(ncepdata = NA, lat, long, tme, reanalysis2 = TRUE) {
   h_od <- bound(spline(tme6, odif, n = n)$y, mn = 0.24, mx = 1.7)
   tmorad <- as.POSIXlt(tmo + 3600 * 3)
   jd <- julday(tmorad$year + 1900, tmorad$mon + 1, tmorad$mday)
-  szenith <- 90 - solalt(tmorad$hour, lat, long, jd)
-  si <- siflat(tmorad$hour, lat, long, jd)
-  am <- airmasscoef(tmorad$hour, lat, long, jd)
+  szenith <- 90 - solalt(tmorad$hour, lat, long, jd, merid = 0)
+  si <- siflat(tmorad$hour, lat, long, jd, merid = 0)
+  am <- airmasscoef(tmorad$hour, lat, long, jd, merid = 0)
   afi <- exp(-am * h_oi)
   afd <- exp(-am * h_od)
   h_dni <- (1 - h_dp) * afi * h_gr
@@ -412,7 +431,7 @@ hourlyNCEP <- function(ncepdata = NA, lat, long, tme, reanalysis2 = TRUE) {
   jd <- julday(tme2$year + 1900, tme2$mon + 1, tme2$mday)
   h_tc<-suppressWarnings(hourlytemp(julian = jd, em = em_h[thsel], dni = h_dni[thsel],
                                     dif = h_dif[thsel], mintemp = tmin, maxtemp = tmax,
-                                    lat = lat, long = long))
+                                    lat = lat, long = long, merid = 0))
   hlwu <- 2.043e-10 * (h_tc + 273.15)^4
   hlwd <- em_h[thsel] *  hlwu
   h_nlw <- hlwu - hlwd
@@ -429,8 +448,11 @@ hourlyNCEP <- function(ncepdata = NA, lat, long, tme, reanalysis2 = TRUE) {
                           netlong = h_nlw, uplong = hlwu, downlong = hlwd,
                           rad_dni = h_dni[thsel] * 0.0036,
                           rad_dif = h_dif[thsel] * 0.0036,
-                          szenith = szenith[thsel])
-  return(hourlyout)
+                          szenith = szenith[thsel], timezone = "UTC")
+  tmetest <- as.POSIXlt(hourlyout$obs_time)
+  tmeout <- as.POSIXlt(tmeout + 0, tz = "UTC")
+  sel <- which(tmetest >= min(tmeout) & tmetest <= max(tmeout))
+  return(hourlyout[sel,])
 }
 #' Obtain daily precipitation from NCEP
 #'
@@ -449,6 +471,8 @@ hourlyNCEP <- function(ncepdata = NA, lat, long, tme, reanalysis2 = TRUE) {
 #' tme <- as.POSIXlt(c(1:15) * 24 * 3600, origin = "2015-01-15", tz = 'UTC')
 #' dailyprecipNCEP(50, -5, tme)
 dailyprecipNCEP <- function(lat, long, tme, reanalysis2 = TRUE) {
+  tmeout <- tme
+  tme <- .tme.sort(tme)
   long <- ifelse(long > 180, long - 360, long)
   int <- as.numeric(tme[2]) - as.numeric(tme[1])
   lgth <- (length(tme) * int) / (24 * 3600)
@@ -462,8 +486,8 @@ dailyprecipNCEP <- function(lat, long, tme, reanalysis2 = TRUE) {
                      lat.southnorth = c(ll$y,ll$y), lon.westeast = c(ll$x,ll$x),
                      return.units = FALSE, status.bar = FALSE, reanalysis2 = reanalysis2)
   if (is.null(dim(pre)) == F) {
-    latdif <- ((ll$y - as.numeric(rownames(pre)))^2)^0.5
-    londif <- ((ll$x%%360 - as.numeric(colnames(pre)))^2)^0.5
+    latdif <- abs(ll$y - as.numeric(rownames(pre)))
+    londif <- abs(ll$x%%360 - as.numeric(colnames(pre)))
     pre <- pre[which.min(londif), which.min(latdif),]
   }
   pre <- pre * 6 * 3600
@@ -479,7 +503,8 @@ dailyprecipNCEP <- function(lat, long, tme, reanalysis2 = TRUE) {
     }
   }
   tma <- as.POSIXlt(tma[-1], origin = '1970-01-01', tz = 'UTC')
-  sel <- which(tma >= min(tme) & tma < (max(tme) + 24 * 3600))
+  tmeout <- as.POSIXlt(tmeout + 0, tz = "UTC")
+  sel <- which(tma >= min(tmeout) & tma <= (max(tmeout)))
   pre <- pre[sel]
   dpre <- t(matrix(pre, nrow = 4))
   dpre <- apply(dpre, 1, sum)
@@ -538,13 +563,13 @@ dailyprecipNCEP <- function(lat, long, tme, reanalysis2 = TRUE) {
   ha <- 0
   jd <- julday(tme$year + 1900, tme$mon + 1, tme$mday)
   for (i in 1:length(tme)) {
-    saz <- solazi(tme$hour[i], lat, long, jd[i])
+    saz <- solazi(tme$hour[i], lat, long, jd[i], merid = 0)
     saz <- round(saz / 10, 0) + 1
     saz <- ifelse(saz > 36, 1, saz)
     ha[i] <- ha36[saz]
   }
-  si <- siflat(tme$hour, lat, long, jd)
-  sa <- solalt(tme$hour, lat, long, jd)
+  si <- siflat(tme$hour, lat, long, jd, merid = 0)
+  sa <- solalt(tme$hour, lat, long, jd, merid = 0)
   si[sa < ha] <- 0
   dirr <- si * hourlydata$rad_dni
   a <- slope * (pi/180)
@@ -572,14 +597,13 @@ dailyprecipNCEP <- function(lat, long, tme, reanalysis2 = TRUE) {
 }
 #' Cold air drainage direct from emissivity
 #' @export
-.cadconditions2 <- function (em, wind, startjul, lat, long,
-                             starttime = 0, hourint = 1, windthresh = 4.5, emthresh = 0.725,
-                             tz = 0, dst = 0, con = TRUE)
+.cadconditions2 <- function (em, wind, startjul, lat, long, starttime = 0, hourint = 1,
+                             windthresh = 4.5, emthresh = 0.725, con = TRUE)
 {
   jd <- floor(c(1:length(em)) * hourint/24 - hourint/24 + startjul +
                 starttime/24)
 
-  st <- suntimes(jd, lat, long, tz, dst)
+  st <- suntimes(jd, lat, long, merid = 0)
   hrs <- (c(1:length(em)) * hourint - hourint + starttime)%%24
   dn <- ifelse(hrs > (st$sunrise + 3) & hrs < st$sunset, 1,
                0)
@@ -794,6 +818,7 @@ dailyprecipNCEP <- function(lat, long, tme, reanalysis2 = TRUE) {
 }
 #' Downloads sea-surface temperature data
 #' @export
+#' @import rnoaa ncdf4
 .get_sst <- function(lat, long, tme) {
   sel1 <- which(tme$year == min(tme$year))
   sel2 <- which(tme$year == max(tme$year))
@@ -838,7 +863,8 @@ dailyprecipNCEP <- function(lat, long, tme, reanalysis2 = TRUE) {
   ssth <- spline(sstdf$sst~as.POSIXct(sstdf$obs_time), n = length(tme2))$y
   tmeh <- spline(sstdf$sst~as.POSIXct(sstdf$obs_time), n = length(tme2))$x
   tmeh <- as.POSIXlt(tmeh, origin = "1970-01-01 00:00", tz = "GMT")
-  sel <- which(tmeh >=min(tme) & tmeh <=max(tme))
+  tme <- as.POSIXlt(tme + 0, tz = "GMT")
+  sel <- which(tmeh >=min(tme) & tmeh <= max(tme))
   return(ssth[sel])
 }
 #' Calculates coastal effects from NCEP data
@@ -917,8 +943,8 @@ coastalNCEP <- function(landsea, ncephourly, steps = 8, use.raster = T, zmin = 0
 #'
 #' @param lat the latitude (in decimal degrees) of the location for point data are required.
 #' @param long the longitude (in decimal degrees) of the location for point data are required.
-#' @param dstart start date as character of time period required in format DD/MM/YYYY
-#' @param dfinish end date as character of time period required in format DD/MM/YYYY
+#' @param dstart start date as character of time period required in format DD/MM/YYYY (UTC timezones assumed)
+#' @param dfinish end date as character of time period required in format DD/MM/YYYY (UTC timezones assumed)
 #' @param l  a single numeric value of the leaf area index for location (see details).
 #' @param x  a single numeric value representing the ratio of vertical to horizontal
 #' projections of leaf foliage for the location (see details).
@@ -1011,13 +1037,15 @@ coastalNCEP <- function(landsea, ncephourly, steps = 8, use.raster = T, zmin = 0
 #' head(mnr$tref)
 #' head(mnr$dailyprecip)
 microclimaforNMR <- function(lat, long, dstart, dfinish, l, x, coastal = TRUE, hourlydata = NA,
-                              dailyprecip = NA, dem = NA, demmeso = dem, albr =0.15,
-                              resolution = 100, zmin = 0, slope = NA, aspect = NA,
-                              windthresh = 4.5, emthresh = 0.78, reanalysis2 = TRUE,
-                              steps = 8, use.raster = TRUE, plot.progress = TRUE, tidyr = FALSE) {
-  tme <- seq(as.POSIXlt(dstart, format = "%d/%m/%Y", origin = "01/01/1900", tz = 'UTC'),
-             as.POSIXlt(dfinish, format = "%d/%m/%Y", origin = "01/01/1900", tz = 'UTC'),
-             by = 'days')
+                             dailyprecip = NA, dem = NA, demmeso = dem, albr =0.15,
+                             resolution = 100, zmin = 0, slope = NA, aspect = NA,
+                             windthresh = 4.5, emthresh = 0.78, reanalysis2 = TRUE,
+                             steps = 8, use.raster = TRUE, plot.progress = TRUE, tidyr = FALSE) {
+  tme <- seq(as.POSIXlt(dstart, format = "%d/%m/%Y", origin = "01/01/1900"),
+             as.POSIXlt(dfinish, format = "%d/%m/%Y", origin = "01/01/1900")
+             + 3600 * 24, by = 'hours')
+  tme <- tme[-length(tme)]
+  tme <- as.POSIXlt(tme)
   if (class(dem) == "logical") {
     cat("Downloading digital elevation data \n")
     dem <- get_dem(r = NA, lat = lat, long = long, resolution = resolution, zmin = zmin)
@@ -1167,6 +1195,7 @@ microclimaforNMR <- function(lat, long, dstart, dfinish, l, x, coastal = TRUE, h
 #' plot_ly(z = ~is_raster(r)) %>%
 #' add_surface(surfacecolor = ~is_raster(meantemp)) %>%
 #' layout(scene = list(zaxis = zrange))
+
 runauto.ncep <- function(r, dstart, dfinish, hgt = 0.05, l, x, habitat = NA,
                          use.raster = FALSE, coastal = TRUE, r.is.dem = TRUE,
                          hourlydata = NA, dailyprecip = NA, albg = 0.15,
@@ -1274,12 +1303,11 @@ runauto.ncep <- function(r, dstart, dfinish, hgt = 0.05, l, x, habitat = NA,
   # Lat long and time
   lat <- latlongfromraster(r)$lat
   long <- latlongfromraster(r)$long
-  tme <- seq(as.POSIXlt(dstart, format = "%d/%m/%Y", origin = "01/01/1900", tz = 'UTC'),
-             as.POSIXlt(dfinish, format = "%d/%m/%Y", origin = "01/01/1900", tz = 'UTC'),
-             by = 'hours')
-  tme2 <- as.POSIXct(c(1:23) * 3600, format = "%d/%m/%Y", origin = dfinish, tz = 'UTC')
-  tme <- c(tme, tme2)
-  tme<-as.POSIXlt(tme)
+  tme <- seq(as.POSIXlt(dstart, format = "%d/%m/%Y", origin = "01/01/1900"),
+             as.POSIXlt(dfinish, format = "%d/%m/%Y", origin = "01/01/1900")
+             + 3600 * 24, by = 'hours')
+  tme <- tme[-length(tme)]
+  tme <- as.POSIXlt(tme)
   # l and x
   l <- is_raster(l)
   x <- is_raster(x)
@@ -1342,8 +1370,8 @@ runauto.ncep <- function(r, dstart, dfinish, hgt = 0.05, l, x, habitat = NA,
   dem[dem == zmin] <- NA
   r[r == zmin] <- NA
   micronmr <- .micro_ncep2(dstart = dstart, dfinish = dfinish, dem = r, dem2 = dem, LAI = 0,
-                          loc = loc, Usrhyt = hgt2, Refhyt = 2, coastal = coastal,
-                          DEP = dep)
+                           loc = loc, Usrhyt = hgt2, Refhyt = 2, coastal = coastal,
+                           DEP = dep)
   ma <- micronmr$microclima.out
   hourlydata <- ma$hourlydata
   #####################
