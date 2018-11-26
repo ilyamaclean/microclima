@@ -1375,6 +1375,7 @@ runauto.ncep <- function(r, dstart, dfinish, hgt = 0.05, l, x, habitat = NA,
   ma <- micronmr$microclima.out
   hourlydata <- ma$hourlydata
   #####################
+  tme <- as.POSIXlt(tme + 0, tz = "UTC")
   nmrout <- as.data.frame(micronmr$metout)
   rwind <- ma$hourlyradwind
   netrad = (1 - 0.15) * rwind$swrad - 0.98 * hourlydata$netlong * rwind$skyviewfact * (1 - rwind$canopyfact)
