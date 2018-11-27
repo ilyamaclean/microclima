@@ -510,9 +510,47 @@ dailyprecipNCEP <- function(lat, long, tme, reanalysis2 = TRUE) {
   dpre <- apply(dpre, 1, sum)
   return(dpre)
 }
+#' get shortwave radiation (time series)
+#' @export
+.shortwave.ts <- function(dni, dif, jd, localtime, lat, long, slope, aspect,
+                          ha = 0, svv = 1, x = 1, l = 0, albr = 0.15,
+                          merid = round(long / 15, 0) * 15, dst = 0, difani = TRUE) {
+  sa <- solalt(localtime, lat, long, jd, merid)
+  alt <- sa * (pi / 180)
+  zen <- pi / 2 - alt
+  saz <- solazi(localtime, lat, long, jd, merid)
+  azi <- saz * (pi / 180)
+  sl <- slope * (pi / 180)
+  aspe <- aspect * (pi / 180)
+  si <- cos(zen) * cos(sl) + sin(zen) * sin(sl) * cos(azi - aspe)
+  si[sa < ha] <- 0
+  si[si < 0] <- 0
+  dirr <- si * dni
+  if (difani) {
+    k <- dni / 4.87
+  } else k <- 0
+  isor <- 0.5 * dif * (1 + cos(sl)) * (1 - k)
+  cisr <- k * dif * si
+  sdi <- (slope + ha) * (pi / 180)
+  refr <- 0.5 * albr * (1 - cos(sdi)) * dif
+  fd <- dirr + cisr
+  fdf <- isor + refr
+  kk <- ((x ^ 2 + 1 / (tan(sa * (pi / 180)) ^ 2)) ^ 0.5) /
+    (x + 1.774 * (x + 1.182) ^ (-0.733))
+  trd <- exp(-kk * l)
+  fr <- as.vector(canopy(array(l, dim = c(1,1)), array(x, dim = c(1,1))))
+  trf <- (1 - fr)
+  fgd <- fd * trd * (1 - albr)
+  fged <- fdf * trf * (1 - albr) * svv
+  fgc <- fgd + fged
+  cfc <- ((1 - trd) * fd + fr * fdf) / (fd + fdf)
+  cfc[is.na(cfc)] <- ((1 - trd[is.na(cfc)]) * 0.5 + fr * 0.5) / (0.5 + 0.5)
+  return(xxx=list(swrad = fgc, canopyfact = cfc))
+}
 #' get radiation and wind for use with NicheMapR
 #' @export
-.pointradwind <- function(hourlydata, dem, lat, long, l, x, albr = 0.15, zmin = 0, slope = NA, aspect = NA) {
+.pointradwind <- function(hourlydata, dem, lat, long, l, x, albr = 0.15, zmin = 0,
+                          slope = NA, aspect = NA, horizon = NA, difani = TRUE) {
   m <- is_raster(dem)
   m[is.na(m)] <- zmin
   m[m < zmin] <- zmin
@@ -551,15 +589,15 @@ dailyprecipNCEP <- function(lat, long, tme, reanalysis2 = TRUE) {
                     array(x, dim = dim(dem)[1:2]), res = reso)
   fr <- canopy(array(l, dim = dim(dem)[1:2]), array(x, dim = dim(dem)[1:2]))
   svf <- extract(svf, xy)
-  fr <- mean(fr)
-  mslope <- mean_slope(dem, res = reso)
-  mha <- extract(mslope, xy)
-  ha36 <- 0
-  for (i in 0:35) {
-    har <- horizonangle(dem, i*10, reso)
-    ha36[i + 1] <- atan(extract(har, xy)) * (180/pi)
-  }
+  if (class(horizon) == "logical") {
+    ha36 <- 0
+    for (i in 0:35) {
+      har <- horizonangle(dem, i*10, reso)
+      ha36[i + 1] <- atan(extract(har, xy)) * (180/pi)
+    }
+  } else ha36 <- rep(horizon, 36)
   tme <- as.POSIXlt(hourlydata$obs_time)
+  tme <- as.POSIXlt(tme + 0, tz = 'UTC')
   ha <- 0
   jd <- julday(tme$year + 1900, tme$mon + 1, tme$mday)
   for (i in 1:length(tme)) {
@@ -568,29 +606,11 @@ dailyprecipNCEP <- function(lat, long, tme, reanalysis2 = TRUE) {
     saz <- ifelse(saz > 36, 1, saz)
     ha[i] <- ha36[saz]
   }
-  si <- siflat(tme$hour, lat, long, jd, merid = 0)
-  sa <- solalt(tme$hour, lat, long, jd, merid = 0)
-  si[sa < ha] <- 0
-  dirr <- si * hourlydata$rad_dni
-  a <- slope * (pi/180)
-  k <- hourlydata$rad_dni / 4.87
-  k <- ifelse(k > 1, 1, k)
-  isor <- 0.5 * hourlydata$rad_dif * (1 + cos(a)) * (1 - k)
-  cisr <- k * hourlydata$rad_dif * si
-  sdi <- (slope + mha) * (pi/180)
-  refr <- 0.5 * albr * (1 - cos(sdi)) * hourlydata$rad_dif
-  fd <- dirr + cisr
-  fdf <- isor + refr
-  kk <- ((x^2 + 1/(tan(sa * (pi/180))^2))^0.5)/(x + 1.774 * (x + 1.182)^(-0.733))
-  trd <- exp(-kk * l)
-  trf <- (1 - fr)
-  fgd <- fd * trd
-  fged <- fdf * trf * svf
-  swrad <- fgd + fged
+  sw <-.shortwave.ts(hourlydata$rad_dni, hourlydata$rad_dif, jd, tme$hour,
+                        lat, long, slope, aspect, ha, svf, x, l, albr, merid = 0,
+                        difani = difani)
   windsp <- windheight(hourlydata$windspeed, 10, 1)
-  cfc <- ((1 - trd) * fd + fr * fdf) / (fd + fdf)
-  cfc[is.na(cfc)] <- ((1 - trd[is.na(cfc)]) * 0.5 + fr * 0.5) / (0.5 + 0.5)
-  hourlyrad <- data.frame(swrad = swrad, skyviewfact = svf, canopyfact = cfc,
+  hourlyrad <- data.frame(swrad = sw$swrad, skyviewfact = svf, canopyfact = sw$canopyfact,
                           whselt = wsheltatground, windspeed = wshelt *  windsp,
                           slope = slope, aspect = aspect)
   hourlyrad
