@@ -646,6 +646,7 @@ dailyprecipNCEP <- function(lat, long, tme, reanalysis2 = TRUE) {
   proj4string(xy) = "+init=epsg:4326"
   xy <- as.data.frame(spTransform(xy, crs(dem)))
   elev <- extract(dem, xy)
+  if (is.na(elev)) elev <- 0
   # elevation effect
   lr <- lapserate(hourlydata$temperature, hourlydata$humidity,
                   hourlydata$pressure)
@@ -678,6 +679,7 @@ dailyprecipNCEP <- function(lat, long, tme, reanalysis2 = TRUE) {
   cdif <- pfa * td
   cdif <- if_raster(cdif, dem)
   cdif <- extract(cdif, xy)
+  if (is.na(cdif)) cdif <- 0
   cadt <- cdif * lr * cad
   tout <- data.frame(tref = hourlydata$temperature,
                      elev = elev, elevncep = elevncep,
