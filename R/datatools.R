@@ -466,6 +466,7 @@ hourlyNCEP <- function(ncepdata = NA, lat, long, tme, reanalysis2 = TRUE) {
 #'
 #' @return a vector of daily precipitations (mm / day) for the period covered by tme
 #' @export
+#' @import RNCEP
 #'
 #' @examples
 #' tme <- as.POSIXlt(c(1:15) * 24 * 3600, origin = "2015-01-15", tz = 'UTC')
@@ -488,7 +489,7 @@ dailyprecipNCEP <- function(lat, long, tme, reanalysis2 = TRUE) {
   if (is.null(dim(pre)) == F) {
     latdif <- abs(ll$y - as.numeric(rownames(pre)))
     londif <- abs(ll$x%%360 - as.numeric(colnames(pre)))
-    pre <- pre[which.min(londif), which.min(latdif),]
+    pre <- pre[which.min(latdif), which.min(londif),]
   }
   pre <- pre * 6 * 3600
   tma <- 0
