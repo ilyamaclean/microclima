@@ -1194,12 +1194,12 @@ microclimaforNMR <- function(lat, long, dstart, dfinish, l, x, coastal = TRUE, h
 #' (6) tmean: If `summarydata` is TRUE, a matrix of mean temperatures
 #' (7) frosthours: If `summarydata` is TRUE, a matrix of hours below 0 deg C.
 #'
-#' @import raster NicheMapR
+#' @import raster
 #' @export
 #'
 #' @examples
 #' library(raster)
-#' library(NicheMapR)
+#' require(NicheMapR)
 #' # Get dem for Pico, Azores
 #' r <- get_dem(lat = 38.467429, long = -28.398995, resolution = 30)
 #' plot(r)
@@ -1319,10 +1319,10 @@ runauto.ncep <- function(r, dstart, dfinish, hgt = 0.05, l, x, habitat = NA,
     if (is.na(mean(x, na.rm = TRUE))) y <- NA
     y
   }
-  #if (!requireNamespace("NicheMapR", quietly = TRUE)) {
+  if (!requireNamespace("NicheMapR", quietly = TRUE)) {
   #  stop("package 'NicheMapR' is needed. Please install it from Github: 'mrke/NicheMapR'",
   #       call. = FALSE)
-  #}
+  }
   # Lat long and time
   lat <- latlongfromraster(r)$lat
   long <- latlongfromraster(r)$long
