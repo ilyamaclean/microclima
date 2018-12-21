@@ -1078,12 +1078,11 @@ microclimaforNMR <- function(lat, long, dstart, dfinish, l, x, coastal = TRUE, h
               + 3600 * 24, by = 'hours')
   tz1 <- format(as.POSIXlt(tme), format="%Z")
   tz2 <- format(as.POSIXlt(tme2), format="%Z")
-  xx <- tz1 == tz2
+  xx <- as.numeric(tme) == as.numeric(tme2)
   sel <- which(xx == FALSE)
   if (length(sel) > 1) {
     warning(paste("Data sequence in UTC/GMT. Some or all dates using system timezone are in", tz2[sel[1]]))
   }
-  tme <- tme2
   tme <- tme[-length(tme)]
   tme <- as.POSIXlt(tme)
   if (class(dem) == "logical") {
@@ -1352,12 +1351,11 @@ runauto.ncep <- function(r, dstart, dfinish, hgt = 0.05, l, x, habitat = NA,
               + 3600 * 24, by = 'hours')
   tz1 <- format(as.POSIXlt(tme), format="%Z")
   tz2 <- format(as.POSIXlt(tme2), format="%Z")
-  xx <- tz1 == tz2
+  xx <- as.numeric(tme) == as.numeric(tme2)
   sel <- which(xx == FALSE)
   if (length(sel) > 1) {
-    warning(paste("Model run in UTC/GMT. Some or all dates using system timezone are in",tz2[sel[1]]))
+    warning(paste("Data sequence in UTC/GMT. Some or all dates using system timezone are in", tz2[sel[1]]))
   }
-  tme <- tme2
   tme <- tme[-length(tme)]
   tme <- as.POSIXlt(tme)
   # l and x
