@@ -29,10 +29,10 @@
 #'
 #' @source \url{http://www.cmsaf.eu/}
 "cfc"
-#' A 2.5º resolution dataset of elevations
+#' A 1.875 (long) by  1.904129(lat) resolution dataset of elevations
 #'
 #' A dataset global dataset elevation in metres (CRS: +init=epsg:4326)
-#' @format A raster object with 72 rows and 144 columns.
+#' @format A raster object with 94 rows and 192 columns.
 #'
 #' @source \url{http://www.cmsaf.eu/}
 "demworld"

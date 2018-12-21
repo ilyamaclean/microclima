@@ -28,7 +28,6 @@ Imports:
     sp (>= 1.2),
     dplyr(>= 0.7),
     RNCEP (>= 1.0.8),
-    NicheMapR,
     zoo (>= 1.8),
     devtools,
     rnoaa,
@@ -38,7 +37,8 @@ RoxygenNote: 6.1.0
 Roxygen: list(markdown = TRUE) 
 Suggests: knitr,
     rmarkdown,
-    plotly
+    plotly,
+    NicheMapR
 VignetteBuilder: knitr
 URL: https://github.com/ilyamaclean/microclima
 BugReports: http://github.com/microclima/issues

@@ -325,8 +325,12 @@ hourlyNCEP <- function(ncepdata = NA, lat, long, tme, reanalysis2 = TRUE) {
     x[x < mn] <- mn
     x
   }
-  tmeout <- tme
+  tz <- format(tme, format="%Z")
+  if (tz[1] != "UTC" & tz[1]!= "GMT") {
+    warning(paste("NCEP data use UTC/GMT. Timezone converted from", tz[1], "to UTC/GMT"))
+  }
   tme <- .tme.sort(tme)
+  tmeout <- tme
   tme <- c(tme, tme[length(tme)] + 24 * 3600)
   if (class(ncepdata) != "logical") {
     tme <- as.POSIXlt(ncepdata$obs_time)
@@ -514,7 +518,7 @@ dailyprecipNCEP <- function(lat, long, tme, reanalysis2 = TRUE) {
 #' get shortwave radiation (time series)
 #' @export
 .shortwave.ts <- function(dni, dif, jd, localtime, lat, long, slope, aspect,
-                          ha = 0, svv = 1, x = 1, l = 0, albr = 0.15,
+                          ha = 0, svv = 1, x = 1, l = 0, albr = 0,
                           merid = round(long / 15, 0) * 15, dst = 0, difani = TRUE) {
   sa <- solalt(localtime, lat, long, jd, merid)
   alt <- sa * (pi / 180)
@@ -534,15 +538,15 @@ dailyprecipNCEP <- function(lat, long, tme, reanalysis2 = TRUE) {
   cisr <- k * dif * si
   sdi <- (slope + ha) * (pi / 180)
   refr <- 0.5 * albr * (1 - cos(sdi)) * dif
-  fd <- dirr + cisr
-  fdf <- isor + refr
+  fd <- dirr + cisr  # direct
+  fdf <- isor + refr  # diffuse
   kk <- ((x ^ 2 + 1 / (tan(sa * (pi / 180)) ^ 2)) ^ 0.5) /
     (x + 1.774 * (x + 1.182) ^ (-0.733))
   trd <- exp(-kk * l)
   fr <- as.vector(canopy(array(l, dim = c(1,1)), array(x, dim = c(1,1))))
   trf <- (1 - fr)
-  fgd <- fd * trd * (1 - albr)
-  fged <- fdf * trf * (1 - albr) * svv
+  fgd <- fd * trd
+  fged <- fdf * trf * svv
   fgc <- fgd + fged
   cfc <- ((1 - trd) * fd + fr * fdf) / (fd + fdf)
   cfc[is.na(cfc)] <- ((1 - trd[is.na(cfc)]) * 0.5 + fr * 0.5) / (0.5 + 0.5)
@@ -551,7 +555,7 @@ dailyprecipNCEP <- function(lat, long, tme, reanalysis2 = TRUE) {
 #' get radiation and wind for use with NicheMapR
 #' @export
 .pointradwind <- function(hourlydata, dem, lat, long, l, x, albr = 0.15, zmin = 0,
-                          slope = NA, aspect = NA, horizon = NA, difani = TRUE) {
+                          slope = NA, aspect = NA, horizon = NA, svf = NA, difani = TRUE) {
   m <- is_raster(dem)
   m[is.na(m)] <- zmin
   m[m < zmin] <- zmin
@@ -586,10 +590,12 @@ dailyprecipNCEP <- function(lat, long, tme, reanalysis2 = TRUE) {
     aspect <- terrain(dem, opt = 'aspect', unit = 'degrees')
     aspect <- extract(aspect, xy)
   }
-  svf <- skyviewveg(dem, array(l, dim = dim(dem)[1:2]),
-                    array(x, dim = dim(dem)[1:2]), res = reso)
   fr <- canopy(array(l, dim = dim(dem)[1:2]), array(x, dim = dim(dem)[1:2]))
-  svf <- extract(svf, xy)
+  if (class(svf) == "logical") {
+    svf <- skyviewveg(dem, array(l, dim = dim(dem)[1:2]),
+                      array(x, dim = dim(dem)[1:2]), res = reso)
+    svf <- extract(svf, xy)
+  }
   if (class(horizon) == "logical") {
     ha36 <- 0
     for (i in 0:35) {
@@ -608,8 +614,8 @@ dailyprecipNCEP <- function(lat, long, tme, reanalysis2 = TRUE) {
     ha[i] <- ha36[saz]
   }
   sw <-.shortwave.ts(hourlydata$rad_dni, hourlydata$rad_dif, jd, tme$hour,
-                        lat, long, slope, aspect, ha, svf, x, l, albr, merid = 0,
-                        difani = difani)
+                      lat, long, slope, aspect, ha, svf, x, l, albr, merid = 0,
+                      difani = difani)
   windsp <- windheight(hourlydata$windspeed, 10, 1)
   hourlyrad <- data.frame(swrad = sw$swrad, skyviewfact = svf, canopyfact = sw$canopyfact,
                           whselt = wsheltatground, windspeed = wshelt *  windsp,
@@ -1064,9 +1070,20 @@ microclimaforNMR <- function(lat, long, dstart, dfinish, l, x, coastal = TRUE, h
                              resolution = 100, zmin = 0, slope = NA, aspect = NA,
                              windthresh = 4.5, emthresh = 0.78, reanalysis2 = TRUE,
                              steps = 8, use.raster = TRUE, plot.progress = TRUE, tidyr = FALSE) {
-  tme <- seq(as.POSIXlt(dstart, format = "%d/%m/%Y", origin = "01/01/1900"),
-             as.POSIXlt(dfinish, format = "%d/%m/%Y", origin = "01/01/1900")
+  tme <- seq(as.POSIXlt(dstart, format = "%d/%m/%Y", origin = "01/01/1900", tz = "UTC"),
+             as.POSIXlt(dfinish, format = "%d/%m/%Y", origin = "01/01/1900", tz = "UTC")
              + 3600 * 24, by = 'hours')
+  tme2 <- seq(as.POSIXlt(dstart, format = "%d/%m/%Y", origin = "01/01/1900"),
+              as.POSIXlt(dfinish, format = "%d/%m/%Y", origin = "01/01/1900")
+              + 3600 * 24, by = 'hours')
+  tz1 <- format(as.POSIXlt(tme), format="%Z")
+  tz2 <- format(as.POSIXlt(tme2), format="%Z")
+  xx <- tz1 == tz2
+  sel <- which(xx == FALSE)
+  if (length(sel) > 1) {
+    warning(paste("Data sequence in UTC/GMT. Some or all dates using system timezone are in", tz2[sel[1]]))
+  }
+  tme <- tme2
   tme <- tme[-length(tme)]
   tme <- as.POSIXlt(tme)
   if (class(dem) == "logical") {
@@ -1326,9 +1343,20 @@ runauto.ncep <- function(r, dstart, dfinish, hgt = 0.05, l, x, habitat = NA,
   # Lat long and time
   lat <- latlongfromraster(r)$lat
   long <- latlongfromraster(r)$long
-  tme <- seq(as.POSIXlt(dstart, format = "%d/%m/%Y", origin = "01/01/1900"),
-             as.POSIXlt(dfinish, format = "%d/%m/%Y", origin = "01/01/1900")
+  tme <- seq(as.POSIXlt(dstart, format = "%d/%m/%Y", origin = "01/01/1900", tz = "UTC"),
+             as.POSIXlt(dfinish, format = "%d/%m/%Y", origin = "01/01/1900", tz = "UTC")
              + 3600 * 24, by = 'hours')
+  tme2 <- seq(as.POSIXlt(dstart, format = "%d/%m/%Y", origin = "01/01/1900"),
+              as.POSIXlt(dfinish, format = "%d/%m/%Y", origin = "01/01/1900")
+              + 3600 * 24, by = 'hours')
+  tz1 <- format(as.POSIXlt(tme), format="%Z")
+  tz2 <- format(as.POSIXlt(tme2), format="%Z")
+  xx <- tz1 == tz2
+  sel <- which(xx == FALSE)
+  if (length(sel) > 1) {
+    warning(paste("Model run in UTC/GMT. Some or all dates using system timezone are in",tz2[sel[1]]))
+  }
+  tme <- tme2
   tme <- tme[-length(tme)]
   tme <- as.POSIXlt(tme)
   # l and x

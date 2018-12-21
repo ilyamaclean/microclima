@@ -3,8 +3,8 @@
 \docType{data}
 \name{demworld}
 \alias{demworld}
-\title{A 2.5º resolution dataset of elevations}
-\format{A raster object with 72 rows and 144 columns.}
+\title{A 1.875 (long) by  1.904129(lat) resolution dataset of elevations}
+\format{A raster object with 94 rows and 192 columns.}
 \source{
 \url{http://www.cmsaf.eu/}
 }
