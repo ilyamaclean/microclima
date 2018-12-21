@@ -1067,8 +1067,8 @@ coastalNCEP <- function(landsea, ncephourly, steps = 8, use.raster = T, zmin = 0
 #' head(mnr$dailyprecip)
 microclimaforNMR <- function(lat, long, dstart, dfinish, l, x, coastal = TRUE, hourlydata = NA,
                              dailyprecip = NA, dem = NA, demmeso = dem, albr =0.15,
-                             resolution = 100, zmin = 0, slope = NA, aspect = NA,
-                             windthresh = 4.5, emthresh = 0.78, reanalysis2 = TRUE,
+                             resolution = 100, zmin = 0, slope = NA, aspect = NA, horizon = NA,
+                             svf = NA, difani = TRUE, windthresh = 4.5, emthresh = 0.78, reanalysis2 = TRUE,
                              steps = 8, use.raster = TRUE, plot.progress = TRUE, tidyr = FALSE) {
   tme <- seq(as.POSIXlt(dstart, format = "%d/%m/%Y", origin = "01/01/1900", tz = "UTC"),
              as.POSIXlt(dfinish, format = "%d/%m/%Y", origin = "01/01/1900", tz = "UTC")
@@ -1100,7 +1100,8 @@ microclimaforNMR <- function(lat, long, dstart, dfinish, l, x, coastal = TRUE, h
     dailyprecip <- dailyprecipNCEP(lat, long, tme, reanalysis2)
   }
   cat("Downscaling radiation and wind speed \n")
-  radwind <- .pointradwind(hourlydata, dem, lat, long, l, x, albr, zmin, slope, aspect)
+  radwind <- .pointradwind(hourlydata, dem, lat, long, l, x, albr, zmin, slope, aspect,
+                           horizon, svf, difani)
   cat("Calculating elevation and cold-air drainage effects \n")
   info <- .eleveffects(hourlydata, demmeso, lat, long, windthresh, emthresh)
   elev <- info$tout
