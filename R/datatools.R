@@ -369,7 +369,6 @@ hourlyNCEP <- function(ncepdata = NA, lat, long, tme, reanalysis2 = TRUE) {
   for (i in 1:length(jd)) {
     dp[i] <- .difprop2(ncepdata$dsw[i], jd[i], tme6$hour[i], lat, long)
   }
-  am_m[am_m > 5] <- 5
   dp[ncepdata$dsw == 0] <- NA
   dnir <- (ncepdata$dsw * (1 - dp)) / si_m
   dnir[si_m == 0] <- NA
@@ -383,30 +382,19 @@ hourlyNCEP <- function(ncepdata = NA, lat, long, tme, reanalysis2 = TRUE) {
   difr <- difr + sdni
   edni <- dnir / ((4.87 / 0.0036) * (1 - dp))
   edif <- difr / ((4.87 / 0.0036) * dp)
-  odni <- bound((log(edni) / -am_m), mn = 0.24, mx = 1.7)
-  odif <- bound((log(edif) / -am_m), mn = 0.24, mx = 1.7)
-  dnir <- dnir / exp(-am_m * odni)
-  difr <- difr / exp(-am_m * odif)
-  dnir <- ifelse(dnir > rmx, rmx, dnir)
-  difr <- ifelse(difr > rmx2, rmx2, difr)
-  # Interpolate to hourly
-  globr <- dnir * si_m + difr
-  globr <- bound(globr, mx = 4.87 / 0.0036)
-  nd <- length(globr)
-  sel <-which(is.na(globr * dp * odni * odif) == F)
-  globr[1] <- globr[min(sel)]
+  odni <- bound((log(edni) / -am_m), mn = 0.001, mx = 1.7)
+  odif <- bound((log(edif) / -am_m), mn = 0.001, mx = 1.7)
+  nd <- length(odni)
+  sel <-which(is.na(am_m * dp * odni * odif) == F)
   dp[1] <- dp[min(sel)]
   odni[1] <- odni[min(sel)]
   odif[1] <- odif[min(sel)]
-  globr[nd] <- globr[max(sel)]
   dp[nd] <- dp[max(sel)]
   odni[nd] <- odni[max(sel)]
   odif[nd] <- odif[max(sel)]
-  globr <- na.approx(globr, na.rm = F)
   dp <- na.approx(dp, na.rm = F)
   odni <- na.approx(odni, na.rm = F)
   odif <- na.approx(odif, na.rm = F)
-  h_gr <- bound(spline(tme6, globr, n = n)$y, mx = 4.87 / 0.0036)
   h_dp <- bound(spline(tme6, dp, n = n)$y)
   h_oi <- bound(spline(tme6, odni, n = n)$y, mn = 0.24, mx = 1.7)
   h_od <- bound(spline(tme6, odif, n = n)$y, mn = 0.24, mx = 1.7)
@@ -417,10 +405,19 @@ hourlyNCEP <- function(ncepdata = NA, lat, long, tme, reanalysis2 = TRUE) {
   am <- airmasscoef(tmorad$hour, lat, long, jd, merid = 0)
   afi <- exp(-am * h_oi)
   afd <- exp(-am * h_od)
-  h_dni <- (1 - h_dp) * afi * h_gr
-  h_dif <- h_dp * afd * h_gr
+  h_dni <- (1 - h_dp) * afi * 4.87 / 0.0036
+  h_dif <- h_dp * afd * 4.87 / 0.0036
   h_dni[si == 0] <- 0
   h_dif[is.na(h_dif)] <- 0
+  # perform adjustments
+  glrad <- si * h_dni + h_dif
+  g6rad <- apply(t(matrix(glrad[-length(glrad)], nrow = 6)), 1, mean)
+  mm <- ncepdata$dsw[-length(ncepdata$dsw)] / g6rad
+  mm[is.na(mm)] <- 1
+  mm[g6rad == 0] <- 1
+  mm <- c(rep(mm, each = 6), 1)
+  h_dni <- h_dni * mm
+  h_dif <- h_dif * mm
   em <- ncepdata$dlw / ncepdata$ulw
   em_h <- spline(tme6, em, n = n)$y
   t6sel <- c(4:(length(tme6)-5))
@@ -433,6 +430,8 @@ hourlyNCEP <- function(ncepdata = NA, lat, long, tme, reanalysis2 = TRUE) {
   tmin <- apply(tcmn, 1, min)
   tmax <- apply(tcmx, 1, max)
   jd <- julday(tme2$year + 1900, tme2$mon + 1, tme2$mday)
+  h_dni <- h_dni * 0.0036
+  h_dif <- h_dif * 0.0036
   h_tc<-suppressWarnings(hourlytemp(julian = jd, em = em_h[thsel], dni = h_dni[thsel],
                                     dif = h_dif[thsel], mintemp = tmin, maxtemp = tmax,
                                     lat = lat, long = long, merid = 0))
@@ -450,12 +449,12 @@ hourlyNCEP <- function(ncepdata = NA, lat, long, tme, reanalysis2 = TRUE) {
                           windspeed = h_ws[thsel2], winddir = h_wd[thsel2],
                           emissivity = em_h[thsel2], cloudcover = h_cc[thsel],
                           netlong = h_nlw, uplong = hlwu, downlong = hlwd,
-                          rad_dni = h_dni[thsel] * 0.0036,
-                          rad_dif = h_dif[thsel] * 0.0036,
+                          rad_dni = h_dni[thsel],
+                          rad_dif = h_dif[thsel],
                           szenith = szenith[thsel], timezone = "UTC")
   tmetest <- as.POSIXlt(hourlyout$obs_time)
   tmeout <- as.POSIXlt(tmeout + 0, tz = "UTC")
-  sel <- which(tmetest >= min(tmeout) & tmetest <= max(tmeout))
+  sel <- which(tmetest >= min(tmeout) & tmetest <= max(tmeout + 23 * 3600))
   return(hourlyout[sel,])
 }
 #' Obtain daily precipitation from NCEP
