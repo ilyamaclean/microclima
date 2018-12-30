@@ -373,13 +373,6 @@ hourlyNCEP <- function(ncepdata = NA, lat, long, tme, reanalysis2 = TRUE) {
   dnir <- (ncepdata$dsw * (1 - dp)) / si_m
   dnir[si_m == 0] <- NA
   difr <- (ncepdata$dsw * dp)
-  rmx <- 4.87 / 0.0036 * (1 - dp)
-  rmx2 <- 4.87 / 0.0036 * (dp)
-  sdni <- dnir - rmx
-  sdni[sdni < 0] <- 0
-  sdni[si_m < 0.0348995] <- dnir[si_m < 0.0348995]
-  dnir <- dnir - sdni
-  difr <- difr + sdni
   edni <- dnir / ((4.87 / 0.0036) * (1 - dp))
   edif <- difr / ((4.87 / 0.0036) * dp)
   odni <- bound((log(edni) / -am_m), mn = 0.001, mx = 1.7)
@@ -411,13 +404,23 @@ hourlyNCEP <- function(ncepdata = NA, lat, long, tme, reanalysis2 = TRUE) {
   h_dif[is.na(h_dif)] <- 0
   # perform adjustments
   glrad <- si * h_dni + h_dif
-  g6rad <- apply(t(matrix(glrad[-length(glrad)], nrow = 6)), 1, mean)
-  mm <- ncepdata$dsw[-length(ncepdata$dsw)] / g6rad
+  glrad <- glrad[4:(n-4)]
+  g6rad <- apply(t(matrix(glrad, nrow = 6)), 1, mean)
+  g6rad2 <- ncepdata$dsw[2:(length(ncepdata$dsw) - 1)]
+  mm <- g6rad2 / g6rad
   mm[is.na(mm)] <- 1
   mm[g6rad == 0] <- 1
-  mm <- c(rep(mm, each = 6), 1)
+  mm <- c(rep(1, 3), rep(mm, each = 6), rep(1, 4))
   h_dni <- h_dni * mm
   h_dif <- h_dif * mm
+  # performs back correction
+  glrad <- h_dni + h_dif
+  sel <- which(glrad > (4.87 / 0.0036))
+  if (length(sel) > 0) {
+    m <- (4.87 / 0.0036) / glrad[sel]
+    h_dni[sel] <- h_dni[sel] * m
+    h_dif[sel] <- h_dif[sel] * m
+  }
   em <- ncepdata$dlw / ncepdata$ulw
   em_h <- spline(tme6, em, n = n)$y
   t6sel <- c(4:(length(tme6)-5))
