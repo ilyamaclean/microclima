@@ -339,10 +339,11 @@ solarindex <- function(slope = NA, aspect, localtime, lat = NA, long, julian,
 #' # airmass coefficient at noon on 21 June 2010, Porthleven, Cornwall
 #' jd <- julday (2010, 6, 21) # Julian day
 #' airmasscoef(12, 50.08, -5.31, jd)
-airmasscoef <- function(localtime, lat, long, julian, merid = round(long / 15, 0) * 15, dst = 0) {
+airmasscoef <- function (localtime, lat, long, julian, merid = round(long/15, 0) * 15, dst = 0) {
   sa <- solalt(localtime, lat, long, julian, merid, dst)
   z <- 90 - sa
-  thickness <- 1 / (cos(z * pi / 180) + 0.50572 * (96.07995 - z) ^ (-1.6364))
-  thickness[sa < -1.757168] <- NA
+  thickness <- 1/(cos(z * pi/180) + 0.50572 * (96.07995 - z)^(-1.6364))
+  thickness[sa < 0] <- (cos(z[sa < 0] * pi/180) + 0.025 * exp(-11 * cos (z[sa < 0] * pi/180)))^-1
+  thickness[thickness < 0] <- NA
   thickness
 }
