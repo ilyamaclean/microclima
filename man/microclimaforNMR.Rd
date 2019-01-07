@@ -81,7 +81,7 @@ canopy shading (\ifelse{html}{\out{MJ m<sup>-2</sup> hr<sup>-1</sup>}}{\eqn{MJ m
 as returned by \code{\link[=shortwaveveg]{shortwaveveg()}}.(ii) \code{skyviewfact}: a topographic sky view correction factor
 as returned by \code{\link[=skyviewveg]{skyviewveg()}}. (iii) \code{canopyfact} a canopy shading factor weighted by the ratio of direct to diffuse radiation.
 (iv) \code{whselt}: a ground level wind shelter coefficient as returned by
-\code{\link[=windcoef]{windcoef()}}. (v) \code{windspeed}: wind speed (m /s) at 1 m, corrected for topographic
+\code{\link[=windcoef]{windcoef()}}. (v) \code{windspeed}: wind speed (m /s) at 2 m, corrected for topographic
 sheltering. (vi) \code{slope}: the slope (decimal degrees) of the location specified
 by \code{lat} and \code{long}. Either the same as that input, or determined from \code{dem}.
 (vii) \code{aspect}: the aspect (decimal degrees) of the location specified by \code{lat} and

@@ -1018,7 +1018,7 @@ coastalNCEP <- function(landsea, ncephourly, steps = 8, use.raster = T, zmin = 0
 #' as returned by [shortwaveveg()].(ii) `skyviewfact`: a topographic sky view correction factor
 #' as returned by [skyviewveg()]. (iii) `canopyfact` a canopy shading factor weighted by the ratio of direct to diffuse radiation.
 #' (iv) `whselt`: a ground level wind shelter coefficient as returned by
-#' [windcoef()]. (v) `windspeed`: wind speed (m /s) at 1 m, corrected for topographic
+#' [windcoef()]. (v) `windspeed`: wind speed (m /s) at 2 m, corrected for topographic
 #' sheltering. (vi) `slope`: the slope (decimal degrees) of the location specified
 #' by `lat` and `long`. Either the same as that input, or determined from `dem`.
 #' (vii) `aspect`: the aspect (decimal degrees) of the location specified by `lat` and
@@ -1356,7 +1356,7 @@ runauto.ncep <- function(r, dstart, dfinish, hgt = 0.05, l, x, habitat = NA,
   xx <- as.numeric(tme) == as.numeric(tme2)
   sel <- which(xx == FALSE)
   if (length(sel) > 1) {
-    warning(paste("Data sequence in UTC/GMT. Some or all dates using system timezone are in", tz2[sel[1]]))
+    cat(paste("Note: Model run in UTC/GMT. Some or all dates using system timezone are in", tz2[sel[1]]))
   }
   tme <- tme[-length(tme)]
   tme <- as.POSIXlt(tme)
