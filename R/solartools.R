@@ -344,6 +344,6 @@ airmasscoef <- function (localtime, lat, long, julian, merid = round(long/15, 0)
   z <- 90 - sa
   thickness <- 1/(cos(z * pi/180) + 0.50572 * (96.07995 - z)^(-1.6364))
   thickness[sa < 0] <- (cos(z[sa < 0] * pi/180) + 0.025 * exp(-11 * cos (z[sa < 0] * pi/180)))^-1
-  thickness[thickness < 0] <- NA
+  thickness[thickness < 0 | sa < -3] <- NA
   thickness
 }
