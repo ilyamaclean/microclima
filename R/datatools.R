@@ -444,7 +444,7 @@ hourlyNCEP <- function(ncepdata = NA, lat, long, tme, reanalysis2 = TRUE) {
   h_uw <- spline(tme6, ncepdata$wu, n = n)$y
   h_vw <- spline(tme6, ncepdata$wv, n = n)$y
   h_ws <- sqrt(h_uw^2 + h_vw^2)
-  h_ws <- windheight(h_ws, 10, 1)
+  h_ws <- windheight(h_ws, 10, 2)
   h_wd <- atan2(h_uw, h_vw) * 180/pi + 180
   h_wd <- h_wd%%360
   hourlyout <- data.frame(obs_time = tmorad[thsel], temperature = h_tc,
@@ -618,7 +618,7 @@ dailyprecipNCEP <- function(lat, long, tme, reanalysis2 = TRUE) {
   sw <-.shortwave.ts(hourlydata$rad_dni, hourlydata$rad_dif, jd, tme$hour,
                       lat, long, slope, aspect, ha, svf, x, l, albr, merid = 0,
                       difani = difani)
-  windsp <- windheight(hourlydata$windspeed, 10, 1)
+  windsp <- hourlydata$windspeed
   hourlyrad <- data.frame(swrad = sw$swrad, skyviewfact = svf, canopyfact = sw$canopyfact,
                           whselt = wsheltatground, windspeed = wshelt *  windsp,
                           slope = slope, aspect = aspect)

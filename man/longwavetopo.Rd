@@ -4,7 +4,7 @@
 \alias{longwavetopo}
 \title{calculates net longwave radiation above canopy}
 \usage{
-longwavetopo(h, tc, p = 101300, n, svf = 1)
+longwavetopo(h, tc, p = 101300, n, svf = 1, co = 1.24)
 }
 \arguments{
 \item{h}{a single numeric value, raster object, two-dimensional array or matrix of specific humidities (\ifelse{html}{\out{kg kg<sup>{-1}</sup> }}{\eqn{kg kg^{-1}}}).}
@@ -16,6 +16,8 @@ longwavetopo(h, tc, p = 101300, n, svf = 1)
 \item{n}{a single numeric value, raster object, two-dimensional array or matrix of fractional cloud cover values (range 0 - 1).}
 
 \item{svf}{an optional single value, raster object, two-dimensional array or matrix of values representing the proportion of isotropic radiation received by a partially obscured surface relative to the full hemisphere, as returned by \code{\link[=skyviewtopo]{skyviewtopo()}}.}
+
+\item{co}{parameter relationship between vapor pressure and temperature near the ground Brutsaert (1975).}
 }
 \value{
 a single numeric value, raster object, two-dimensional array pr matrix of values representing net longwave radiation (MJ per metre squared per hour).

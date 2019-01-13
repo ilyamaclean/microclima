@@ -380,16 +380,16 @@ suntimes <- function(julian, lat, long, merid = round(long / 15, 0) * 15, dst = 
   pr <- ifelse(pr > 1, 1, pr)
   pr
 }
-#' calculates emsisivity from humidity etc
-.emissivity <- function(h, tc, n, p = 100346.13) {
+#' calculates emmisivity from humidity etc
+.emissivity <- function(h, tc, n, p = 100346.13, co = 1.24) {
   pk <- p / 1000
   e0 <- 0.6108 * exp(17.27 * tc / (tc + 237.3))
   ws <- 0.622 * e0 / pk
   rh <- (h / ws) * 100
   rh[rh > 100] <- 100
   ea <- e0 * rh / 100
-  emcs <- 0.23 + 0.433 * (ea / (tc + 273.15)) ^ (1 / 8)
-  em <- emcs * (1 - n ^ 2) + 0.976 * n ^ 2
+  eo <- co * (0.1 * ea / (tc + 273.15)) ^ (1/7)
+  em <- (1 - n) + n * eo
   em
 }
 
@@ -460,10 +460,10 @@ hourlytemp <- function(julian, em = NA, h, n, p = 100346.13, dni, dif,
     em <- .emissivity(h, tc, n, p)
   day <- which(is.na(pr) == F)
   ngt <- which(is.na(pr))
-  tfrac[day] <- -0.5154639 + 1.1060481 * tfrac[day] + 6.1147121 * pr[day] -
-    7.5826432 * tfrac[day] * pr[day]
-  tfrac[ngt] <- -4.614759 + 5.909548 * tfrac[ngt] + 4.308512 * em[ngt] -
-    5.020017 * tfrac[ngt] * em[ngt]
+  tfrac[day] <- -0.49323 +  1.06076 * tfrac[day] + 1.33179 *
+    pr[day] + 0.06755 * tfrac[day] * pr[day]
+  tfrac[ngt] <-  -1.16642 + 0.04394 * tfrac[ngt] + 1.83416 *
+    em[ngt] + 1.38032 * tfrac[ngt] * em[ngt]
   tfrac <- 1 / (1 + exp(-1 * tfrac))
   td <- array(tfrac, dim = c(24, length(tfrac) / 24))
   tmns <- apply(td, 2, min)

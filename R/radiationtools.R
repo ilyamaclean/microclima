@@ -499,6 +499,7 @@ skyviewveg <- function(dtm, l, x, steps = 36, res = 1) {
 #' @param p an optional single numeric value, raster object, two-dimensional array or matrix of sea-level pressures (Pa).
 #' @param n a single numeric value, raster object, two-dimensional array or matrix of fractional cloud cover values (range 0 - 1).
 #' @param svf an optional single value, raster object, two-dimensional array or matrix of values representing the proportion of isotropic radiation received by a partially obscured surface relative to the full hemisphere, as returned by [skyviewtopo()].
+#' @param co parameter relationship between vapor pressure and temperature near the ground Brutsaert (1975).
 #' @import raster
 #' @export
 #'
@@ -547,7 +548,7 @@ skyviewveg <- function(dtm, l, x, steps = 36, res = 1) {
 #' netlong100m <- longwavetopo(hr, tr, pr, nr, sv)
 #' netlong100m <- mask(netlong100m, dtm100m)
 #' plot(netlong100m, main = "Net longwave radiation")
-longwavetopo <- function(h, tc, p = 101300, n, svf = 1) {
+longwavetopo <- function(h, tc, p = 101300, n, svf = 1, co = 1.24) {
   r <- svf
   h <- is_raster(h)
   tc <- is_raster(tc)
@@ -560,8 +561,8 @@ longwavetopo <- function(h, tc, p = 101300, n, svf = 1) {
   rh <- (h / ws) * 100
   rh <- ifelse(rh > 100, 100, rh)
   ea <- e0 * (rh / 100)
-  emcs <- 0.23 + 0.433 * (ea / (tc + 273.15)) ^ (1 / 8)
-  em <- emcs * (1 - n ^ 2) + 0.976 * n ^ 2
+  eo <- co * (0.1 * ea / (tc + 273.15)) ^ (1/7)
+  em <- (1 - n) + n * eo
   Ln <- 2.043e-10 * (1 - em) * (tc + 273.15) ^ 4
   lwr <- Ln * svf
   if_raster(lwr, r)
@@ -578,6 +579,7 @@ longwavetopo <- function(h, tc, p = 101300, n, svf = 1) {
 #' @param fr a raster object, two-dimensional array or matrix of fractional canopy cover as returned by [canopy()].
 #' @param svv an optional raster object, two-dimensional array or matrix of values representing the proportion of isotropic radiation received by a surface partially obscured by topography relative to the full hemisphere underneath vegetation as returned by [skyviewveg()].
 #' @param albc an optional single value, raster object, two-dimensional array or matrix of values representing the albedo(s) of the vegetated canopy as returned by [albedo2()].
+#' @param co parameter relationship between vapor pressure and temperature near the ground Brutsaert (1975).
 #' @import raster
 #' @export
 #'
@@ -623,7 +625,7 @@ longwavetopo <- function(h, tc, p = 101300, n, svf = 1) {
 #' netlong1m <-longwaveveg(h, tc, p, n, x, fr, svv, albc)
 #' nlr <- mask(netlong1m, dtm1m)
 #' plot(nlr, main = "Net longwave radiation")
-longwaveveg <- function(h, tc, p = 101300, n, x, fr, svv = 1, albc = 0.23) {
+longwaveveg <- function(h, tc, p = 101300, n, x, fr, svv = 1, albc = 0.23, co = 1.24) {
   rr <- svv
   h <- is_raster(h)
   tc <- is_raster(tc)
@@ -639,8 +641,8 @@ longwaveveg <- function(h, tc, p = 101300, n, x, fr, svv = 1, albc = 0.23) {
   rh <- (h / ws) * 100
   rh <- ifelse(rh > 100, 100, rh)
   ea <- e0 * rh / 100
-  emcs <- 0.23 + 0.433 * (ea / (tc + 273.15)) ^ (1 / 8)
-  em <- emcs * (1 - n ^ 2) + 0.976 * n ^ 2
+  eo <- co * (0.1 * ea / (tc + 273.15)) ^ (1/7)
+  em <- (1 - n) + n * eo
   le0 <- 2.043e-10 * (tc + 273.15) ^ 4
   lwsky <- em * le0
   lw1 <- (1 - fr) * lwsky

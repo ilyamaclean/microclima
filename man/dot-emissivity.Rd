@@ -2,10 +2,10 @@
 % Please edit documentation in R/othertools.R
 \name{.emissivity}
 \alias{.emissivity}
-\title{calculates emsisivity from humidity etc}
+\title{calculates emmisivity from humidity etc}
 \usage{
-.emissivity(h, tc, n, p = 100346.13)
+.emissivity(h, tc, n, p = 100346.13, co = 1.24)
 }
 \description{
-calculates emsisivity from humidity etc
+calculates emmisivity from humidity etc
 }

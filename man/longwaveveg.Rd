@@ -4,7 +4,8 @@
 \alias{longwaveveg}
 \title{Calculates net longwave radiation below canopy}
 \usage{
-longwaveveg(h, tc, p = 101300, n, x, fr, svv = 1, albc = 0.23)
+longwaveveg(h, tc, p = 101300, n, x, fr, svv = 1, albc = 0.23,
+  co = 1.24)
 }
 \arguments{
 \item{h}{a single numeric value, raster object, two-dimensional array or matrix of specific humidities (\ifelse{html}{\out{kg kg<sup>{-1}</sup> }}{\eqn{kg kg^{-1}}}).}
@@ -22,6 +23,8 @@ longwaveveg(h, tc, p = 101300, n, x, fr, svv = 1, albc = 0.23)
 \item{svv}{an optional raster object, two-dimensional array or matrix of values representing the proportion of isotropic radiation received by a surface partially obscured by topography relative to the full hemisphere underneath vegetation as returned by \code{\link[=skyviewveg]{skyviewveg()}}.}
 
 \item{albc}{an optional single value, raster object, two-dimensional array or matrix of values representing the albedo(s) of the vegetated canopy as returned by \code{\link[=albedo2]{albedo2()}}.}
+
+\item{co}{parameter relationship between vapor pressure and temperature near the ground Brutsaert (1975).}
 }
 \value{
 a single numeric value, raster object or two-dimensional array of values representing net longwave radiation (MJ per metre squared per hour).
