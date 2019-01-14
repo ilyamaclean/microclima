@@ -460,10 +460,10 @@ hourlytemp <- function(julian, em = NA, h, n, p = 100346.13, dni, dif,
     em <- .emissivity(h, tc, n, p)
   day <- which(is.na(pr) == F)
   ngt <- which(is.na(pr))
-  tfrac[day] <- -0.49323 +  1.06076 * tfrac[day] + 1.33179 *
-    pr[day] + 0.06755 * tfrac[day] * pr[day]
-  tfrac[ngt] <-  -1.16642 + 0.04394 * tfrac[ngt] + 1.83416 *
-    em[ngt] + 1.38032 * tfrac[ngt] * em[ngt]
+  tfrac[day] <- -0.30516 +   0.78414 * tfrac[day] + 0.89086 *
+    pr[day] + 0.34062 * tfrac[day] * pr[day]
+  tfrac[ngt] <-  -0.6562 + 1.0277 * tfrac[ngt] + 0.8981 *
+    em[ngt] -0.5262 * tfrac[ngt] * em[ngt]
   tfrac <- 1 / (1 + exp(-1 * tfrac))
   td <- array(tfrac, dim = c(24, length(tfrac) / 24))
   tmns <- apply(td, 2, min)
