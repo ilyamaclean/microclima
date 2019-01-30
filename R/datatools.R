@@ -1421,7 +1421,7 @@ runauto.ncep <- function(r, dstart, dfinish, hgt = 0.05, l, x, habitat = NA,
   loc <- c(long, lat)
   dem[dem == zmin] <- NA
   r[r == zmin] <- NA
-  micronmr <- .micro_ncep2(dstart = dstart, dfinish = dfinish, dem = r, dem2 = dem, LAI = 0,
+  micronmr <- micro_ncep(dstart = dstart, dfinish = dfinish, dem = r, dem2 = dem, LAI = 0,
                            loc = loc, Usrhyt = hgt2, Refhyt = 2, coastal = coastal,
                            DEP = dep)
   ma <- micronmr$microclima.out
