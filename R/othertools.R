@@ -72,6 +72,8 @@ humidityconvert <- function(h, intype = "relative", tc = 20, p = 101300) {
 #' @return a raster object with distance-weighted proportions of upwind land pixels
 #' @import raster rgdal
 #' @importFrom sp coordinates
+#' @useDynLib microclima, .registration = TRUE
+#' @importFrom Rcpp sourceCpp
 #' @export
 #'
 #' @examples
