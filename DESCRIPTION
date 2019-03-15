@@ -5,7 +5,8 @@ Version: 0.1.0
 Authors@R: c(
     person("Ilya", "Maclean", email = "i.m.d.maclean@exeter.ac.uk", role = "cre"),
     person("Jonathan", "Mosedale", email = "j.mosedale@exeter.ac.uk", role = "aut"),
-    person("JOnathan", "Bennie", email = "j.j.bennie@exeter.ac.uk", role = "aut"))
+    person("Jonathan", "Bennie", email = "j.j.bennie@exeter.ac.uk", role = "aut"),
+	  person("James", "Duffy", email = "james.philip.duffy@gmail.com", role = "aut"))
 Maintainer: Ilya M. D. Maclean <i.m.d.maclean@exeter.ac.uk>
 Description: The functions in the microclima package contain tools for 
     modelling the mechanistic processes that govern fine-scale variation in 
@@ -20,6 +21,7 @@ License: GPL-2
 Encoding: UTF-8
 LazyData: true
 Remotes: mrke/NicheMapR
+LinkingTo: Rcpp
 Imports:
     raster (>= 2.5),
     rgdal (>= 0.8),
@@ -32,8 +34,9 @@ Imports:
     devtools,
     rnoaa,
     ncdf4,
-    rgcvpack
-RoxygenNote: 6.1.0
+    rgcvpack,
+	Rcpp
+RoxygenNote: 6.1.1
 Roxygen: list(markdown = TRUE) 
 Suggests: knitr,
     rmarkdown,

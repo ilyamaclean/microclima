@@ -95,24 +95,8 @@ invls <- function(landsea, e, direction) {
   lss <- crop(slr, e, snap = 'out')
   lsm <- getValues(lss, format = "matrix")
   lsw <- array(NA, dim = dim(lsm))
-  for (yy in 1:dim(lsm)[1]) {
-    for (xx in 1:dim(lsm)[2]) {
-      if (lsm[yy, xx] != 0) {
-        x <- xx * resolution + e@xmin - resolution / 2
-        y <- e@ymax + resolution / 2 - yy * resolution
-        xdist <- round(s * sin(direction * pi / 180), 0)
-        ydist <- round(s * cos(direction * pi / 180), 0)
-        xy <- data.frame(x = x + xdist, y = y + ydist)
-        coordinates(xy) <- ~x + y
-        lsc <- extract(slr, xy)
-        lsc[1] <- 1
-        lsc <- lsc[is.na(lsc) == F]
-        if(length(lsc > 0)) {
-          lsw[yy, xx] <- sum(lsc, na.rm = T) / length(lsc)
-        } else lsw[yy, xx] <- 1
-      }
-    }
-  }
+  lsw <- invls_calc(lsm, resolution, e@xmin, e@ymax, s, direction, raster::as.matrix(slr),
+                    raster::xmin(slr),raster::xmax(slr),raster::ymin(slr),raster::ymax(slr))
   lsr <- raster(lsw, template = lss)
   lsr
 }
