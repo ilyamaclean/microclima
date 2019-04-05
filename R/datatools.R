@@ -357,13 +357,17 @@ hourlyNCEP <- function(ncepdata = NA, lat, long, tme, reanalysis2 = TRUE) {
   si <- siflat(tmo2$hour, lat, long, jd, merid = 0)
   am <- airmasscoef(tmo2$hour, lat, long, jd, merid = 0)
   si_m <- 0
-  am_m <- 0
+  iam_m <- 0
   for (i in 1:(length(tme6))) {
     st <- (i - 1) * 6 + 1
     ed <- st + 5
     si_m[i] <- mean(si[st:ed], na.rm = T)
-    am_m[i] <- mean(am[st:ed], na.rm = T)
+    iam <- 1 / am[st:ed]
+    iam[is.na(iam)] <- 0
+    iam_m[i] <- mean(iam, na.rm = T)
   }
+  am_m <- 1 / iam_m
+  am_m[am_m > 100] <- NA
   jd <- julday(tme6$year + 1900, tme6$mon + 1, tme6$mday)
   dp <- 0
   for (i in 1:length(jd)) {
@@ -377,6 +381,12 @@ hourlyNCEP <- function(ncepdata = NA, lat, long, tme, reanalysis2 = TRUE) {
   edif <- difr / ((4.87 / 0.0036) * dp)
   odni <- bound((log(edni) / -am_m), mn = 0.001, mx = 1.7)
   odif <- bound((log(edif) / -am_m), mn = 0.001, mx = 1.7)
+  m1 <- summary(lm(log(1/odni) ~ log(am_m)))
+  m2 <- summary(lm(log(1/odif) ~ log(am_m)))
+  N1 <- -1 * m1$coef[2,1] + 1
+  N2 <- -1 * m2$coef[2,1] + 1
+  odni <- bound((log(edni) / -am_m^N1), mn = 0.001, mx = 1.7)
+  odif <- bound((log(edif) / -am_m^N2), mn = 0.001, mx = 1.7)
   nd <- length(odni)
   sel <-which(is.na(am_m * dp * odni * odif) == F)
   dp[1] <- dp[min(sel)]
@@ -396,8 +406,8 @@ hourlyNCEP <- function(ncepdata = NA, lat, long, tme, reanalysis2 = TRUE) {
   szenith <- 90 - solalt(tmorad$hour, lat, long, jd, merid = 0)
   si <- siflat(tmorad$hour, lat, long, jd, merid = 0)
   am <- airmasscoef(tmorad$hour, lat, long, jd, merid = 0)
-  afi <- exp(-am * h_oi)
-  afd <- exp(-am * h_od)
+  afi <- exp(-am^N1 * h_oi)
+  afd <- exp(-am^N2 * h_od)
   h_dni <- (1 - h_dp) * afi * 4.87 / 0.0036
   h_dif <- h_dp * afd * 4.87 / 0.0036
   h_dni[si == 0] <- 0
