@@ -23,7 +23,9 @@
 #' @details Currently, `get_dem` utilises the Amazon Web Services (AWS)
 #' (https://aws.amazon.com/public-datasets/terrain/) to retrieve dems.  The spatial
 #' resolution of the data available vary by location
-#' (see https://mapzen.com/documentation/terrain-tiles/data-sources/ for details).
+#' (see https://mapzen.com/documentation/terrain-tiles/data-sources/ for details
+#' and https://github.com/tilezen/joerd/blob/master/docs/images/footprints-preview.png
+#' for a map showing the resolution of data available for different parts of the globe).
 #' Global coverage is ~30m resolution and if the resolution of data requested is
 #' higher than that available, elevations are derived by interpolation. If `r` is
 #' unspecified, then `lat` and `long` are used to retrieve a xdims x ydims cell raster

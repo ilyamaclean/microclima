@@ -20,6 +20,6 @@
 #' @param slr_ymax The maximum y coordinate of slr
 #' @export
 invls_calc <- function(lsm, resolution, xmin, ymax, s, direction, slr, slr_xmin, slr_xmax, slr_ymin, slr_ymax) {
-    .Call('_microclima_invls_calc', PACKAGE = 'microclima', lsm, resolution, xmin, ymax, s, direction, slr, slr_xmin, slr_xmax, slr_ymin, slr_ymax)
+    .Call(`_microclima_invls_calc`, lsm, resolution, xmin, ymax, s, direction, slr, slr_xmin, slr_xmax, slr_ymin, slr_ymax)
 }
 
