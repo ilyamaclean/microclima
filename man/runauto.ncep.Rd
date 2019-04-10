@@ -5,12 +5,12 @@
 \title{Function for automatically generating microclimate surfaces for anywhere in the word}
 \usage{
 runauto.ncep(r, dstart, dfinish, hgt = 0.05, l, x, habitat = NA,
-  use.raster = FALSE, coastal = TRUE, r.is.dem = TRUE,
-  hourlydata = NA, dailyprecip = NA, albg = 0.15, albr = 0.15,
-  albc = 0.23, mesoresolution = 100, zmin = 0, slope = NA,
-  aspect = NA, windthresh = 4.5, emthresh = 0.78,
-  reanalysis2 = TRUE, steps = 8, plot.progress = TRUE,
-  continious = TRUE, summarydata = TRUE, save.memory = FALSE)
+  use.raster = FALSE, coastal = TRUE, r.is.dem = TRUE, save = 0,
+  albg = 0.15, albr = 0.15, albc = 0.23, mesoresolution = 100,
+  zmin = 0, slope = NA, aspect = NA, windthresh = 4.5,
+  emthresh = 0.78, reanalysis2 = TRUE, steps = 8,
+  plot.progress = TRUE, continious = TRUE, summarydata = TRUE,
+  save.memory = FALSE)
 }
 \arguments{
 \item{r}{a raster object defining the extent and resolution for which microclimate
@@ -50,9 +50,8 @@ coastal effects.}
 elevation dataset used for calculating microclimatic effects. If FALSE, then a
 dem is downloaded.}
 
-\item{hourlydata}{Optional data.frame of hourly climate data as returned by \code{\link[=hourlyNCEP]{hourlyNCEP()}}}
-
-\item{dailyprecip}{Optional data.frame of daily precipitation data as returned by \code{\link[=dailyprecipNCEP]{dailyprecipNCEP()}}}
+\item{save}{optional integer: don't save forcing data (0), save the forcing data (1)
+or read previously saved data (2).}
 
 \item{albg}{an optional single value, raster object, two-dimensional array or
 matrix of values representing the albedo(s) of the ground as returned by \code{\link[=albedo2]{albedo2()}}.}
@@ -98,6 +97,8 @@ default 8 is specified, coastal effects are calculated at 45º intervals.}
 
 \item{save.memory}{An optional logical indicatign whether to save
 memory by storing temperature x 1000 as an integer values.}
+
+\item{dailyprecip}{Optional data.frame of daily precipitation data as returned by \code{\link[=dailyprecipNCEP]{dailyprecipNCEP()}}}
 }
 \value{
 a list with the following objects:
@@ -118,7 +119,7 @@ NCEP-NCAR or NCEP–DOE Atmospheric Model Intercomparison Project (Kanamitso et 
 microclimate model using the \code{NicheMapR} package (Kearny & Porter 2016). Using digital
 elevation data either downloaded or provided by the user, and canopy
 characteristics either specified by the user, or derived from habitat,
-it runs the microclimate model in hourly timesteps to generate an array oftemperatures.
+it runs the microclimate model in hourly timesteps to generate an array of temperatures.
 }
 \examples{
 library(raster)

@@ -1147,7 +1147,7 @@ microclimaforNMR <- function(lat, long, dstart, dfinish, l, x, coastal = TRUE, h
 #' microclimate model using the `NicheMapR` package (Kearny & Porter 2016). Using digital
 #' elevation data either downloaded or provided by the user, and canopy
 #' characteristics either specified by the user, or derived from habitat,
-#' it runs the microclimate model in hourly timesteps to generate an array oftemperatures.
+#' it runs the microclimate model in hourly timesteps to generate an array of temperatures.
 #'
 #' @param r a raster object defining the extent and resolution for which microclimate
 #' temperature data are required.
@@ -1176,7 +1176,8 @@ microclimaforNMR <- function(lat, long, dstart, dfinish, l, x, coastal = TRUE, h
 #' @param r.is.dem optional logical value indicating whether 'r' is a digital
 #' elevation dataset used for calculating microclimatic effects. If FALSE, then a
 #' dem is downloaded.
-#' @param hourlydata Optional data.frame of hourly climate data as returned by [hourlyNCEP()]
+#' @param save optional integer: don't save forcing data (0), save the forcing data (1)
+#' or read previously saved data (2).
 #' @param dailyprecip Optional data.frame of daily precipitation data as returned by [dailyprecipNCEP()]
 #' @param albg an optional single value, raster object, two-dimensional array or
 #' matrix of values representing the albedo(s) of the ground as returned by [albedo2()].
@@ -1252,11 +1253,10 @@ microclimaforNMR <- function(lat, long, dstart, dfinish, l, x, coastal = TRUE, h
 
 runauto.ncep <- function(r, dstart, dfinish, hgt = 0.05, l, x, habitat = NA,
                          use.raster = FALSE, coastal = TRUE, r.is.dem = TRUE,
-                         hourlydata = NA, dailyprecip = NA, albg = 0.15,
-                         albr =0.15, albc = 0.23, mesoresolution = 100,
-                         zmin = 0, slope = NA, aspect = NA, windthresh = 4.5,
-                         emthresh = 0.78, reanalysis2 = TRUE, steps = 8,
-                         plot.progress = TRUE, continious = TRUE,
+                         save = 0, albg = 0.15, albr =0.15, albc = 0.23,
+                         mesoresolution = 100, zmin = 0, slope = NA, aspect = NA,
+                         windthresh = 4.5, emthresh = 0.78, reanalysis2 = TRUE,
+                         steps = 8, plot.progress = TRUE, continious = TRUE,
                          summarydata = TRUE, save.memory = FALSE) {
   longwaveveg2 <- function(le0, lwsky, x, fr, svv, albc) {
     lw1 <- (1 - fr) * lwsky
@@ -1435,7 +1435,7 @@ runauto.ncep <- function(r, dstart, dfinish, hgt = 0.05, l, x, habitat = NA,
   r[r == zmin] <- NA
   micronmr <- micro_ncep(dstart = dstart, dfinish = dfinish, dem = r, dem2 = dem, LAI = 0,
                            loc = loc, Usrhyt = hgt2, Refhyt = 2, coastal = coastal,
-                           DEP = dep)
+                           DEP = dep, save = save)
   ma <- micronmr$microclima.out
   hourlydata <- ma$hourlydata
   #####################
