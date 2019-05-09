@@ -866,6 +866,9 @@ dailyprecipNCEP <- function(lat, long, tme, reanalysis2 = TRUE) {
   sel1 <- which(tme$year == min(tme$year))
   sel2 <- which(tme$year == max(tme$year))
   dms <- c(31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31)
+  yr <-  unique(tme$year) + 1900
+  if (length(yr > 1)) stop("SST intepolation only works on data from one year. Select dates in yearly blocks")
+  if(yr%%4 == 0) dms[2] <- 29
   amonth <- min(tme$mon[sel1])
   amonth <- ifelse(amonth == 0, 12, amonth)
   pmonth <- max(tme$mon[sel1]) + 2
