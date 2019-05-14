@@ -94,7 +94,8 @@ invls <- function(landsea, e, direction) {
   slr <- if_raster(m, slr)
   s <- c(0, (8:1000) / 8) ^ 2 * resolution
   s <- s[s <= maxdist]
-  lss <- crop(slr, e, snap = 'out')
+  etest <- extent(slr)
+  if (etest != e) lss <- crop(slr, e, snap = 'out')
   lsm <- getValues(lss, format = "matrix")
   lsw <- array(NA, dim = dim(lsm))
   lsw <- invls_calc(lsm, resolution, e@xmin, e@ymax, s, direction, raster::as.matrix(slr),
