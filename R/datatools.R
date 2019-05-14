@@ -1208,7 +1208,7 @@ microclimaforNMR <- function(lat, long, dstart, dfinish, l, x, coastal = TRUE, h
 #' default 8 is specified, coastal effects are calculated at 45º intervals.
 #' @param plot.progress an optional logical indicating whether to produce plots to track progress.
 #' @param continious an optional logical value indicating whether to treat wind speed as a continious variable
-#' @param summarydata an optional logical idicating whether to calculate summary data
+#' @param summarydata an optional logical indicating whether to calculate summary data
 #' (frost hours and maximum, minimum and mean temperature) for each pixel and return these to the output.
 #' @param save.memory An optional logical indicatign whether to save
 #' memory by storing temperature x 1000 as an integer values.
