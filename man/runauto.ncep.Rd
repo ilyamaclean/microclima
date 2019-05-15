@@ -92,7 +92,7 @@ default 8 is specified, coastal effects are calculated at 45º intervals.}
 
 \item{continious}{an optional logical value indicating whether to treat wind speed as a continious variable}
 
-\item{summarydata}{an optional logical idicating whether to calculate summary data
+\item{summarydata}{an optional logical indicating whether to calculate summary data
 (frost hours and maximum, minimum and mean temperature) for each pixel and return these to the output.}
 
 \item{save.memory}{An optional logical indicatign whether to save

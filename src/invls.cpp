@@ -5,21 +5,9 @@ using namespace Rcpp;
 //' This function returns a numeric matrix identifying
 //' matching values from a raster that intersect with
 //' a set of points
-//'
-//' @param lsm A binary matrix indicating land and sea
-//' @param resolution The resolution of the input raster
-//' @param xmin The minimum x coordinate
-//' @param ymax The maximum y coordinate
-//' @param s A vector
-//' @param direction The source direction of wind (in degrees)
-//' @param slr The minimum x coordinate
-//' @param slr_xmin The minimum x coordinate of slr
-//' @param slr_xmax The maximum x coordinate of slr
-//' @param slr_ymin The minimum y coordinate of slr
-//' @param slr_ymax The maximum y coordinate of slr
 //' @export
 // [[Rcpp::export]]
-NumericMatrix invls_calc(NumericMatrix lsm, int resolution,
+NumericMatrix invls_calc(NumericMatrix lsm, double resolution,
                    double xmin, double ymax, NumericVector s,
                    int direction, NumericMatrix slr,
                    double slr_xmin, double slr_xmax,
@@ -32,15 +20,16 @@ NumericMatrix invls_calc(NumericMatrix lsm, int resolution,
   //set up collection matrix
   NumericMatrix lsw(lsm_row,lsm_col);
 
+  //for each cell in the land/sea mask
   for(int yy = 0; yy < lsm_row; ++yy) {
     for(int xx = 0; xx < lsm_col; ++xx) {
-
+	  
+	  //if it is not a sea pixel...
       if (lsm(yy,xx) != 0) {
 
         double x = (xx + 1) * resolution + xmin - resolution / 2;
         double y = ymax + resolution / 2 - (yy + 1) * resolution;
 
-        //these produce -0 - is that ok?
         NumericVector xdist = round(s * sin(direction * pi / 180), 0);
         NumericVector ydist = round(s * cos(direction * pi / 180), 0);
 
@@ -56,14 +45,15 @@ NumericMatrix invls_calc(NumericMatrix lsm, int resolution,
         //collector
         NumericVector lsc(xy.nrow());
 
-        //for every point
+        //for every point (in steps away from focal cell)
         for (int point = 0; point < xy.nrow(); point++) {
           double x2 = xy(point,0);
           double y2 = xy(point,1);
 
           //check position of point falls within raster
           if (x2 > slr_xmin && slr_xmax > x2 && y2 > slr_ymin && slr_ymax > y2) {
-
+			
+			//work out index of position
             double rdist = slr_ymax - y2;
             int row = floor(rdist/resolution);
             double cdist = x2 - slr_xmin;

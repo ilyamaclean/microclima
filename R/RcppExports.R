@@ -6,18 +6,6 @@
 #' This function returns a numeric matrix identifying
 #' matching values from a raster that intersect with
 #' a set of points
-#'
-#' @param lsm A binary matrix indicating land and sea
-#' @param resolution The resolution of the input raster
-#' @param xmin The minimum x coordinate
-#' @param ymax The maximum y coordinate
-#' @param s A vector
-#' @param direction The source direction of wind (in degrees)
-#' @param slr The minimum x coordinate
-#' @param slr_xmin The minimum x coordinate of slr
-#' @param slr_xmax The maximum x coordinate of slr
-#' @param slr_ymin The minimum y coordinate of slr
-#' @param slr_ymax The maximum y coordinate of slr
 #' @export
 invls_calc <- function(lsm, resolution, xmin, ymax, s, direction, slr, slr_xmin, slr_xmax, slr_ymin, slr_ymax) {
     .Call(`_microclima_invls_calc`, lsm, resolution, xmin, ymax, s, direction, slr, slr_xmin, slr_xmax, slr_ymin, slr_ymax)

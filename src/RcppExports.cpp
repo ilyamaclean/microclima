@@ -6,13 +6,13 @@
 using namespace Rcpp;
 
 // invls_calc
-NumericMatrix invls_calc(NumericMatrix lsm, int resolution, double xmin, double ymax, NumericVector s, int direction, NumericMatrix slr, double slr_xmin, double slr_xmax, double slr_ymin, double slr_ymax);
+NumericMatrix invls_calc(NumericMatrix lsm, double resolution, double xmin, double ymax, NumericVector s, int direction, NumericMatrix slr, double slr_xmin, double slr_xmax, double slr_ymin, double slr_ymax);
 RcppExport SEXP _microclima_invls_calc(SEXP lsmSEXP, SEXP resolutionSEXP, SEXP xminSEXP, SEXP ymaxSEXP, SEXP sSEXP, SEXP directionSEXP, SEXP slrSEXP, SEXP slr_xminSEXP, SEXP slr_xmaxSEXP, SEXP slr_yminSEXP, SEXP slr_ymaxSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
     Rcpp::traits::input_parameter< NumericMatrix >::type lsm(lsmSEXP);
-    Rcpp::traits::input_parameter< int >::type resolution(resolutionSEXP);
+    Rcpp::traits::input_parameter< double >::type resolution(resolutionSEXP);
     Rcpp::traits::input_parameter< double >::type xmin(xminSEXP);
     Rcpp::traits::input_parameter< double >::type ymax(ymaxSEXP);
     Rcpp::traits::input_parameter< NumericVector >::type s(sSEXP);

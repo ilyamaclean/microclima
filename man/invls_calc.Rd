@@ -7,29 +7,6 @@
 invls_calc(lsm, resolution, xmin, ymax, s, direction, slr, slr_xmin,
   slr_xmax, slr_ymin, slr_ymax)
 }
-\arguments{
-\item{lsm}{A binary matrix indicating land and sea}
-
-\item{resolution}{The resolution of the input raster}
-
-\item{xmin}{The minimum x coordinate}
-
-\item{ymax}{The maximum y coordinate}
-
-\item{s}{A vector}
-
-\item{direction}{The source direction of wind (in degrees)}
-
-\item{slr}{The minimum x coordinate}
-
-\item{slr_xmin}{The minimum x coordinate of slr}
-
-\item{slr_xmax}{The maximum x coordinate of slr}
-
-\item{slr_ymin}{The minimum y coordinate of slr}
-
-\item{slr_ymax}{The maximum y coordinate of slr}
-}
 \description{
 This function returns a numeric matrix identifying
 matching values from a raster that intersect with
