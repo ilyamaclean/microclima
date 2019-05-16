@@ -18,7 +18,7 @@ difprop(rad, julian, localtime, lat, long, hourly = FALSE,
 
 \item{long}{a single numeric value representing the longitude of the location for which partitioned radiation is required (decimal degrees, -ve west of Greenwich meridian).}
 
-\item{hourly}{species whether values of \code{rad} are hourly (see details).}
+\item{hourly}{specifies whether values of \code{rad} are hourly (see details).}
 
 \item{watts}{a logical value indicating  whether the units of \code{rad} are \ifelse{html}{\out{W m<sup>-2</sup>}}{\eqn{W m^{-2}}} (TRUE) or \ifelse{html}{\out{MJ m<sup>-2</sup> hr<sup>-1</sup>}}{\eqn{MJ m^{-2} hr^{-1}}} (FALSE).}
 
