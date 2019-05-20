@@ -715,7 +715,9 @@ dailyprecipNCEP <- function(lat, long, tme, reanalysis2 = TRUE) {
     rfine[is.na(rfine)] <- zmin
     rc <- trim(rc)
     aggf <- floor(mean(res(rc)[1:2]) / mean(res(rfine)))
-    if (aggf > 1) rfine2 <- suppressWarnings(aggregate(rfine, aggf, max))
+    if (aggf > 1) {
+      rfine2 <- suppressWarnings(aggregate(rfine, aggf, max))
+    } else rfine2 <- rfine
     rfine2 <- suppressWarnings(resample(rfine2, rc, method = 'ngb'))
     rfine2 <- crop(rfine2, extent(rfine))
     if (dim(rfine2)[1] * dim(rfine2)[2] == 1) {
