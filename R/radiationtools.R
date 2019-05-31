@@ -984,6 +984,7 @@ shortwaveveg <- function(dni, dif, julian, localtime, lat = NA, long = NA,
 #' @param watts a logical value indicating  whether the units of `rad` are \ifelse{html}{\out{W m<sup>-2</sup>}}{\eqn{W m^{-2}}} (TRUE) or \ifelse{html}{\out{MJ m<sup>-2</sup> hr<sup>-1</sup>}}{\eqn{MJ m^{-2} hr^{-1}}} (FALSE).
 #' @param merid an optional numeric value representing the longitude (decimal degrees) of the local time zone meridian (0 for GMT). Default is `round(long / 15, 0) * 15`
 #' @param dst an optional numeric value representing the time difference from the timezone meridian (hours, e.g. +1 for BST if `merid` = 0).
+#' @param corr an optional numeric value representing a correction to account for over- or under-estimated diffuse proportions. Values > 1 will apportion a greater ammount of total radiation as diffuse than originally calculated by the formula.
 #'
 #' @return a vector of diffuse fractions (either \ifelse{html}{\out{MJ m<sup>-2</sup> hr<sup>-1</sup>}}{\eqn{MJ m^{-2} hr^{-1}}} or \ifelse{html}{\out{W m<sup>-2</sup>}}{\eqn{W m^{-2}}}).
 #' @export
@@ -1004,7 +1005,8 @@ shortwaveveg <- function(dni, dif, julian, localtime, lat = NA, long = NA,
 #' plot(dfr ~ rad, type = "l", lwd = 2, xlab = "Incoming shortwave radiation",
 #'      ylab = "Diffuse fraction")
 difprop <- function(rad, julian, localtime, lat, long, hourly = FALSE,
-                  watts = TRUE, merid = round(long / 15, 0) * 15, dst = 0) {
+                  watts = TRUE, merid = round(long / 15, 0) * 15, dst = 0,
+                  corr = 1) {
   if (watts) rad <- rad * 0.0036
   sa <- solalt(localtime, lat, long, julian, merid, dst)
   alt <- sa * (pi / 180)
@@ -1051,6 +1053,10 @@ difprop <- function(rad, julian, localtime, lat, long, hourly = FALSE,
   d[sigma3 > 0.01] <- d[sigma3 > 0.01] + delta[sigma3 > 0.01]
   d[rad == 0] <- 0.5
   d[sa < 0] <- 1
+  # apply correction
+  dif_val <- rad * d
+  dif_val_adj <- dif_val * corr
+  d <- dif_val_adj /rad
   d[d > 1] <- 1
   d[d < 0] <- 1
   d[is.na(d)] <- 0.5

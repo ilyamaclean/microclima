@@ -5,7 +5,7 @@
 \title{Calculates the diffuse fraction from incoming shortwave radiation}
 \usage{
 difprop(rad, julian, localtime, lat, long, hourly = FALSE,
-  watts = TRUE, merid = round(long/15, 0) * 15, dst = 0)
+  watts = TRUE, merid = round(long/15, 0) * 15, dst = 0, corr = 1)
 }
 \arguments{
 \item{rad}{a vector of incoming shortwave radiation values (either \ifelse{html}{\out{MJ m<sup>-2</sup> hr<sup>-1</sup>}}{\eqn{MJ m^{-2} hr^{-1}}} or \ifelse{html}{\out{W m<sup>-2</sup>}}{\eqn{W m^{-2}}})}
@@ -25,6 +25,8 @@ difprop(rad, julian, localtime, lat, long, hourly = FALSE,
 \item{merid}{an optional numeric value representing the longitude (decimal degrees) of the local time zone meridian (0 for GMT). Default is \code{round(long / 15, 0) * 15}}
 
 \item{dst}{an optional numeric value representing the time difference from the timezone meridian (hours, e.g. +1 for BST if \code{merid} = 0).}
+
+\item{corr}{an optional numeric value representing a correction to account for over- or under-estimated diffuse proportions. Values > 1 will apportion a greater ammount of total radiation as diffuse than originally calculated by the formula.}
 }
 \value{
 a vector of diffuse fractions (either \ifelse{html}{\out{MJ m<sup>-2</sup> hr<sup>-1</sup>}}{\eqn{MJ m^{-2} hr^{-1}}} or \ifelse{html}{\out{W m<sup>-2</sup>}}{\eqn{W m^{-2}}}).
