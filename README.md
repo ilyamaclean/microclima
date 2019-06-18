@@ -4,3 +4,9 @@ The functions in the microclima package contain tools for modelling the mechanis
     functions for determining the fine-scale topographic and vegetation 
     effects on wind speed and radiation are also provided. It also includes 
     tools for deriving canopy cover, leaf architecture, surface albedo and cold air drainage basins from digital elevation data and aerial imagery. 
+    
+## Installation
+
+`#install.packages("devtools")`
+
+`devtools::install_github("ilyamaclean/microclima")`
