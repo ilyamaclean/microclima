@@ -291,7 +291,7 @@ siflat <- function(localtime, lat, long, julian, merid = round(long / 15, 0) * 1
 #' @param reanalysis2 Logical. Should data be obtained from the Reanalysis II dataset (default) or
 #' from Reanalysis I (data prior to 1979). Ignored if `ncepdata` provided.
 #'
-#' @return a dataframe with the following variables: (i) obs_time: a POSIXlt oobject of times,
+#' @return a dataframe with the following variables: (i) obs_time: a POSIXlt object of times,
 #' (ii) temperature: temperatures at 2m (ºC), (iii) humidity: specific humidity at 2m (Kg / Kg),
 #' (iv) pressure: surface pressure (Pa), (v) windspeed: wind speed at 2m (metres per
 #' second), (vi) winddir: wind direction (degrees from N), (vii) emissivity: emissivity of the
