@@ -30,7 +30,7 @@ a raster object:
 }
 }
 \description{
-\code{ pcad} calculates the expected temperature differences resulting from cold air
+\code{pcad} calculates the expected temperature differences resulting from cold air
 drainage.
 }
 \details{

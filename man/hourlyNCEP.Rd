@@ -13,13 +13,13 @@ hourlyNCEP(ncepdata = NA, lat, long, tme, reanalysis2 = TRUE)
 
 \item{long}{the longitude of the location for which data are required. Ignored if \code{ncepdata} provided.}
 
-\item{tme}{a POSIXlt object covering the duration for which data are required. Ignored if \code{ncepdata`` provided. Hourly data are returned irrespective of the time interval of }tme\code{.Ignored if }ncepdata` provided.}
+\item{tme}{a POSIXlt object covering the duration for which data are required. Ignored if \code{ncepdata`` provided. Hourly data are returned irrespective of the time interval of}tme\code{.Ignored if}ncepdata` provided.}
 
 \item{reanalysis2}{Logical. Should data be obtained from the Reanalysis II dataset (default) or
 from Reanalysis I (data prior to 1979). Ignored if \code{ncepdata} provided.}
 }
 \value{
-a dataframe with the following variables: (i) obs_time: a POSIXlt oobject of times,
+a dataframe with the following variables: (i) obs_time: a POSIXlt object of times,
 (ii) temperature: temperatures at 2m (ºC), (iii) humidity: specific humidity at 2m (Kg / Kg),
 (iv) pressure: surface pressure (Pa), (v) windspeed: wind speed at 2m (metres per
 second), (vi) winddir: wind direction (degrees from N), (vii) emissivity: emissivity of the
