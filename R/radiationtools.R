@@ -562,8 +562,9 @@ longwavetopo <- function(h, tc, p = 101300, n, svf = 1, co = 1.24) {
   rh <- ifelse(rh > 100, 100, rh)
   ea <- e0 * (rh / 100)
   eo <- co * (0.1 * ea / (tc + 273.15)) ^ (1/7)
-  em <- (1 - n) + n * eo
-  Ln <- 2.043e-10 * em * (tc + 273.15) ^ 4
+  s <- 1 - n
+  em <- (1 - s) + s * eo
+  Ln <- 2.043e-10 * (1 - em) * (tc + 273.15) ^ 4
   lwr <- Ln * svf
   if_raster(lwr, r)
 }
@@ -642,9 +643,10 @@ longwaveveg <- function(h, tc, p = 101300, n, x, fr, svv = 1, albc = 0.23, co = 
   rh <- ifelse(rh > 100, 100, rh)
   ea <- e0 * rh / 100
   eo <- co * (0.1 * ea / (tc + 273.15)) ^ (1/7)
-  em <- (1 - n) + n * eo
+  s <- 1 - n
+  em <- (1 - s) + s * eo
   le0 <- 2.043e-10 * (tc + 273.15) ^ 4
-  lwsky <- (1 - em) * le0
+  lwsky <- em * le0
   lw1 <- (1 - fr) * lwsky
   lr <- (2 / 3) * log(x + 1)
   r <- 1 / (1 + exp(-1 * lr))
