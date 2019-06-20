@@ -1209,7 +1209,7 @@ microclimaforNMR <- function(lat, long, dstart, dfinish, l, x, coastal = TRUE, h
 #' directions upwind. Steps defines the total number of directions used. If the
 #' default 8 is specified, coastal effects are calculated at 45º intervals.
 #' @param plot.progress an optional logical indicating whether to produce plots to track progress.
-#' @param continious an optional logical value indicating whether to treat wind speed as a continious variable
+#' @param continuous an optional logical value indicating whether to treat wind speed as a continuous variable
 #' @param summarydata an optional logical indicating whether to calculate summary data
 #' (frost hours and maximum, minimum and mean temperature) for each pixel and return these to the output.
 #' @param save.memory An optional logical indicatign whether to save
@@ -1261,7 +1261,7 @@ runauto.ncep <- function(r, dstart, dfinish, hgt = 0.05, l, x, habitat = NA,
                          save = 0, albg = 0.15, albr =0.15, albc = 0.23,
                          mesoresolution = 100, zmin = 0, slope = NA, aspect = NA,
                          windthresh = 4.5, emthresh = 0.78, reanalysis2 = TRUE,
-                         steps = 8, plot.progress = TRUE, continious = TRUE,
+                         steps = 8, plot.progress = TRUE, continuous = TRUE,
                          summarydata = TRUE, save.memory = FALSE) {
   longwaveveg2 <- function(le0, lwsky, x, fr, svv, albc) {
     lw1 <- (1 - fr) * lwsky
@@ -1454,7 +1454,7 @@ runauto.ncep <- function(r, dstart, dfinish, hgt = 0.05, l, x, habitat = NA,
                       reftemp = nmrout$TAREF,
                       wind = rwind$windspeed,
                       netrad = netrad)
-    params <- fitmicro(mft, alldata = TRUE, continious = T)
+    params <- fitmicro(mft, alldata = TRUE, continuous = continuous)
   }
   if (hgt <= 0) {
     soiltemps <- as.data.frame(micronmr$soil)
@@ -1462,7 +1462,7 @@ runauto.ncep <- function(r, dstart, dfinish, hgt = 0.05, l, x, habitat = NA,
                       reftemp = nmrout$TAREF,
                       wind = rwind$windspeed,
                       netrad = netrad)
-    params <- fitmicro(mft, alldata = TRUE, continious = T)
+    params <- fitmicro(mft, alldata = TRUE, continuous = continuous)
   }
   if (hgt < 0) {
     pred0 <- mft$reftemp + params$Estimate[1] + params$Estimate[3] * netrad +
@@ -1561,7 +1561,7 @@ runauto.ncep <- function(r, dstart, dfinish, hgt = 0.05, l, x, habitat = NA,
     ws <- ifelse(ws < mnwind, mnwind, ws)
     ws <- ifelse(ws > mxwind, mxwind, ws)
     ws <- if_raster(ws, r2)
-    tea <- runmicro(params, nr, ws, continious = TRUE)
+    tea <- runmicro(params, nr, ws, continuous = continuous)
     tea <- mask(tea, r)
     if (hgt < 0) {
       soil0 <- is_raster(tea) + tr

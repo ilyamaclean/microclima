@@ -9,7 +9,7 @@ runauto.ncep(r, dstart, dfinish, hgt = 0.05, l, x, habitat = NA,
   albg = 0.15, albr = 0.15, albc = 0.23, mesoresolution = 100,
   zmin = 0, slope = NA, aspect = NA, windthresh = 4.5,
   emthresh = 0.78, reanalysis2 = TRUE, steps = 8,
-  plot.progress = TRUE, continious = TRUE, summarydata = TRUE,
+  plot.progress = TRUE, continuous = TRUE, summarydata = TRUE,
   save.memory = FALSE)
 }
 \arguments{
@@ -90,7 +90,7 @@ default 8 is specified, coastal effects are calculated at 45º intervals.}
 
 \item{plot.progress}{an optional logical indicating whether to produce plots to track progress.}
 
-\item{continious}{an optional logical value indicating whether to treat wind speed as a continious variable}
+\item{continuous}{an optional logical value indicating whether to treat wind speed as a continuous variable}
 
 \item{summarydata}{an optional logical indicating whether to calculate summary data
 (frost hours and maximum, minimum and mean temperature) for each pixel and return these to the output.}
