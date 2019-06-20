@@ -13,7 +13,7 @@ runmicro(params, netrad, wind, continuous = FALSE)
 
 \item{wind}{a raster object, two-dimensional array or matrix of downscaled wind speed, as produced by reference wind speed x the output of \code{\link[=windcoef]{windcoef()}}.}
 
-\item{continuous}{an optional logical value indicating whether the model was fitted by treating wind speed as a continious variable.}
+\item{continuous}{an optional logical value indicating whether the model was fitted by treating wind speed as a continuous variable.}
 }
 \value{
 a raster object, two-dimensional array or matrix of temperature anomolies from reference temperature, normally in ºC, but units depend on those used in \code{\link[=fitmicro]{fitmicro()}}.

@@ -20,7 +20,7 @@ fitmicro(microfitdata, alldata = FALSE, windthresh = NA,
 
 \item{windthresh}{an optional single numeric value indicating the threshold wind speed above which an alternative linear relationship between net radiation the microclimate temperature anomoly is fitted. See details.}
 
-\item{continuous}{an optional logical value indicating whether to treat wind speed as a continious variable.}
+\item{continuous}{an optional logical value indicating whether to treat wind speed as a continuous variable.}
 
 \item{iter}{a single integer specifying the iterations to perform during randomization. Ignored if \code{alldata} = TRUE.}
 }
@@ -54,11 +54,11 @@ and the specific heat of air at constant pressure are constant, the slope
 varies as a function of a wind speed factor, such that different slope values
 are assumed under high and low wind conditions.  Hence, as a default, \code{fitmicro}
 fits a linear model of the form \code{lm((temperature - reftemp) ~ netrad * windfact)}
-where windfact is given by \code{ifelse(wind > windthresh, 1, 0)} If \code{continious} is
+where windfact is given by \code{ifelse(wind > windthresh, 1, 0)} If \code{continuous} is
 set to TRUE, then a linear model of the form \code{lm((temperature - reftemp) ~ netrad * log(wind + 1)}
 is fitted. If \code{alldata} is FALSE, random subsets of the data are selected and the analyses repeated
 \code{iter} times to reduce the effects of of temporal autocorrelation. Parameter
-estimates are derived as the median of all runs. If \code{continious} is set to FALSE
+estimates are derived as the median of all runs. If \code{continuous} is set to FALSE
 and no value is provided for \code{windthresh}, it is derived by iteratively trying out
 different values, and selecting that which yields the best fit. The gradient of
 the relationship is also dependent on vegetation structure, and in some
@@ -68,5 +68,5 @@ vegetation type.
 \examples{
 fitmicro(microfitdata)
 fitmicro(mesofitdata, alldata = TRUE)
-fitmicro(mesofitdata, alldata = TRUE, continious = TRUE)
+fitmicro(mesofitdata, alldata = TRUE, continuous = TRUE)
 }

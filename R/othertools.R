@@ -531,7 +531,7 @@ arrayspline <- function(a, tme, nfact = 24, out = NA) {
 #' }
 #' @param alldata an optional logical value indicating whether to fit the model using all data (TRUE) or using a randomization procedure (FALSE). See details.
 #' @param windthresh an optional single numeric value indicating the threshold wind speed above which an alternative linear relationship between net radiation the microclimate temperature anomoly is fitted. See details.
-#' @param continuous an optional logical value indicating whether to treat wind speed as a continious variable.
+#' @param continuous an optional logical value indicating whether to treat wind speed as a continuous variable.
 #' @param iter a single integer specifying the iterations to perform during randomization. Ignored if `alldata` = TRUE.
 #'
 #' @return a data,frame with the following columns:
@@ -561,11 +561,11 @@ arrayspline <- function(a, tme, nfact = 24, out = NA) {
 #' varies as a function of a wind speed factor, such that different slope values
 #' are assumed under high and low wind conditions.  Hence, as a default, `fitmicro`
 #' fits a linear model of the form `lm((temperature - reftemp) ~ netrad * windfact)`
-#' where windfact is given by `ifelse(wind > windthresh, 1, 0)` If `continious` is
+#' where windfact is given by `ifelse(wind > windthresh, 1, 0)` If `continuous` is
 #' set to TRUE, then a linear model of the form `lm((temperature - reftemp) ~ netrad * log(wind + 1)`
 #' is fitted. If `alldata` is FALSE, random subsets of the data are selected and the analyses repeated
 #' `iter` times to reduce the effects of of temporal autocorrelation. Parameter
-#' estimates are derived as the median of all runs. If `continious` is set to FALSE
+#' estimates are derived as the median of all runs. If `continuous` is set to FALSE
 #' and no value is provided for `windthresh`, it is derived by iteratively trying out
 #' different values, and selecting that which yields the best fit. The gradient of
 #' the relationship is also dependent on vegetation structure, and in some
@@ -575,7 +575,7 @@ arrayspline <- function(a, tme, nfact = 24, out = NA) {
 #' @examples
 #' fitmicro(microfitdata)
 #' fitmicro(mesofitdata, alldata = TRUE)
-#' fitmicro(mesofitdata, alldata = TRUE, continious = TRUE)
+#' fitmicro(mesofitdata, alldata = TRUE, continuous = TRUE)
 fitmicro <- function(microfitdata, alldata = FALSE, windthresh = NA,
                      continuous = FALSE, iter = 999) {
   pvals <- function(x) {
@@ -588,7 +588,7 @@ fitmicro <- function(microfitdata, alldata = FALSE, windthresh = NA,
   }
   wthresh <- NA
   microfitdata$anom <- microfitdata$temperature - microfitdata$reftemp
-  if (is.na(windthresh) & continious == FALSE) {
+  if (is.na(windthresh) & continuous == FALSE) {
     wrange <- floor(max(microfitdata$wind) - min(microfitdata$wind))
     rsq <- 0
     for (i in 1:100 * wrange) {
@@ -599,7 +599,7 @@ fitmicro <- function(microfitdata, alldata = FALSE, windthresh = NA,
     wthresh <- which(rsq == max(rsq, na.rm = TRUE)) / 100
   }
   if (alldata) {
-    if (continious) {
+    if (continuous) {
       m1 <- summary(lm(anom ~ log(wind + 1) * netrad, data = microfitdata))
     } else {
       wf <- ifelse(microfitdata$wind > wthresh, 1, 0)
@@ -617,7 +617,7 @@ fitmicro <- function(microfitdata, alldata = FALSE, windthresh = NA,
     for (i in 1:iter) {
       u <- round(runif(ln, 1, dim(microfitdata)[1]), 0)
       one.iter <- microfitdata[u, ]
-      if (continious == F) {
+      if (continuous == F) {
         wf <- ifelse(one.iter$wind > wthresh, 1, 0)
         m1 <- lm(one.iter$anom ~ wf * one.iter$netrad)
       } else {
@@ -639,7 +639,7 @@ fitmicro <- function(microfitdata, alldata = FALSE, windthresh = NA,
                        P = c(pvs, ""))
   row.names(params) <- c("Intercept", "Wind factor", "Net radiation",
                          "Wind factor:Net radiation", "Wind threshold")
-  if (continious) {
+  if (continuous) {
     row.names(params)[2] <- "wind"
     row.names(params)[5] <- ""
     params$Estimate[5] <- ""
@@ -655,7 +655,7 @@ fitmicro <- function(microfitdata, alldata = FALSE, windthresh = NA,
 #' @param params a data.frame of parameter estimates as produced by [fitmicro()]
 #' @param netrad a raster object, two-dimensional array or matrix of downscaled net radiation as produced by [shortwaveveg()] - [longwaveveg()] or [shortwavetopo()] - [longwavetopo()].
 #' @param wind a raster object, two-dimensional array or matrix of downscaled wind speed, as produced by reference wind speed x the output of [windcoef()].
-#' @param continuous an optional logical value indicating whether the model was fitted by treating wind speed as a continious variable.
+#' @param continuous an optional logical value indicating whether the model was fitted by treating wind speed as a continuous variable.
 
 #' @return a raster object, two-dimensional array or matrix of temperature anomolies from reference temperature, normally in ºC, but units depend on those used in [fitmicro()].
 #' @import raster
@@ -798,7 +798,7 @@ runmicro <- function(params, netrad, wind, continuous = FALSE) {
   r <- netrad
   netrad <- is_raster(netrad)
   wind <- is_raster(wind)
-  if (continious) {
+  if (continuous) {
     temp <- params[1, 1] + params[2, 1] * log(wind + 1) + params[3, 1] * netrad +
       params[4, 1] * log(wind + 1) * netrad
   } else {
