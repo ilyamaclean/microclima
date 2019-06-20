@@ -5,7 +5,7 @@
 \title{Fits micro- or mesoclimate model}
 \usage{
 fitmicro(microfitdata, alldata = FALSE, windthresh = NA,
-  continious = FALSE, iter = 999)
+  continuous = FALSE, iter = 999)
 }
 \arguments{
 \item{microfitdata}{a data.frame with at least the following columns (see, for example, microfit data):
@@ -20,7 +20,7 @@ fitmicro(microfitdata, alldata = FALSE, windthresh = NA,
 
 \item{windthresh}{an optional single numeric value indicating the threshold wind speed above which an alternative linear relationship between net radiation the microclimate temperature anomoly is fitted. See details.}
 
-\item{continious}{an optional logical value indicating whether to treat wind speed as a continious variable.}
+\item{continuous}{an optional logical value indicating whether to treat wind speed as a continious variable.}
 
 \item{iter}{a single integer specifying the iterations to perform during randomization. Ignored if \code{alldata} = TRUE.}
 }

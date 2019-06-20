@@ -531,7 +531,7 @@ arrayspline <- function(a, tme, nfact = 24, out = NA) {
 #' }
 #' @param alldata an optional logical value indicating whether to fit the model using all data (TRUE) or using a randomization procedure (FALSE). See details.
 #' @param windthresh an optional single numeric value indicating the threshold wind speed above which an alternative linear relationship between net radiation the microclimate temperature anomoly is fitted. See details.
-#' @param continious an optional logical value indicating whether to treat wind speed as a continious variable.
+#' @param continuous an optional logical value indicating whether to treat wind speed as a continious variable.
 #' @param iter a single integer specifying the iterations to perform during randomization. Ignored if `alldata` = TRUE.
 #'
 #' @return a data,frame with the following columns:
@@ -577,7 +577,7 @@ arrayspline <- function(a, tme, nfact = 24, out = NA) {
 #' fitmicro(mesofitdata, alldata = TRUE)
 #' fitmicro(mesofitdata, alldata = TRUE, continious = TRUE)
 fitmicro <- function(microfitdata, alldata = FALSE, windthresh = NA,
-                     continious = FALSE, iter = 999) {
+                     continuous = FALSE, iter = 999) {
   pvals <- function(x) {
     iter <- length(x)
     d <- floor(log(iter, 10))
@@ -655,7 +655,7 @@ fitmicro <- function(microfitdata, alldata = FALSE, windthresh = NA,
 #' @param params a data.frame of parameter estimates as produced by [fitmicro()]
 #' @param netrad a raster object, two-dimensional array or matrix of downscaled net radiation as produced by [shortwaveveg()] - [longwaveveg()] or [shortwavetopo()] - [longwavetopo()].
 #' @param wind a raster object, two-dimensional array or matrix of downscaled wind speed, as produced by reference wind speed x the output of [windcoef()].
-#' @param continious an optional logical value indicating whether the model was fitted by treating wind speed as a continious variable.
+#' @param continuous an optional logical value indicating whether the model was fitted by treating wind speed as a continious variable.
 
 #' @return a raster object, two-dimensional array or matrix of temperature anomolies from reference temperature, normally in ºC, but units depend on those used in [fitmicro()].
 #' @import raster
@@ -789,12 +789,12 @@ fitmicro <- function(microfitdata, alldata = FALSE, windthresh = NA,
 #' # ------------------
 #' # Fit and run model
 #' # ------------------
-#' params <- fitmicro(mesofitdata)
-#' anom <- runmicro(params, netrad, ws)
+#' params <- fitmicro(mesofitdata, continuous = T)
+#' anom <- runmicro(params, netrad, ws, continuous = T)
 #' tc <- tc + anom
 #' plot(mask(tc, dtm100m), main =
 #'      expression(paste("Mesoclimate temperature ",(~degree~C))))
-runmicro <- function(params, netrad, wind, continious = FALSE) {
+runmicro <- function(params, netrad, wind, continuous = FALSE) {
   r <- netrad
   netrad <- is_raster(netrad)
   wind <- is_raster(wind)
