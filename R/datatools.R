@@ -704,7 +704,7 @@ dailyprecipNCEP <- function(lat, long, tme, reanalysis2 = TRUE) {
   cadt <- cdif * lr * cad
   tout <- data.frame(tref = hourlydata$temperature,
                      elev = elev, elevncep = elevncep,
-                     telev = lr * elev,
+                     telev = elevt,
                      tcad = cadt)
   return(list(tout = tout, basins = basins, flowacc = fa))
 }
