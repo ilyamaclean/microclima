@@ -10,3 +10,5 @@ The functions in the microclima package contain tools for modelling the mechanis
 `#install.packages("devtools")`
 
 `devtools::install_github("ilyamaclean/microclima")`
+
+For further help with installation - please visit the [wiki](https://github.com/ilyamaclean/microclima/wiki).
