@@ -5,6 +5,8 @@ The functions in the microclima package contain tools for modelling the mechanis
     effects on wind speed and radiation are also provided. It also includes 
     tools for deriving canopy cover, leaf architecture, surface albedo and cold air drainage basins from digital elevation data and aerial imagery. 
     
+Citation: Maclean, I.M.D., Mosedale, J.R. & Bennie, J.J. 2018. Microclima: An R package for modelling meso‐ and microclimate. Methods in Ecology and Evolution 10:280-290.  
+    
 ## Installation
 
 `#install.packages("devtools")`
