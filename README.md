@@ -14,3 +14,7 @@ Citation: Maclean, I.M.D., Mosedale, J.R. & Bennie, J.J. 2018. Microclima: An R 
 `devtools::install_github("ilyamaclean/microclima")`
 
 For further help with installation - please visit the [wiki](https://github.com/ilyamaclean/microclima/wiki).
+
+## Issues?
+
+If you have any problems with the package or wish to suggest improvements, then please open an issue [here](https://github.com/ilyamaclean/microclima/issues).
