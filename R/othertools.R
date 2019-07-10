@@ -114,8 +114,6 @@ invls <- function(landsea, e, direction) {
 #' @param lsa a fine-resolution raster of mean coastal exposure in all directions.
 #' @return a fine-resolution raster of sea - land temperature differences (ºC).
 #' @export
-#' @importFrom rgcvpack fitTps
-#' @importFrom rgcvpack predict.Tps
 #'
 #' @examples
 #' library(raster)
@@ -150,7 +148,7 @@ coastalTps <- function(dT, lsw, lsa) {
   sel <- which(is.na(v) == F)
   v <- v[is.na(v) == F]
   xyz <- xyz[sel, ]
-  tps <- fitTps(xyz, v, m = 3)
+  tps <- fields::Tps(xyz, v, m = 3)
   xy <- data.frame(xyFromCell(lsw, 1:ncell(lsw)))
   z1 <- extract(lsw, xy)
   z2 <- extract(lsa, xy)
@@ -158,7 +156,7 @@ coastalTps <- function(dT, lsw, lsa) {
   sel <- which(is.na(z1) == FALSE)
   xyz <- xyz[sel, ]
   xy$z <- NA
-  xy$z[sel] <- predict.Tps(tps, xyz)
+  xy$z[sel] <- fields::predict(tps, xyz)
   r <- rasterFromXYZ(xy)
   r
 }
