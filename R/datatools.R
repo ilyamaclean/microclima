@@ -916,9 +916,9 @@ dailyprecipNCEP <- function(lat, long, tme, reanalysis2 = TRUE) {
 }
 #' Calculates coastal effects from NCEP data
 #'
-#' @param landsea landsea A raster object with NAs (representing sea) or any non-NA value and a projection system defined.
+#' @param landsea a raster object with NAs (representing sea) or any non-NA value and a projection system defined.
 #' @param ncephourly a dataframe of hourly climate data as returned by [hourlyNCEP()].
-#' @param steps  an optional integer. Coastal effects are calculated in specified directions upwind. Steps defines the total number of directions used. If the default 8 is specified, coastal effects are calculated at 45º intervals.
+#' @param steps an optional integer. Coastal effects are calculated in specified directions upwind. Steps defines the total number of directions used. If the default 8 is specified, coastal effects are calculated at 45º intervals.
 #' @param use.raster an optional logical value indicating whether to mask the output values by `landsea`.
 #' @param zmin optional assumed sea-level height. Values below this are set to zmin
 #' @param plot.progress logical value indicating whether to produce plots to track progress.
