@@ -8,7 +8,7 @@ coastalNCEP(landsea, ncephourly, steps = 8, use.raster = T, zmin = 0,
   plot.progress = T, tidyr = F)
 }
 \arguments{
-\item{landsea}{landsea A raster object with NAs (representing sea) or any non-NA value and a projection system defined.}
+\item{landsea}{a raster object with NAs (representing sea) or any non-NA value and a projection system defined.}
 
 \item{ncephourly}{a dataframe of hourly climate data as returned by \code{\link[=hourlyNCEP]{hourlyNCEP()}}.}
 
