@@ -493,9 +493,11 @@ dailyprecipNCEP <- function(lat, long, tme, reanalysis2 = TRUE) {
   tmeout <- tme
   tme <- .tme.sort(tme)
   long <- ifelse(long > 180, long - 360, long)
-  int <- as.numeric(tme[2]) - as.numeric(tme[1])
-  lgth <- (length(tme) * int) / (24 * 3600)
-  tme <- as.POSIXlt(c(0:(lgth - 1)) * 3600 * 24, origin = min(tme), tz = 'UTC')
+  if (length(tme) > 1) {
+    int <- as.numeric(tme[2]) - as.numeric(tme[1])
+    lgth <- (length(tme) * int) / (24 * 3600)
+    tme <- as.POSIXlt(c(0:(lgth - 1)) * 3600 * 24, origin = min(tme), tz = 'UTC')
+  } else tme <- as.POSIXlt(0, origin = min(tme), tz = 'UTC')
   yrs <- unique(tme$year + 1900)
   mths <- unique(tme$mon + 1)
   ll <- data.frame(x = long, y = lat)
