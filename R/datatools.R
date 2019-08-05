@@ -706,7 +706,7 @@ dailyprecipNCEP <- function(lat, long, tme, reanalysis2 = TRUE) {
   cadt <- cdif * lr * cad
   tout <- data.frame(tref = hourlydata$temperature,
                      elev = elev, elevncep = elevncep,
-                     telev = elevt, tcad = cadt)
+                     telev = elevt, tcad = cadt, lapserate = lr)
   return(list(tout = tout, basins = basins, flowacc = fa))
 }
 #' Calculates coastal exposure automatically
