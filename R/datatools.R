@@ -1138,7 +1138,7 @@ microclimaforNMR <- function(lat, long, dstart, dfinish, l, x, coastal = TRUE, h
     yi <- round((xy$y - e@ymin) / res(dem)[2] + 0.5, 0)
     ce <- acoast[xi, yi, ]
     if (is.na(ce[1])) ce <- apply(acoast, 3, mean, na.rm = T)
-    elev$tref <- ce + elev$telev
+    elev$tref <- ce - elev$tref + elev$telev
   }  else acoast <- NA
   return(list(hourlydata = hourlydata, hourlyradwind = radwind, tref = elev,
               dailyprecip = dailyprecip, acoast = acoast, basins = info$basins,
