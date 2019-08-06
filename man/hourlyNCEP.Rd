@@ -19,16 +19,23 @@ hourlyNCEP(ncepdata = NA, lat, long, tme, reanalysis2 = TRUE)
 from Reanalysis I (data prior to 1979). Ignored if \code{ncepdata} provided.}
 }
 \value{
-a dataframe with the following variables: (i) obs_time: a POSIXlt object of times,
-(ii) temperature: temperatures at 2m (ºC), (iii) humidity: specific humidity at 2m (Kg / Kg),
-(iv) pressure: surface pressure (Pa), (v) windspeed: wind speed at 2m (metres per
-second), (vi) winddir: wind direction (degrees from N), (vii) emissivity: emissivity of the
-atmosphere (0 - 1), (viii) netlong: Net longwave radiation (\ifelse{html}{\out{MJ m<sup>-2</sup> hr<sup>-1</sup>}}{\eqn{MJ m^-2 hr^{-1}}})
-(ix) uplong: upward longwave radiation (\ifelse{html}{\out{MJ m<sup>-2</sup> hr<sup>-1</sup>}}{\eqn{MJ m^-2 hr^{-1}}}),
-(x) downlong: downward longwave radiation (\ifelse{html}{\out{MJ m<sup>-2</sup> hr<sup>-1</sup>}}{\eqn{MJ m^-2 hr^{-1}}}),
-(xi) rad_dni: Direct radiation normal to the solar beam (\ifelse{html}{\out{MJ m<sup>-2</sup> hr<sup>-1</sup>}}{\eqn{MJ m^-2 hr^{-1}}}),
-(xii) rad_dif: Diffuse radiation (\ifelse{html}{\out{MJ m<sup>-2</sup> hr<sup>-1</sup>}}{\eqn{MJ m^-2 hr^{-1}}}),
-(xiii) szenith: the zenith angle (degrees), (ixx) cloudcover: cloud cover (%).
+a dataframe with the following variables:
+\describe{
+\item{obs_time}{POSIXlt object of times in UTC}
+\item{temperature}{emperatures at 2m (ºC)}
+\item{humidity}{specific humidity at 2m (Kg / Kg)}
+\item{pressure}{surface pressure (Pa)}
+\item{windspeed}{wind speed at 2m (metres per second}
+\item{winddir}{wind direction (degrees from N)}
+\item{emissivity}{emissivity of the atmosphere (0 - 1, downlong / uplong)}
+\item{netlong}{Net longwave radiation (\ifelse{html}{\out{MJ m<sup>-2</sup> hr<sup>-1</sup>}}{\eqn{MJ m^-2 hr^{-1}}})}
+\item{uplong}{Upward longwave radiation (\ifelse{html}{\out{MJ m<sup>-2</sup> hr<sup>-1</sup>}}{\eqn{MJ m^-2 hr^{-1}}})}
+\item{downlong}{Downward longwave radiation (\ifelse{html}{\out{MJ m<sup>-2</sup> hr<sup>-1</sup>}}{\eqn{MJ m^-2 hr^{-1}}})}
+\item{rad_dni}{Direct radiation normal to the solar beam (\ifelse{html}{\out{MJ m<sup>-2</sup> hr<sup>-1</sup>}}{\eqn{MJ m^-2 hr^{-1}}})}
+\item{rad_dif}{Diffuse radiation (\ifelse{html}{\out{MJ m<sup>-2</sup> hr<sup>-1</sup>}}{\eqn{MJ m^-2 hr^{-1}}})}
+\item{szenith}{the zenith angle (degrees)}
+\item{cloudcover}{cloud cover (Percentage)}
+}
 }
 \description{
 \code{hourlyNCEP} optionally downloads the required NCEP climate and radiation forcing data
