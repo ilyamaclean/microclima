@@ -1400,7 +1400,7 @@ runauto <- function(r, dstart, dfinish, hgt = 0.05, l, x, habitat = NA,
   xx <- as.numeric(tme) == as.numeric(tme2)
   sel <- which(xx == FALSE)
   if (length(sel) > 1) {
-    cat(paste("Note: Model run in UTC/GMT. Some or all dates using system timezone are in", tz2[sel[1]]))
+    cat(paste("Note: Model run in UTC/GMT. Some or all dates using system timezone are in", tz2[sel[1]]), "\n")
   }
   tme <- tme[-length(tme)]
   tme <- as.POSIXlt(tme)
