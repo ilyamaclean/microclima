@@ -149,8 +149,8 @@ require(NicheMapR)
 # Get dem for Pico, Azores
 r <- get_dem(lat = 38.467429, long = -28.398995, resolution = 30)
 plot(r)
-# Takes ~ c. 15 minutes to run
-temps <- runauto.ncep(r, "10/06/2010", "15/06/2010", hgt = 0.1, l = NA, x = NA,
+# Takes ~ c. 5 minutes to run
+temps <- runauto(r, "10/06/2010", "15/06/2010", hgt = 0.1, l = NA, x = NA,
                      habitat = "Barren or sparsely vegetated")
 mypal <- colorRampPalette(c("darkblue", "blue", "green", "yellow", "orange",
                           "red"))(255)
