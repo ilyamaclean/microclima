@@ -531,7 +531,7 @@ dailyprecipNCEP <- function(lat, long, tme, reanalysis2 = TRUE) {
   }
   tma <- as.POSIXlt(tma[-1], origin = '1970-01-01', tz = 'UTC')
   tmeout <- as.POSIXlt(tmeout + 0, tz = "UTC")
-  sel <- which(tma >= min(tmeout) & tma <= (max(tmeout)))
+  sel <- which(tma >= min(tmeout) & tma < (max(tmeout) + 3600 * 24))
   pre <- pre[sel]
   dpre <- t(matrix(pre, nrow = 4))
   dpre <- apply(dpre, 1, sum)
