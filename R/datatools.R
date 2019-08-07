@@ -1153,7 +1153,7 @@ microclimaforNMR <- function(lat, long, dstart, dfinish, l, x, coastal = TRUE, h
 #' Function for automatically generating microclimate surfaces for anywhere in the word
 #'
 #' @description This function generating microclimate temperature surfaces for anywhere
-#' in the word. It first downloads coarse-resolution climate and radiationdata from The
+#' in the word. It first downloads coarse-resolution climate and radiation data from the
 #' NCEP-NCAR or NCEP–DOE Atmospheric Model Intercomparison Project (Kanamitso et al
 #' 2002) and interpolates these data to hourly. It calculates mesoclimatic effects and derives parameters for fitting the
 #' microclimate model using the `NicheMapR` package (Kearny & Porter 2016). Using digital
@@ -1184,19 +1184,19 @@ microclimaforNMR <- function(lat, long, dstart, dfinish, l, x, coastal = TRUE, h
 #' downloaded using [hourlyNCEP()]
 #' \describe{
 #'   \item{obs_time}{POSIXlt object of times in UTC}
-#'   \item{temperature}{emperatures at 2m (ºC)}
-#'   \item{humidity}{specific humidity at 2m (Kg / Kg)}
-#'   \item{pressure}{surface pressure (Pa)}
-#'   \item{windspeed}{wind speed at 2m (metres per second}
-#'   \item{winddir}{wind direction (degrees from N)}
-#'   \item{emissivity}{emissivity of the atmosphere (0 - 1, downlong / uplong)}
+#'   \item{temperature}{Temperatures at 2 m (ºC)}
+#'   \item{humidity}{Specific humidity at 2m (Kg / Kg)}
+#'   \item{pressure}{Surface pressure (Pa)}
+#'   \item{windspeed}{Wind speed at 2 m (metres per second)}
+#'   \item{winddir}{Wind direction (degrees from N)}
+#'   \item{emissivity}{Emissivity of the atmosphere (0 - 1, downlong / uplong)}
 #'   \item{netlong}{Net longwave radiation (\ifelse{html}{\out{MJ m<sup>-2</sup> hr<sup>-1</sup>}}{\eqn{MJ m^-2 hr^{-1}}})}
 #'   \item{uplong}{Upward longwave radiation (\ifelse{html}{\out{MJ m<sup>-2</sup> hr<sup>-1</sup>}}{\eqn{MJ m^-2 hr^{-1}}})}
 #'   \item{downlong}{Downward longwave radiation (\ifelse{html}{\out{MJ m<sup>-2</sup> hr<sup>-1</sup>}}{\eqn{MJ m^-2 hr^{-1}}})}
 #'   \item{rad_dni}{Direct radiation normal to the solar beam (\ifelse{html}{\out{MJ m<sup>-2</sup> hr<sup>-1</sup>}}{\eqn{MJ m^-2 hr^{-1}}})}
 #'   \item{rad_dif}{Diffuse radiation (\ifelse{html}{\out{MJ m<sup>-2</sup> hr<sup>-1</sup>}}{\eqn{MJ m^-2 hr^{-1}}})}
-#'   \item{szenith}{the zenith angle (degrees)}
-#'   \item{cloudcover}{cloud cover (Percentage)}
+#'   \item{szenith}{The zenith angle (degrees)}
+#'   \item{cloudcover}{Cloud cover (Percentage)}
 #' }
 #' @param dailyprecip a vector of daily rainfall (mm / day) for the period specified.
 #' If not supplied downloaded using [dailyprecipNCEP()].
@@ -1251,7 +1251,7 @@ microclimaforNMR <- function(lat, long, dstart, dfinish, l, x, coastal = TRUE, h
 #' @return a list with the following objects:
 #' (1) temps: an array of temperatures for each pixel of r and hour of the time sequence.
 #' (2) e: an extent object given the extent of `temps`. Generally the same as `raster::extent(r)`
-#' though note that edge cells are NA as slopes cannot be calculate for these cells.
+#' though note that edge cells are NA as slopes cannot be calculated for these cells.
 #' (3) units: the units of `temps`. Either deg C or dec C * 1000 if `save.memory` is TRUE.
 #' (4) tmax: If `summarydata` is TRUE, a matrix of maximum temperatures
 #' (5) tmin: If `summarydata` is TRUE, a matrix of minimum temperatures
@@ -1264,7 +1264,7 @@ microclimaforNMR <- function(lat, long, dstart, dfinish, l, x, coastal = TRUE, h
 #' @examples
 #' library(raster)
 #' require(NicheMapR)
-#' # Get dem for Pico, Azores
+#' # Get DEM for Pico, Azores
 #' r <- get_dem(lat = 38.467429, long = -28.398995, resolution = 30)
 #' plot(r)
 #' # Takes ~ c. 5 minutes to run
