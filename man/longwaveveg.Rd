@@ -14,7 +14,8 @@ longwaveveg(h, tc, p = 101300, n, x, fr, svv = 1, albc = 0.23,
 
 \item{p}{an optional single numeric value, raster object, two-dimensional array or matrix of sea-level pressures (Pa).}
 
-\item{n}{a single numeric value, raster object, two-dimensional array or matrix of fractional cloud cover (range 0 - 1).}
+\item{n}{a single numeric value, raster object, two-dimensional array or matrix of fractional cloud cover (range 0 - 1).
+Technically assumed to be 1 - ratio of measured to clear-sky radiation.}
 
 \item{x}{a raster object, two-dimensional array or matrix of numeric values representing the ratio of vertical to horizontal projections of leaf foliage as returned by \code{\link[=leaf_geometry]{leaf_geometry()}}.}
 
@@ -73,4 +74,5 @@ plot(nlr, main = "Net longwave radiation")
 \seealso{
 The function \code{\link[=longwavetopo]{longwavetopo()}} returns the net longwave radiation above vegetation.
 The function \code{\link[=humidityconvert]{humidityconvert()}} can be used to derive specific humidy from other meaures of humidity.
+\code{\link[=cloudfromrad]{cloudfromrad()}} can be used to derive derive cloud cover from radiation.
 }

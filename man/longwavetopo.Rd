@@ -13,7 +13,8 @@ longwavetopo(h, tc, p = 101300, n, svf = 1, co = 1.24)
 
 \item{p}{an optional single numeric value, raster object, two-dimensional array or matrix of sea-level pressures (Pa).}
 
-\item{n}{a single numeric value, raster object, two-dimensional array or matrix of fractional cloud cover values (range 0 - 1).}
+\item{n}{a single numeric value, raster object, two-dimensional array or matrix of fractional cloud cover values (range 0 - 1).
+Technically assumed to be 1 - ratio of measured to clear-sky radiation.}
 
 \item{svf}{an optional single value, raster object, two-dimensional array or matrix of values representing the proportion of isotropic radiation received by a partially obscured surface relative to the full hemisphere, as returned by \code{\link[=skyviewtopo]{skyviewtopo()}}.}
 
@@ -71,4 +72,5 @@ plot(netlong100m, main = "Net longwave radiation")
 \seealso{
 The function \code{\link[=longwaveveg]{longwaveveg()}} returns the net longwave radiation under vegetation.
 The function \code{\link[=humidityconvert]{humidityconvert()}} can be used to derive specific humidy from other meaures of humidity.
+\code{\link[=cloudfromrad]{cloudfromrad()}} can be used to derive derive cloud cover from radiation.
 }

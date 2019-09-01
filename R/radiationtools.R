@@ -498,6 +498,7 @@ skyviewveg <- function(dtm, l, x, steps = 36, res = 1) {
 #' @param tc a single numeric value, raster object, two-dimensional array or matrix of temperatures (ºC).
 #' @param p an optional single numeric value, raster object, two-dimensional array or matrix of sea-level pressures (Pa).
 #' @param n a single numeric value, raster object, two-dimensional array or matrix of fractional cloud cover values (range 0 - 1).
+#' Technically assumed to be 1 - ratio of measured to clear-sky radiation.
 #' @param svf an optional single value, raster object, two-dimensional array or matrix of values representing the proportion of isotropic radiation received by a partially obscured surface relative to the full hemisphere, as returned by [skyviewtopo()].
 #' @param co parameter relationship between vapor pressure and temperature near the ground Brutsaert (1975).
 #' @import raster
@@ -505,6 +506,7 @@ skyviewveg <- function(dtm, l, x, steps = 36, res = 1) {
 #'
 #' @seealso The function [longwaveveg()] returns the net longwave radiation under vegetation.
 #' The function [humidityconvert()] can be used to derive specific humidy from other meaures of humidity.
+#' [cloudfromrad()] can be used to derive derive cloud cover from radiation.
 #'
 #' @details
 #' if `svf` is a raster object, a raster object is returned.
@@ -555,16 +557,15 @@ longwavetopo <- function(h, tc, p = 101300, n, svf = 1, co = 1.24) {
   p <- is_raster(p)
   n <- is_raster(n)
   svf <- is_raster(svf)
-  pk <- p / 1000
-  e0 <- 0.6108 * exp(17.27 * tc / (tc + 237.3))
-  ws <- 0.622 * e0 / pk
-  rh <- (h / ws) * 100
+  pk <- p/1000
+  e0 <- 0.6108 * exp(17.27 * tc/(tc + 237.3))
+  ws <- 0.622 * e0/pk
+  rh <- (h/ws) * 100
   rh <- ifelse(rh > 100, 100, rh)
-  ea <- e0 * (rh / 100)
-  eo <- co * (0.1 * ea / (tc + 273.15)) ^ (1/7)
-  s <- 1 - n
-  em <- (1 - s) + s * eo
-  Ln <- 2.043e-10 * (1 - em) * (tc + 273.15) ^ 4
+  ea <- e0 * (rh/100)
+  eo <- co * (10 * ea /(tc + 273.15))^(1/7)
+  em <- n + (1 -n ) * eo
+  Ln <- (1 - em) * 2.043e-10 * (tc + 273.15)^4
   lwr <- Ln * svf
   if_raster(lwr, r)
 }
@@ -576,6 +577,7 @@ longwavetopo <- function(h, tc, p = 101300, n, svf = 1, co = 1.24) {
 #' @param tc a single numeric value, raster object, two-dimensional array or matrix of temperatures (ºC).
 #' @param p an optional single numeric value, raster object, two-dimensional array or matrix of sea-level pressures (Pa).
 #' @param n a single numeric value, raster object, two-dimensional array or matrix of fractional cloud cover (range 0 - 1).
+#' Technically assumed to be 1 - ratio of measured to clear-sky radiation.
 #' @param x a raster object, two-dimensional array or matrix of numeric values representing the ratio of vertical to horizontal projections of leaf foliage as returned by [leaf_geometry()].
 #' @param fr a raster object, two-dimensional array or matrix of fractional canopy cover as returned by [canopy()].
 #' @param svv an optional raster object, two-dimensional array or matrix of values representing the proportion of isotropic radiation received by a surface partially obscured by topography relative to the full hemisphere underneath vegetation as returned by [skyviewveg()].
@@ -586,6 +588,7 @@ longwavetopo <- function(h, tc, p = 101300, n, svf = 1, co = 1.24) {
 #'
 #' @seealso The function [longwavetopo()] returns the net longwave radiation above vegetation.
 #' The function [humidityconvert()] can be used to derive specific humidy from other meaures of humidity.
+#' [cloudfromrad()] can be used to derive derive cloud cover from radiation.
 #'
 #' @return a single numeric value, raster object or two-dimensional array of values representing net longwave radiation (MJ per metre squared per hour).
 #'
@@ -642,9 +645,8 @@ longwaveveg <- function(h, tc, p = 101300, n, x, fr, svv = 1, albc = 0.23, co = 
   rh <- (h / ws) * 100
   rh <- ifelse(rh > 100, 100, rh)
   ea <- e0 * rh / 100
-  eo <- co * (0.1 * ea / (tc + 273.15)) ^ (1/7)
-  s <- 1 - n
-  em <- (1 - s) + s * eo
+  eo <- co * (10 * ea / (tc + 273.15)) ^ (1/7)
+  em <- n + (1 - n) * eo
   le0 <- 2.043e-10 * (tc + 273.15) ^ 4
   lwsky <- em * le0
   lw1 <- (1 - fr) * lwsky
@@ -1063,4 +1065,107 @@ difprop <- function(rad, julian, localtime, lat, long, hourly = FALSE,
   d[d < 0] <- 1
   d[is.na(d)] <- 0.5
   d
+}
+#' calculates clearsky radiation
+#'
+#' @description
+#' `clearskyrad` is used to calculate clear-sky shortwave irradiance using the
+#'  Crawford & Duchon (1999) method
+#' @param tme a single value or vector of POSIXlt objects indicating the time(s)
+#' for which clearksy radiation is required.
+#' @param lat latitude in decimal degrees
+#' @param long longitude in decimal degrees
+#' @param h a single value or vector of specific humidities (\ifelse{html}{\out{kg kg<sup>{-1}</sup> }}{\eqn{kg kg^{-1}}}).
+#' @param tc a single value or vector of temperatures (ºC).
+#' @param p an optional single value or vector of pressures (Pa).
+#' @param G an optional single value or vector describing he moisture profile
+#' in the atmosphere (per Smith 1966).
+#' @param Ie an optional single value for extra-terrestrail radiation to permit adjustment for
+#' sun-earth distances (see details).
+#'
+#' @seealso The function [cloudfromrad()] uses this function to return 1 - ratio of measured to clearsky
+#' radiation for input when computing longwave radiation when using [longwavetopo()] or [longwaveveg()]
+#'
+#' @details
+#' The units returned are the same as for `Ie`, with the default option in W / M^2.
+#' If no values for `p` are provided, a default value of 101300 Pa, typical of
+#' sea-level pressure, is assumed. The method used is that detailed in
+#' Crawford & Duchon (1999) Quarterly Journal of the Royal Meteorological
+#' Society 122: 1127-1151.
+#'
+#' @return a single value or vector of clearksy radiation.
+#'
+#' @examples
+#' tme <- as.POSIXlt(c(0:23) * 3600, origin = "2010-05-23 00:00", tz = "GMT")
+#' Io <- clearskyrad(tme, 50, -5, 0.007953766 , 11)
+#' plot(Io ~ as.POSIXct(tme), type = "l")
+clearskyrad <- function(tme, lat, long, h, tc, p = 101300, G = 2.78, Ie = 1352.778) {
+  jd <- julday(tme$year + 1900, tme$mon + 1, tme$mday)
+  sa <- solalt(tme$hour, lat, long, jd, merid = 0)
+  sa[sa < 0] <- NA
+  z <- (90 - sa) * (pi / 180)
+  m <- 35 * cos(z) * ((1224 * cos(z)^2 + 1)^(-0.5))
+  TrTpg <- 1.021 - 0.084 * (m * 0.000949 * 0.01 * p + 0.051)^0.5
+  pk <- p / 1000
+  e0 <- 0.6108 * exp(17.27 * tc/(tc + 237.3))
+  ws <- 0.622 * e0/pk
+  rh <- (h/ws) * 100
+  rh <- ifelse(rh > 100, 100, rh)
+  xx <- log(rh / 100) + ((17.27 * tc) / (237.3 + tc))
+  Td <- (237.3 * xx) / (17.27 - xx)
+  u <- exp(0.1133 - log(G + 1) + 0.0393 * Td)
+  Tw <- 1 - 0.077 * (u * m) ^ 0.3
+  Ta <- 0.935 * m
+  od <- TrTpg * Tw * Ta
+  Ic <- Ie * (cos(z)) * TrTpg * Tw * Ta
+  Ic[Ic > Ie] <- NA
+  Ic[Ic < 0] <- NA
+  Ic
+}
+#' calculates cloud cover form shortwave radiation
+#'
+#' @description
+#' `cloudfromrad` is used to derive a cloud cover index as 1 - the ratio of measured to clearksy radiation
+#' missing values (e.g. at night) are interpolated
+#' @param rad a single numeric value or vector of solar irradiance(s). Units must be the same
+#' as those for `Ie`. Default is Watts /m^2.
+#' @param tme a single value or vector of POSIXlt objects indicating the time(s)
+#' for which clearksy radiation is required.
+#' @param lat latitude in decimal degrees
+#' @param long longitude in decimal degrees
+#' @param h a single value or vector of specific humidities (\ifelse{html}{\out{kg kg<sup>{-1}</sup> }}{\eqn{kg kg^{-1}}}).
+#' @param tc a single value or vector of temperatures (ºC).
+#' @param p an optional single value or vector of pressures (Pa).
+#' @param G an optional single value or vector describing he moisture profile
+#' in the atmosphere (per Smith 1966).
+#' @param Ie an optional single value for extra-terrestrail radiation to permit adjustment for
+#' sun-earth distances (see details).
+#' @import zoo
+#'
+#' @seealso The function [clearskyrad()] is uses to derive clear-sky irradiance. Can be used
+#' to derive cloud covers for computing longwave radiation when using [longwavetopo()] or [longwaveveg()]
+#'
+#' @details
+#' If no values for `p` are provided, a default value of 101300 Pa, typical of
+#' sea-level pressure, is assumed. The method used is that detailed in
+#' Crawford & Duchon (1999) Quarterly Journal of the Royal Meteorological
+#' Society 122: 1127-1151.
+#'
+#' @return a single value or vector of clearksy radiation.
+#'
+#' @examples
+#' tme <- as.POSIXlt(c(0:23) * 3600, origin = "2010-05-23 00:00", tz = "GMT")
+#' rad <- clearskyrad(tme, 50, -5, 0.007953766 , 11) * 0.75
+#' cfc <- cloudfromrad(rad, tme, 50, -5, 0.007953766 , 11)
+#' plot(cfc ~ as.POSIXct(tme), type = "l") # should be 0.25
+cloudfromrad <- function(rad, tme, lat, long, h, tc, p = 101300, G = 2.78, Ie = 1352.778) {
+  Ic <- clearskyrad(tme, lat, long, h, tc, p, G, Ie)
+  s <- rad / Ic
+  s[s > 1] <- 1
+  s[s < 0] <- 0
+  s[1] <- mean(s, na.rm = T)
+  s[length(s)] <- mean(s, na.rm = T)
+  s <- na.approx(s)
+  cfc <- 1 - s
+  cfc
 }
