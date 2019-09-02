@@ -4,8 +4,8 @@
 \alias{clearskyrad}
 \title{calculates clearsky radiation}
 \usage{
-clearskyrad(tme, lat, long, h, tc, p = 101300, G = 2.78,
-  Ie = 1352.778, merid = round(long/15, 0) * 15, dst = 0)
+clearskyrad(tme, lat, long, h = 0.00697, tc = 15, p = 101300,
+  G = 2.78, Ie = 1352.778, merid = round(long/15, 0) * 15, dst = 0)
 }
 \arguments{
 \item{tme}{a single value or vector of POSIXlt objects indicating the time(s)
@@ -15,9 +15,9 @@ for which clearksy radiation is required.}
 
 \item{long}{longitude in decimal degrees}
 
-\item{h}{a single value or vector of specific humidities (\ifelse{html}{\out{kg kg<sup>{-1}</sup> }}{\eqn{kg kg^{-1}}}).}
+\item{h}{an optional single value or vector of specific humidities (\ifelse{html}{\out{kg kg<sup>{-1}</sup> }}{\eqn{kg kg^{-1}}}).}
 
-\item{tc}{a single value or vector of temperatures (ºC).}
+\item{tc}{an optional single value or vector of temperatures (ºC).}
 
 \item{p}{an optional single value or vector of pressures (Pa).}
 
@@ -43,7 +43,9 @@ The units returned are the same as for \code{Ie}, with the default option in W /
 If no values for \code{p} are provided, a default value of 101300 Pa, typical of
 sea-level pressure, is assumed. The method used is that detailed in
 Crawford & Duchon (1999) Quarterly Journal of the Royal Meteorological
-Society 122: 1127-1151.
+Society 122: 1127-1151. The method is not greatly sensitive to humidity,
+temperature and pressure so approximate values can be provided, or the defaults
+chosen, if these data are unavailable.
 }
 \examples{
 tme <- as.POSIXlt(c(0:23) * 3600, origin = "2010-05-23 00:00", tz = "GMT")

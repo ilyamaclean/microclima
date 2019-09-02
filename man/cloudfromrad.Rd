@@ -4,8 +4,8 @@
 \alias{cloudfromrad}
 \title{calculates cloud cover form shortwave radiation}
 \usage{
-cloudfromrad(rad, tme, lat, long, h, tc, p = 101300, G = 2.78,
-  Ie = 1352.778, merid = round(long/15, 0) * 15, dst = 0)
+cloudfromrad(rad, tme, lat, long, h = 0.00697, tc = 15, p = 101300,
+  G = 2.78, Ie = 1352.778, merid = round(long/15, 0) * 15, dst = 0)
 }
 \arguments{
 \item{rad}{a single numeric value or vector of solar irradiance(s). Units must be the same
@@ -45,7 +45,9 @@ missing values (e.g. at night) are interpolated
 If no values for \code{p} are provided, a default value of 101300 Pa, typical of
 sea-level pressure, is assumed. The method used is that detailed in
 Crawford & Duchon (1999) Quarterly Journal of the Royal Meteorological
-Society 122: 1127-1151.
+Society 122: 1127-1151. The method is not greatly sensitive to humidity,
+temperature and pressure so approximate values can be provided, or the defaults
+chosen, if these data are unavailable.
 }
 \examples{
 tme <- as.POSIXlt(c(0:23) * 3600, origin = "2010-05-23 00:00", tz = "GMT")

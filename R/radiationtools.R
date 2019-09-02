@@ -1075,8 +1075,8 @@ difprop <- function(rad, julian, localtime, lat, long, hourly = FALSE,
 #' for which clearksy radiation is required.
 #' @param lat latitude in decimal degrees
 #' @param long longitude in decimal degrees
-#' @param h a single value or vector of specific humidities (\ifelse{html}{\out{kg kg<sup>{-1}</sup> }}{\eqn{kg kg^{-1}}}).
-#' @param tc a single value or vector of temperatures (ºC).
+#' @param h an optional single value or vector of specific humidities (\ifelse{html}{\out{kg kg<sup>{-1}</sup> }}{\eqn{kg kg^{-1}}}).
+#' @param tc an optional single value or vector of temperatures (ºC).
 #' @param p an optional single value or vector of pressures (Pa).
 #' @param G an optional single value or vector describing he moisture profile
 #' in the atmosphere (per Smith 1966).
@@ -1092,7 +1092,9 @@ difprop <- function(rad, julian, localtime, lat, long, hourly = FALSE,
 #' If no values for `p` are provided, a default value of 101300 Pa, typical of
 #' sea-level pressure, is assumed. The method used is that detailed in
 #' Crawford & Duchon (1999) Quarterly Journal of the Royal Meteorological
-#' Society 122: 1127-1151.
+#' Society 122: 1127-1151. The method is not greatly sensitive to humidity,
+#' temperature and pressure so approximate values can be provided, or the defaults
+#' chosen, if these data are unavailable.
 #'
 #' @return a single value or vector of clearksy radiation.
 #'
@@ -1100,7 +1102,7 @@ difprop <- function(rad, julian, localtime, lat, long, hourly = FALSE,
 #' tme <- as.POSIXlt(c(0:23) * 3600, origin = "2010-05-23 00:00", tz = "GMT")
 #' Io <- clearskyrad(tme, 50, -5, 0.007953766 , 11)
 #' plot(Io ~ as.POSIXct(tme), type = "l")
-clearskyrad <- function(tme, lat, long, h, tc, p = 101300, G = 2.78, Ie = 1352.778,
+clearskyrad <- function(tme, lat, long, h = 0.00697, tc = 15, p = 101300, G = 2.78, Ie = 1352.778,
                         merid = round(long/15, 0) * 15, dst = 0) {
   jd <- julday(tme$year + 1900, tme$mon + 1, tme$mday)
   lt <- tme$hour + tme$min / 60 + tme$sec / 3600
@@ -1154,7 +1156,9 @@ clearskyrad <- function(tme, lat, long, h, tc, p = 101300, G = 2.78, Ie = 1352.7
 #' If no values for `p` are provided, a default value of 101300 Pa, typical of
 #' sea-level pressure, is assumed. The method used is that detailed in
 #' Crawford & Duchon (1999) Quarterly Journal of the Royal Meteorological
-#' Society 122: 1127-1151.
+#' Society 122: 1127-1151. The method is not greatly sensitive to humidity,
+#' temperature and pressure so approximate values can be provided, or the defaults
+#' chosen, if these data are unavailable.
 #'
 #' @return a single value or vector of clearksy radiation.
 #'
@@ -1163,7 +1167,7 @@ clearskyrad <- function(tme, lat, long, h, tc, p = 101300, G = 2.78, Ie = 1352.7
 #' rad <- clearskyrad(tme, 50, -5, 0.007953766 , 11) * 0.75
 #' cfc <- cloudfromrad(rad, tme, 50, -5, 0.007953766 , 11)
 #' plot(cfc ~ as.POSIXct(tme), type = "l") # should be 0.25
-cloudfromrad <- function(rad, tme, lat, long, h, tc, p = 101300, G = 2.78,
+cloudfromrad <- function(rad, tme, lat, long, h = 0.00697, tc = 15, p = 101300, G = 2.78,
                          Ie = 1352.778, merid = round(long/15, 0) * 15, dst = 0) {
   Ic <- clearskyrad(tme, lat, long, h, tc, p, G, Ie, merid, dst)
   s <- rad / Ic
