@@ -5,7 +5,7 @@
 \title{calculates clearsky radiation}
 \usage{
 clearskyrad(tme, lat, long, h, tc, p = 101300, G = 2.78,
-  Ie = 1352.778)
+  Ie = 1352.778, merid = round(long/15, 0) * 15, dst = 0)
 }
 \arguments{
 \item{tme}{a single value or vector of POSIXlt objects indicating the time(s)
@@ -26,6 +26,10 @@ in the atmosphere (per Smith 1966).}
 
 \item{Ie}{an optional single value for extra-terrestrail radiation to permit adjustment for
 sun-earth distances (see details).}
+
+\item{merid}{an optional numeric value representing the longitude (decimal degrees) of the local time zone meridian (0 for GMT). Default is \code{round(long / 15, 0) * 15}}
+
+\item{dst}{an optional numeric value representing the time difference from the timezone meridian (hours, e.g. +1 for BST if \code{merid} = 0).}
 }
 \value{
 a single value or vector of clearksy radiation.

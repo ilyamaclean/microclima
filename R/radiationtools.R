@@ -1082,7 +1082,8 @@ difprop <- function(rad, julian, localtime, lat, long, hourly = FALSE,
 #' in the atmosphere (per Smith 1966).
 #' @param Ie an optional single value for extra-terrestrail radiation to permit adjustment for
 #' sun-earth distances (see details).
-#'
+#' @param merid an optional numeric value representing the longitude (decimal degrees) of the local time zone meridian (0 for GMT). Default is `round(long / 15, 0) * 15`
+#' @param dst an optional numeric value representing the time difference from the timezone meridian (hours, e.g. +1 for BST if `merid` = 0).
 #' @seealso The function [cloudfromrad()] uses this function to return 1 - ratio of measured to clearsky
 #' radiation for input when computing longwave radiation when using [longwavetopo()] or [longwaveveg()]
 #'
@@ -1099,9 +1100,11 @@ difprop <- function(rad, julian, localtime, lat, long, hourly = FALSE,
 #' tme <- as.POSIXlt(c(0:23) * 3600, origin = "2010-05-23 00:00", tz = "GMT")
 #' Io <- clearskyrad(tme, 50, -5, 0.007953766 , 11)
 #' plot(Io ~ as.POSIXct(tme), type = "l")
-clearskyrad <- function(tme, lat, long, h, tc, p = 101300, G = 2.78, Ie = 1352.778) {
+clearskyrad <- function(tme, lat, long, h, tc, p = 101300, G = 2.78, Ie = 1352.778,
+                        merid = round(long/15, 0) * 15, dst = 0) {
   jd <- julday(tme$year + 1900, tme$mon + 1, tme$mday)
-  sa <- solalt(tme$hour, lat, long, jd, merid = 0)
+  lt <- tme$hour + tme$min / 60 + tme$sec / 3600
+  sa <- solalt(lt, lat, long, jd, merid, dst)
   sa[sa < 0] <- NA
   z <- (90 - sa) * (pi / 180)
   m <- 35 * cos(z) * ((1224 * cos(z)^2 + 1)^(-0.5))
@@ -1140,6 +1143,8 @@ clearskyrad <- function(tme, lat, long, h, tc, p = 101300, G = 2.78, Ie = 1352.7
 #' in the atmosphere (per Smith 1966).
 #' @param Ie an optional single value for extra-terrestrail radiation to permit adjustment for
 #' sun-earth distances (see details).
+#' @param merid an optional numeric value representing the longitude (decimal degrees) of the local time zone meridian (0 for GMT). Default is `round(long / 15, 0) * 15`
+#' @param dst an optional numeric value representing the time difference from the timezone meridian (hours, e.g. +1 for BST if `merid` = 0).
 #' @import zoo
 #'
 #' @seealso The function [clearskyrad()] is uses to derive clear-sky irradiance. Can be used
@@ -1158,13 +1163,14 @@ clearskyrad <- function(tme, lat, long, h, tc, p = 101300, G = 2.78, Ie = 1352.7
 #' rad <- clearskyrad(tme, 50, -5, 0.007953766 , 11) * 0.75
 #' cfc <- cloudfromrad(rad, tme, 50, -5, 0.007953766 , 11)
 #' plot(cfc ~ as.POSIXct(tme), type = "l") # should be 0.25
-cloudfromrad <- function(rad, tme, lat, long, h, tc, p = 101300, G = 2.78, Ie = 1352.778) {
-  Ic <- clearskyrad(tme, lat, long, h, tc, p, G, Ie)
+cloudfromrad <- function(rad, tme, lat, long, h, tc, p = 101300, G = 2.78,
+                         Ie = 1352.778, merid = round(long/15, 0) * 15, dst = 0) {
+  Ic <- clearskyrad(tme, lat, long, h, tc, p, G, Ie, merid, dst)
   s <- rad / Ic
   s[s > 1] <- 1
   s[s < 0] <- 0
-  s[1] <- mean(s, na.rm = T)
-  s[length(s)] <- mean(s, na.rm = T)
+  if (is.na(s[1])) s[1] <- mean(s, na.rm = T)
+  if (is.na(s[length(s)])) s[length(s)] <- mean(s, na.rm = T)
   s <- na.approx(s)
   cfc <- 1 - s
   cfc
