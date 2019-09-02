@@ -1086,6 +1086,7 @@ difprop <- function(rad, julian, localtime, lat, long, hourly = FALSE,
 #' @param dst an optional numeric value representing the time difference from the timezone meridian (hours, e.g. +1 for BST if `merid` = 0).
 #' @seealso The function [cloudfromrad()] uses this function to return 1 - ratio of measured to clearsky
 #' radiation for input when computing longwave radiation when using [longwavetopo()] or [longwaveveg()]
+#' @export
 #'
 #' @details
 #' The units returned are the same as for `Ie`, with the default option in W / M^2.
@@ -1148,6 +1149,7 @@ clearskyrad <- function(tme, lat, long, h = 0.00697, tc = 15, p = 101300, G = 2.
 #' @param merid an optional numeric value representing the longitude (decimal degrees) of the local time zone meridian (0 for GMT). Default is `round(long / 15, 0) * 15`
 #' @param dst an optional numeric value representing the time difference from the timezone meridian (hours, e.g. +1 for BST if `merid` = 0).
 #' @import zoo
+#' @export
 #'
 #' @seealso The function [clearskyrad()] is uses to derive clear-sky irradiance. Can be used
 #' to derive cloud covers for computing longwave radiation when using [longwavetopo()] or [longwaveveg()]
