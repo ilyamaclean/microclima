@@ -163,19 +163,43 @@ get_NCEP <- function(lat, long, tme, reanalysis2 = TRUE) {
   ll <- data.frame(x = long, y = lat)
   tme2 <- sorttimes(tme)$tme
   sel <- sorttimes(tme)$sel
-  # These variables are forecasts valid 6 hours after the reference time.
-  Tk <- ncepget1('air.2m', tme2, ll, sel)
-  Tkmin <- ncepget1('tmin.2m', tme2, ll, sel)
-  Tkmax <- ncepget1('tmax.2m', tme2, ll, sel)
-  sh <- ncepget1('shum.2m', tme2, ll, sel)
-  pr <- ncepget1('pres.sfc', tme2, ll, sel)
-  wu <- ncepget1('uwnd.10m', tme2, ll, sel)
-  wv <- ncepget1('vwnd.10m', tme2, ll, sel)
-  # These variables are 6 hour averages starting at the reference time.
-  dlw <- ncepget1('dlwrf.sfc', tme2, ll, sel)
-  ulw <- ncepget1('ulwrf.sfc', tme2, ll, sel)
-  dsw <- ncepget1('dswrf.sfc', tme2, ll, sel)
-  tcdc <- ncepget1('tcdc.eatm', tme2, ll, sel)
+  if(as.numeric(format(max(tme), "%Y")) == as.numeric(format(Sys.time(), "%Y"))){
+    max.date <- as.POSIXct(paste0("01/", format(Sys.time(), "%m/%Y")), format = "%d/%m/%Y", tz = "UTC") - 24 * 3600
+    max.date2 <- as.POSIXct(paste0("01/01/", substr(max.date, 1, 4)), format = "%d/%m/%Y", tz = "UTC")
+    sel <- sel[sel < max(which(tme2 <= max.date))]
+    tme2 <- tme2[tme2 <= max.date]
+    sel3 <- sel[sel < max(which(tme2 < max.date2))]
+    tme3 <- tme2[tme2 < max.date2]
+    tme4 <- tme2[tme2 >= max.date2]
+    sel4 <- which(tme4 >= max.date2)
+    # These variables are forecasts valid 6 hours after the reference time.
+    Tk <- c(ncepget1("air.2m", tme3, ll, sel3), ncepget1("air.2m", tme4, ll, sel4))
+    Tkmin <- c(ncepget1("tmin.2m", tme3, ll, sel3), ncepget1("tmin.2m", tme4, ll, sel4))
+    Tkmax <- c(ncepget1("tmax.2m", tme3, ll, sel3), ncepget1("tmax.2m", tme4, ll, sel4))
+    sh <- c(ncepget1("shum.2m", tme3, ll, sel3), ncepget1("shum.2m", tme4, ll, sel4))
+    pr <- c(ncepget1("pres.sfc", tme3, ll, sel3), ncepget1("pres.sfc", tme4, ll, sel4))
+    wu <- c(ncepget1("uwnd.10m", tme3, ll, sel3), ncepget1("uwnd.10m", tme4, ll, sel4))
+    wv <- c(ncepget1("vwnd.10m", tme3, ll, sel3), ncepget1("vwnd.10m", tme4, ll, sel4))
+    # These variables are 6 hour averages starting at the reference time.
+    dlw <- c(ncepget1("dlwrf.sfc", tme3, ll, sel3), ncepget1("dlwrf.sfc", tme4, ll, sel4))
+    ulw <- c(ncepget1("ulwrf.sfc", tme3, ll, sel3),ncepget1("ulwrf.sfc", tme4, ll, sel4))
+    dsw <- c(ncepget1("dswrf.sfc", tme3, ll, sel3), ncepget1("dswrf.sfc", tme4, ll, sel4))
+    tcdc <- c(ncepget1("tcdc.eatm", tme3, ll, sel3), ncepget1("tcdc.eatm", tme4, ll, sel4))
+  }else{
+    # These variables are forecasts valid 6 hours after the reference time.
+    Tk <- ncepget1("air.2m", tme2, ll, sel)
+    Tkmin <- ncepget1("tmin.2m", tme2, ll, sel)
+    Tkmax <- ncepget1("tmax.2m", tme2, ll, sel)
+    sh <- ncepget1("shum.2m", tme2, ll, sel)
+    pr <- ncepget1("pres.sfc", tme2, ll, sel)
+    wu <- ncepget1("uwnd.10m", tme2, ll, sel)
+    wv <- ncepget1("vwnd.10m", tme2, ll, sel)
+    # These variables are 6 hour averages starting at the reference time.
+    dlw <- ncepget1("dlwrf.sfc", tme2, ll, sel)
+    ulw <- ncepget1("ulwrf.sfc", tme2, ll, sel)
+    dsw <- ncepget1("dswrf.sfc", tme2, ll, sel)
+    tcdc <- ncepget1("tcdc.eatm", tme2, ll, sel)
+  }
   dfout <- data.frame(obs_time = tme2[sel], timezone = "UTC", Tk, Tkmin, Tkmax, sh, pr, wu, wv, dlw, ulw, dsw, tcdc)
   rownames(dfout) <- NULL
   return(dfout)
