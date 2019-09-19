@@ -164,11 +164,12 @@ get_NCEP <- function(lat, long, tme, reanalysis2 = TRUE) {
   tme2 <- sorttimes(tme)$tme
   sel <- sorttimes(tme)$sel
   if(as.numeric(format(max(tme), "%Y")) == as.numeric(format(Sys.time(), "%Y"))){
-    max.date <- as.POSIXct(paste0("01/", format(Sys.time(), "%m/%Y")), format = "%d/%m/%Y", tz = "UTC") - 24 * 3600
+    max.date <- as.POSIXct(paste0("01/", format(Sys.time(), "%m/%Y")), format = "%d/%m/%Y", tz = "UTC") - 6 * 3600
     max.date2 <- as.POSIXct(paste0("01/01/", substr(max.date, 1, 4)), format = "%d/%m/%Y", tz = "UTC")
-    sel <- sel[sel < max(which(tme2 <= max.date))]
+    tme <- tme[tme <= max.date]
+    sel <- sel[sel <= max(which(tme2 <= max.date))]
     tme2 <- tme2[tme2 <= max.date]
-    sel3 <- sel[sel < max(which(tme2 < max.date2))]
+    sel3 <- sel[sel < max(which(tme2 <= max.date2))]
     tme3 <- tme2[tme2 < max.date2]
     tme4 <- tme2[tme2 >= max.date2]
     sel4 <- which(tme4 >= max.date2)
@@ -361,6 +362,8 @@ hourlyNCEP <- function(ncepdata = NA, lat, long, tme, reanalysis2 = TRUE) {
   if (tz[1] != "UTC" & tz[1]!= "GMT") {
     warning(paste("NCEP data use UTC/GMT. Timezone converted from", tz[1], "to UTC/GMT"))
   }
+  max.date <- as.POSIXct(paste0("01/", format(Sys.time(), "%m/%Y")), format = "%d/%m/%Y", tz = "UTC") - 24 * 3600
+  tme <- tme[tme < max.date]
   tme <- .tme.sort(tme)
   tmeout <- tme
   tme <- c(tme, tme[length(tme)] + 24 * 3600)
@@ -465,9 +468,15 @@ hourlyNCEP <- function(ncepdata = NA, lat, long, tme, reanalysis2 = TRUE) {
   }
   em <- ncepdata$dlw / ncepdata$ulw
   em_h <- spline(tme6, em, n = n)$y
-  t6sel <- c(4:(length(tme6)-5))
-  thsel <-c(22:(length(tmorad)-22))
-  thsel2 <-c(19:(length(tmo) - 25))
+  if(as.numeric(format(max(tme), "%Y")) == as.numeric(format(Sys.time(), "%Y"))){
+    t6sel <- c(5:(length(tme6)-2))
+    thsel <-c(22:(length(tmorad)))
+    thsel2 <-c(19:(length(tmo)-3))
+  }else{
+    t6sel <- c(5:(length(tme6)-4))
+    thsel <-c(22:(length(tmorad)-22))
+    thsel2 <-c(19:(length(tmo) - 25))
+  }
   tcmn <- ncepdata$Tkmin[t6sel] - 273.15
   tcmx <- ncepdata$Tkmax[t6sel] - 273.15
   tcmn <-t(matrix(tcmn, nrow = 4))
@@ -479,7 +488,10 @@ hourlyNCEP <- function(ncepdata = NA, lat, long, tme, reanalysis2 = TRUE) {
   h_dif <- h_dif * 0.0036
   h_tc<-suppressWarnings(hourlytemp(julian = jd, em = em_h[thsel], dni = h_dni[thsel],
                                     dif = h_dif[thsel], mintemp = tmin, maxtemp = tmax,
-                                    lat = lat, long = long, merid = 0))
+                                    lat = lat, long = long))
+  if(as.numeric(format(max(tme), "%Y")) == as.numeric(format(Sys.time(), "%Y"))){
+    h_tc <- h_tc[1:(length(h_tc)-2)]
+  }
   hlwu <- 2.043e-10 * (h_tc + 273.15)^4
   hlwd <- em_h[thsel] *  hlwu
   h_nlw <- hlwu - hlwd
@@ -531,11 +543,27 @@ dailyprecipNCEP <- function(lat, long, tme, reanalysis2 = TRUE) {
   yrs <- unique(tme$year + 1900)
   mths <- unique(tme$mon + 1)
   ll <- data.frame(x = long, y = lat)
-  pre <- NCEP.gather('prate.sfc', level = 'gaussian',
+  if(as.numeric(format(max(tme), "%Y")) == as.numeric(format(Sys.time(), "%Y")) & as.numeric(format(min(tme), "%Y")) != as.numeric(format(Sys.time(), "%Y"))){
+    pre1 <- NCEP.gather('prate.sfc', level = 'gaussian',
+                       years.minmax = c(min(yrs),max(yrs)-1),
+                       months.minmax = c(min(mths):max(mths)),
+                       lat.southnorth = c(ll$y,ll$y), lon.westeast = c(ll$x,ll$x),
+                       return.units = FALSE, status.bar = FALSE, reanalysis2 = reanalysis2)
+    tme.sub <- tme[tme >= as.POSIXct(paste0("01/01/",format(max(tme), "%Y")), format = "%d/%m/%Y", tz = "UTC")]
+    mths <- unique(tme.sub$mon + 1)
+    pre2 <- NCEP.gather('prate.sfc', level = 'gaussian',
+                        years.minmax = c(max(yrs),max(yrs)),
+                        months.minmax = c(min(mths):max(mths)),
+                        lat.southnorth = c(ll$y,ll$y), lon.westeast = c(ll$x,ll$x),
+                        return.units = FALSE, status.bar = FALSE, reanalysis2 = reanalysis2)
+    pre <- c(pre1, pre2)
+  }else{
+   pre <- NCEP.gather('prate.sfc', level = 'gaussian',
                      years.minmax = c(min(yrs),max(yrs)),
                      months.minmax = c(min(mths):max(mths)),
                      lat.southnorth = c(ll$y,ll$y), lon.westeast = c(ll$x,ll$x),
                      return.units = FALSE, status.bar = FALSE, reanalysis2 = reanalysis2)
+  }
   if (is.null(dim(pre)) == F) {
     latdif <- abs(ll$y - as.numeric(rownames(pre)))
     londif <- abs(ll$x%%360 - as.numeric(colnames(pre)))
@@ -1154,6 +1182,10 @@ microclimaforNMR <- function(lat, long, dstart, dfinish, l, x, coastal = TRUE, h
   cat("Calculating elevation and cold-air drainage effects \n")
   info <- .eleveffects(hourlydata, demmeso, lat, long, windthresh, emthresh)
   elev <- info$tout
+  if(as.numeric(format(max(tme), "%Y")) == as.numeric(format(Sys.time(), "%Y")) | coastal){
+   cat(paste0("Sorry, can't do a coastal correction for ", as.numeric(format(Sys.time(), "%Y")), " because whole years are needed; switching coastal option off \n"))
+   coastal = FALSE
+  }
   if (coastal) {
     m <- is_raster(dem)
     m[m == zmin] <- NA
