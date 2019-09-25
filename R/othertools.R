@@ -345,25 +345,48 @@ suntimes <- function(julian, lat, long, merid = round(long / 15, 0) * 15, dst = 
 }
 #' derived fraction of solar day
 .solarday <- function(julian, localtime, lat, long, merid, dst = 0) {
-  src <- suntimes(julian, lat, long, merid, dst)$sunrise
-  ssc <- suntimes(julian, lat, long, merid, dst)$sunset
-  ssp <- suntimes(julian - 1, lat, long, merid, dst)$sunset
-  srn <- suntimes(julian + 1, lat, long, merid, dst)$sunrise
-  st <- ifelse(localtime >= src & localtime <= ssc,
-               ((localtime - src) / (ssc - src)) * 12 + 6, localtime)
-  st <- ifelse(localtime > ssc, ((localtime - ssc) / (srn + 24 - ssc)) *
-                 12 + 18, st)
-  st <- ifelse(localtime < src, ((localtime + 24 - ssp) / (src + 24 - ssp)) *
-                 12 - 6, st)
-  st <- (st / 24)%%1
-  st
+  sr <- suntimes(julian, lat, long, merid, dst)$sunrise
+  ss <- suntimes(julian, lat, long, merid, dst)$sunset
+  sr <- rep(sr, each = 24)
+  ss <- rep(ss, each = 24)
+  dl <- ifelse(ss >= sr, ss - sr, 24 + (ss - sr))
+  nl <- 24 - dl
+  sel <- which(sr > ss)
+  dn <- ifelse(localtime >= sr & localtime <= ss, 1, 0)
+  lt2 <- localtime + 24
+  ss2 <- ss + 24
+  dn2 <- ifelse(lt2 >= sr & lt2 <= ss2 | localtime > sr, 1, 0)
+  dn[sel] <- dn2[sel]
+  # days
+  ltd <- localtime - sr
+  ltd <- ifelse(ltd > dl, ltd - 24, ltd)
+  ltd <- ifelse(ltd < 0, ltd + 24, ltd)
+  std <- ltd / (dl * 2) + 0.25
+  # nights
+  ltn <- localtime - ss
+  ltn <- ifelse(ltn > nl, ltn - 24, ltn)
+  ltn <- ifelse(ltn < 0, ltn + 24, ltn)
+  stn <- ltn / (nl * 2) - 0.25
+  st <- ifelse(dn > 0, std, stn)
+  st <- st%%1
+  st * 24
 }
 #' derived proportion of maximum radiation
-.propmaxrad <- function(dif, dct, am) {
-  theta <- 1.1 * (0.7 ^ (am ^ 0.678))
-  mxr <- 4.87 * theta
-  pr <- (dif + dct) / mxr
-  pr <- ifelse(pr > 1, 1, pr)
+.propmaxrad <- function(julian, dif, dct, lat, long, merid, dst) {
+  lt <- c(0:23)
+  sa <- solalt(lt, lat, long, julian, merid, dst)
+  sa[sa < 0] <- NA
+  z <- (90 - sa) * (pi / 180)
+  m <- 35 * cos(z) * ((1224 * cos(z)^2 + 1)^(-0.5))
+  TrTpg <- 1.021 - 0.084 * (m * 0.000949 * 0.01 * 101300 + 0.051)^0.5
+  Td <- 8.83266
+  u <- exp(0.1133 - log(2.78 + 1) + 0.0393 * Td)
+  Tw <- 1 - 0.077 * (u * m) ^ 0.3
+  Ta <- 0.935 * m
+  od <- TrTpg * Tw * Ta
+  Ic <- 4.87 * (cos(z)) * TrTpg * Tw * Ta
+  pr <- (dif + dct) / Ic
+  pr[pr > 1] <- 1
   pr
 }
 #' calculates emmisivity from humidity etc
@@ -373,13 +396,11 @@ suntimes <- function(julian, lat, long, merid = round(long / 15, 0) * 15, dst = 
   ws <- 0.622 * e0 / pk
   rh <- (h / ws) * 100
   rh[rh > 100] <- 100
-  ea <- e0 * rh / 100
-  eo <- co * (0.1 * ea / (tc + 273.15)) ^ (1/7)
-  em <- (1 - n) + n * eo
+  ea <- e0 * (rh / 100)
+  eo <- co * (10 * ea /(tc + 273.15))^(1/7)
+  em <- n + (1 - n) * eo
   em
 }
-
-
 #' Derives hourly temperatures from daily data
 #'
 #' @description `hourlytemp` is used to derive hourly temperatures from daily maxima and minima.
@@ -429,18 +450,16 @@ hourlytemp <- function(julian, em = NA, h, n, p = 100346.13, dni, dif,
   if (l1[1] != l2[1] * 24) {
     warning("Number of hourly values not 24 times number of daily values")
   }
-  o <- order(rep(c(1:length(julian)), 24))
-  jd <- rep(julian, 24)[o]
+  jd <- rep(julian, each = 24)
   localtime <- rep(c(0:23), length(mintemp))
   solfrac <- .solarday(julian, localtime, lat, long, merid, dst)
   am <- airmasscoef(localtime, lat, long, julian, merid, dst)
   dct <- dni * siflat(localtime, lat, long, jd, merid, dst)
-  pr <- .propmaxrad(dif, dct, am)
-  tfrac <- 110.42201 * sin(solfrac) - 38.64802 * cos(solfrac) - 79.82963 *
-    sin(2 * solfrac) + 65.39122 * cos(2 * solfrac) + 15.54387 *
-    sin(3 * solfrac) - 26.30047 * cos(3 * solfrac)
-  mns <- rep(mintemp, 24)[o]
-  mxs <- rep(maxtemp, 24)[o]
+  pr <- .propmaxrad(jd, dif, dct, lat, long, merid, dst)
+  tfrac <- 0.44 - 0.46 * sin((pi / 12) * solfrac + 0.9) + 0.11 *
+    sin(2 * (pi / 12) * solfrac + 0.9)
+  mns <- rep(mintemp, each = 24)
+  mxs <- rep(maxtemp, each = 24)
   tc <- (mxs - mns) * tfrac + mns
   if (is.na(em[1]))
     em <- .emissivity(h, tc, n, p)

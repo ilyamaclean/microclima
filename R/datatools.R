@@ -356,84 +356,34 @@ hourlyNCEP <- function(ncepdata = NA, lat, long, tme, reanalysis2 = TRUE) {
   tmo <- as.POSIXlt(tmo, origin = "1970-01-01 00:00",
                     tz = "UTC")
   tmo2 <- as.POSIXlt(seq(0,(length(tme6) / 4), by = 1/24) * 3600 * 24, origin = min(tme6), tz = 'UTC')
-  jd <- julday(tmo2$year + 1900,  tmo2$mon + 1, tmo2$mday)
-  si <- siflat(tmo2$hour, lat, long, jd, merid = 0)
-  am <- airmasscoef(tmo2$hour, lat, long, jd, merid = 0)
-  si_m <- 0
-  iam_m <- 0
+  csr <- clearskyrad(tmo2, lat, long, merid = 0, dst = 0)
+  csr[is.na(csr)] <- 0
+  csr_m <- 0
   for (i in 1:(length(tme6))) {
     st <- (i - 1) * 6 + 1
-    ed <- st + 5
-    si_m[i] <- mean(si[st:ed], na.rm = T)
-    iam <- 1 / am[st:ed]
-    iam[is.na(iam)] <- 0
-    iam_m[i] <- mean(iam, na.rm = T)
+    ed <- st + 6
+    csr_m[i] <- mean(csr[st:ed], na.rm = T)
   }
-  am_m <- 1 / iam_m
-  am_m[am_m > 100] <- NA
-  jd <- julday(tme6$year + 1900, tme6$mon + 1, tme6$mday)
+  od <- bound(ncepdata$dsw / csr_m)
+  if (is.na(od)[1]) od[1] <- mean(od, na.rm = T)
+  if (is.na(od)[length(od)]) od[length(od)] <- mean(od, na.rm = T)
+  h_od <- bound(spline(tme6, od, n = n)$y)
+  tmorad <- as.POSIXlt(tmo + 3600 * 3)
+  csrh <- clearskyrad(tmorad, lat, long, merid = 0, dst = 0)
+  rad_h <- h_od * csrh
+  rad_h[is.na(rad_h)] <- 0
+  jd <- julday(tmorad$year + 1900, tmorad$mon + 1, tmorad$mday)
   dp <- 0
   for (i in 1:length(jd)) {
-    dp[i] <- .difprop2(ncepdata$dsw[i], jd[i], tme6$hour[i], lat, long)
+    dp[i] <- .difprop2(rad_h[i], jd[i], tmorad$hour[i], lat, long)
   }
-  dp[ncepdata$dsw == 0] <- NA
-  dnir <- (ncepdata$dsw * (1 - dp)) / si_m
-  dnir[si_m == 0] <- NA
-  difr <- (ncepdata$dsw * dp)
-  edni <- dnir / ((4.87 / 0.0036) * (1 - dp))
-  edif <- difr / ((4.87 / 0.0036) * dp)
-  odni <- bound((log(edni) / -am_m), mn = 0.001, mx = 1.7)
-  odif <- bound((log(edif) / -am_m), mn = 0.001, mx = 1.7)
-  m1 <- summary(lm(log(1/odni) ~ log(am_m)))
-  m2 <- summary(lm(log(1/odif) ~ log(am_m)))
-  N1 <- -1 * m1$coef[2,1] + 1
-  N2 <- -1 * m2$coef[2,1] + 1
-  odni <- bound((log(edni) / -am_m^N1), mn = 0.001, mx = 1.7)
-  odif <- bound((log(edif) / -am_m^N2), mn = 0.001, mx = 1.7)
-  nd <- length(odni)
-  sel <-which(is.na(am_m * dp * odni * odif) == F)
-  dp[1] <- dp[min(sel)]
-  odni[1] <- odni[min(sel)]
-  odif[1] <- odif[min(sel)]
-  dp[nd] <- dp[max(sel)]
-  odni[nd] <- odni[max(sel)]
-  odif[nd] <- odif[max(sel)]
-  dp <- na.approx(dp, na.rm = F)
-  odni <- na.approx(odni, na.rm = F)
-  odif <- na.approx(odif, na.rm = F)
-  h_dp <- bound(spline(tme6, dp, n = n)$y)
-  h_oi <- bound(spline(tme6, odni, n = n)$y, mn = 0.24, mx = 1.7)
-  h_od <- bound(spline(tme6, odif, n = n)$y, mn = 0.24, mx = 1.7)
-  tmorad <- as.POSIXlt(tmo + 3600 * 3)
-  jd <- julday(tmorad$year + 1900, tmorad$mon + 1, tmorad$mday)
-  szenith <- 90 - solalt(tmorad$hour, lat, long, jd, merid = 0)
+  dp[is.na(dp)] <- 1
   si <- siflat(tmorad$hour, lat, long, jd, merid = 0)
-  am <- airmasscoef(tmorad$hour, lat, long, jd, merid = 0)
-  afi <- exp(-am^N1 * h_oi)
-  afd <- exp(-am^N2 * h_od)
-  h_dni <- (1 - h_dp) * afi * 4.87 / 0.0036
-  h_dif <- h_dp * afd * 4.87 / 0.0036
-  h_dni[si == 0] <- 0
-  h_dif[is.na(h_dif)] <- 0
-  # perform adjustments
-  glrad <- si * h_dni + h_dif
-  glrad <- glrad[4:(n-4)]
-  g6rad <- apply(t(matrix(glrad, nrow = 6)), 1, mean)
-  g6rad2 <- ncepdata$dsw[2:(length(ncepdata$dsw) - 1)]
-  mm <- g6rad2 / g6rad
-  mm[is.na(mm)] <- 1
-  mm[g6rad == 0] <- 1
-  mm <- c(rep(1, 3), rep(mm, each = 6), rep(1, 4))
-  h_dni <- h_dni * mm
-  h_dif <- h_dif * mm
-  # performs back correction
-  glrad <- h_dni + h_dif
-  sel <- which(glrad > (4.87 / 0.0036))
-  if (length(sel) > 0) {
-    m <- (4.87 / 0.0036) / glrad[sel]
-    h_dni[sel] <- h_dni[sel] * m
-    h_dif[sel] <- h_dif[sel] * m
-  }
+  h_dif <- dp *  rad_h
+  h_dni <- ((1 - dp) * rad_h) / si
+  h_dni[is.na(h_dni)] <- 0
+  h_dni[h_dni > 1353] <- 1353
+  ###
   em <- ncepdata$dlw / ncepdata$ulw
   em_h <- spline(tme6, em, n = n)$y
   t6sel <- c(4:(length(tme6)-5))
@@ -460,6 +410,8 @@ hourlyNCEP <- function(ncepdata = NA, lat, long, tme, reanalysis2 = TRUE) {
   h_ws <- windheight(h_ws, 10, 2)
   h_wd <- atan2(h_uw, h_vw) * 180/pi + 180
   h_wd <- h_wd%%360
+  jd <- julday(tmorad$year + 1900, tmorad$mon + 1, tmorad$mday)
+  szenith <- 90 - solalt(tmorad$hour, lat, long, jd, merid = 0)
   hourlyout <- data.frame(obs_time = tmorad[thsel], temperature = h_tc,
                           humidity = h_sh[thsel2], pressure = h_pr[thsel2],
                           windspeed = h_ws[thsel2], winddir = h_wd[thsel2],

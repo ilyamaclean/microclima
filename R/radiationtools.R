@@ -564,7 +564,7 @@ longwavetopo <- function(h, tc, p = 101300, n, svf = 1, co = 1.24) {
   rh <- ifelse(rh > 100, 100, rh)
   ea <- e0 * (rh/100)
   eo <- co * (10 * ea /(tc + 273.15))^(1/7)
-  em <- n + (1 -n ) * eo
+  em <- n + (1 - n) * eo
   Ln <- (1 - em) * 2.043e-10 * (tc + 273.15)^4
   lwr <- Ln * svf
   if_raster(lwr, r)
