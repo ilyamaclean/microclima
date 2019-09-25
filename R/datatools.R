@@ -122,64 +122,59 @@ get_dem <- function(r = NA, lat, long, resolution = 30, zmin = 0, xdims = 200, y
 #' tme <- as.POSIXlt(c(1:15) * 24 * 3600, origin = "2015-01-15", tz = 'UTC')
 #' head(get_NCEP(50, -5, tme))
 get_NCEP <- function(lat, long, tme, reanalysis2 = TRUE) {
-  sorttimes <- function(tme) {
-    tme2 <- as.POSIXct(tme)
-    tme2 <- c((tme2 - 24 * 3600), tme2, (tme2 + 24 * 3600), (tme2 + 48 * 3600))
-    tme2 <- as.POSIXlt(tme2)
+  ncepget1 <- function(climvar, tme2, ll) {
     yrs <- unique(tme2$year + 1900)
-    mths <- unique(tme2$mon + 1)
-    tma <- 0
-    dm <- c(31,28,31,30,31,30,31,31,30,31,30,31) * 4 - 1
-    for (yr in min(yrs):max(yrs)) {
-      dm[2] <- ifelse(yr%%4 == 0, 115, 111)
-      for (mth in min(mths):max(mths)) {
-        tmym <- as.POSIXct(c(0:dm[mth]) * 3600 * 6,
-                           origin = paste0(yr,"-",mth,"-01 00:00"),
-                           tz = 'UTC')
-        tma <- c(tma, tmym)
-      }
+    vv <- list()
+    for (yr in 1:length(yrs)) {
+      sel <- which(tme2$year + 1900 == yrs[yr])
+      tme3 <- tme2[sel]
+      mths <- unique(tme3$mon + 1)
+      v <- NCEP.gather(climvar, level = 'gaussian',
+                       years.minmax = c(yrs[yr],yrs[yr]),
+                       months.minmax = c(min(mths):max(mths)),
+                       lat.southnorth = c(ll$y,ll$y), lon.westeast = c(ll$x,ll$x),
+                       reanalysis2 = reanalysis2, return.units = FALSE, status.bar = FALSE)
+      if (is.null(dim(v)) == F) {
+        latdif <- abs(ll$y - as.numeric(rownames(v)))
+        londif <- abs(ll$x%%360 - as.numeric(colnames(v)))
+        vv[[yr]] <- as.numeric(v[which.min(latdif), which.min(londif),])
+      } else vv[[yr]] <- as.numeric(v)
     }
-    tma <- as.POSIXlt(tma[-1], origin = '1970-01-01', tz = 'UTC')
-    sel <- which(tma >= min(tme2) & tma <= max(tme2))
-    sel <- sel[-length(sel)]
-    return(list(tme = tma, sel = sel))
+    vv <- as.vector(unlist(vv))
   }
-  ncepget1 <- function(climvar, tme2, ll, sel) {
-    yrs <- unique(tme2$year + 1900)
-    mths <- unique(tme2$mon + 1)
-    v <- NCEP.gather(climvar, level = 'gaussian',
-                     years.minmax = c(min(yrs),max(yrs)),
-                     months.minmax = c(min(mths):max(mths)),
-                     lat.southnorth = c(ll$y,ll$y), lon.westeast = c(ll$x,ll$x),
-                     reanalysis2 = reanalysis2, return.units = FALSE, status.bar = FALSE)
-    if (is.null(dim(v)) == F) {
-      latdif <- abs(ll$y - as.numeric(rownames(v)))
-      londif <- abs(ll$x%%360 - as.numeric(colnames(v)))
-      v <- v[which.min(latdif), which.min(londif),]
-    }
-    v[sel]
-  }
+
+
   tme <- as.POSIXlt(tme + 0, tz = "UTC")
   ll <- data.frame(x = long, y = lat)
-  tme2 <- sorttimes(tme)$tme
-  sel <- sorttimes(tme)$sel
+  tme2 <- as.POSIXct(tme)
+  tme2 <- c((tme2 - 24 * 3600), tme2, (tme2 + 24 * 3600), (tme2 + 42 * 3600))
+  tme2 <- as.POSIXlt(tme2)
   # These variables are forecasts valid 6 hours after the reference time.
-  Tk <- ncepget1('air.2m', tme2, ll, sel)
-  Tkmin <- ncepget1('tmin.2m', tme2, ll, sel)
-  Tkmax <- ncepget1('tmax.2m', tme2, ll, sel)
-  sh <- ncepget1('shum.2m', tme2, ll, sel)
-  pr <- ncepget1('pres.sfc', tme2, ll, sel)
-  wu <- ncepget1('uwnd.10m', tme2, ll, sel)
-  wv <- ncepget1('vwnd.10m', tme2, ll, sel)
+  Tk <- ncepget1('air.2m', tme2, ll)
+  Tkmin <- ncepget1('tmin.2m', tme2, ll)
+  Tkmax <- ncepget1('tmax.2m', tme2, ll)
+  sh <- ncepget1('shum.2m', tme2, ll)
+  pr <- ncepget1('pres.sfc', tme2, ll)
+  wu <- ncepget1('uwnd.10m', tme2, ll)
+  wv <- ncepget1('vwnd.10m', tme2, ll)
   # These variables are 6 hour averages starting at the reference time.
-  dlw <- ncepget1('dlwrf.sfc', tme2, ll, sel)
-  ulw <- ncepget1('ulwrf.sfc', tme2, ll, sel)
-  dsw <- ncepget1('dswrf.sfc', tme2, ll, sel)
-  tcdc <- ncepget1('tcdc.eatm', tme2, ll, sel)
-  dfout <- data.frame(obs_time = tme2[sel], timezone = "UTC", Tk, Tkmin, Tkmax, sh, pr, wu, wv, dlw, ulw, dsw, tcdc)
+  dlw <- ncepget1('dlwrf.sfc', tme2, ll)
+  ulw <- ncepget1('ulwrf.sfc', tme2, ll)
+  dsw <- ncepget1('dswrf.sfc', tme2, ll)
+  tcdc <- ncepget1('tcdc.eatm', tme2, ll)
+  # get correct data
+  ogn <- paste0(tme2$year[1] + 1900, "-", tme2$mon[1] + 1, "-01 00:00")
+  xx <- (c(1:length(Tk)) - 1) * 3600 * 6
+  tma <- as.POSIXlt(xx, origin = ogn, tz = "UTC")
+  sel <- which(tma >= tme2[1] & tma <= tme2[length(tme2)])
+  dfout <- data.frame(obs_time = tma[sel], timezone = "UTC", Tk = Tk[sel],
+                      TKmin = Tkmin[sel], Tkmax = Tkmax[sel], sh = sh[sel],
+                      pr = pr[sel], wu = wu[sel], wv = wv[sel], dlw = dlw[sel],
+                      ulw = ulw[sel], dsw = dsw[sel], tcdc = tcdc[sel])
   rownames(dfout) <- NULL
   return(dfout)
 }
+
 
 #' Calculates the solar index for a flat surface
 #'
