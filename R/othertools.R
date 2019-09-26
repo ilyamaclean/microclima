@@ -453,7 +453,6 @@ hourlytemp <- function(julian, em = NA, h, n, p = 100346.13, dni, dif,
   jd <- rep(julian, each = 24)
   localtime <- rep(c(0:23), length(mintemp))
   solfrac <- .solarday(julian, localtime, lat, long, merid, dst)
-  am <- airmasscoef(localtime, lat, long, julian, merid, dst)
   dct <- dni * siflat(localtime, lat, long, jd, merid, dst)
   pr <- .propmaxrad(jd, dif, dct, lat, long, merid, dst)
   tfrac <- 0.44 - 0.46 * sin((pi / 12) * solfrac + 0.9) + 0.11 *
@@ -465,10 +464,10 @@ hourlytemp <- function(julian, em = NA, h, n, p = 100346.13, dni, dif,
     em <- .emissivity(h, tc, n, p)
   day <- which(is.na(pr) == F)
   ngt <- which(is.na(pr))
-  tfrac[day] <- -0.30516 +   0.78414 * tfrac[day] + 0.89086 *
-    pr[day] + 0.34062 * tfrac[day] * pr[day]
-  tfrac[ngt] <-  -0.6562 + 1.0277 * tfrac[ngt] + 0.8981 *
-    em[ngt] -0.5262 * tfrac[ngt] * em[ngt]
+  tfrac[day] <- 0.40452 +  0.29463 * tfrac[day] - 0.10314 *
+    pr[day]  + 0.29286 * tfrac[day] * pr[day]
+  tfrac[ngt] <-   -0.49099 + 1.16173 * tfrac[ngt] + 0.86694  *
+    em[ngt] - 0.93626 * tfrac[ngt] * em[ngt]
   tfrac <- 1 / (1 + exp(-1 * tfrac))
   td <- array(tfrac, dim = c(24, length(tfrac) / 24))
   tmns <- apply(td, 2, min)
