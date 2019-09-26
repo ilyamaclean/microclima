@@ -168,7 +168,7 @@ get_NCEP <- function(lat, long, tme, reanalysis2 = TRUE) {
   tma <- as.POSIXlt(xx, origin = ogn, tz = "UTC")
   sel <- which(tma >= tme2[1] & tma <= tme2[length(tme2)])
   dfout <- data.frame(obs_time = tma[sel], timezone = "UTC", Tk = Tk[sel],
-                      TKmin = Tkmin[sel], Tkmax = Tkmax[sel], sh = sh[sel],
+                      Tkmin = Tkmin[sel], Tkmax = Tkmax[sel], sh = sh[sel],
                       pr = pr[sel], wu = wu[sel], wv = wv[sel], dlw = dlw[sel],
                       ulw = ulw[sel], dsw = dsw[sel], tcdc = tcdc[sel])
   rownames(dfout) <- NULL

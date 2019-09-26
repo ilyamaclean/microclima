@@ -4,7 +4,7 @@
 \alias{.propmaxrad}
 \title{derived proportion of maximum radiation}
 \usage{
-.propmaxrad(dif, dct, am)
+.propmaxrad(julian, dif, dct, lat, long, merid, dst)
 }
 \description{
 derived proportion of maximum radiation
