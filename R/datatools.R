@@ -142,8 +142,6 @@ get_NCEP <- function(lat, long, tme, reanalysis2 = TRUE) {
     }
     vv <- as.vector(unlist(vv))
   }
-
-
   tme <- as.POSIXlt(tme + 0, tz = "UTC")
   ll <- data.frame(x = long, y = lat)
   tme2 <- as.POSIXct(tme)
@@ -452,18 +450,24 @@ dailyprecipNCEP <- function(lat, long, tme, reanalysis2 = TRUE) {
     tme <- as.POSIXlt(c(0:(lgth - 1)) * 3600 * 24, origin = min(tme), tz = 'UTC')
   } else tme <- as.POSIXlt(0, origin = min(tme), tz = 'UTC')
   yrs <- unique(tme$year + 1900)
-  mths <- unique(tme$mon + 1)
-  ll <- data.frame(x = long, y = lat)
-  pre <- NCEP.gather('prate.sfc', level = 'gaussian',
-                     years.minmax = c(min(yrs),max(yrs)),
-                     months.minmax = c(min(mths):max(mths)),
-                     lat.southnorth = c(ll$y,ll$y), lon.westeast = c(ll$x,ll$x),
-                     return.units = FALSE, status.bar = FALSE, reanalysis2 = reanalysis2)
-  if (is.null(dim(pre)) == F) {
-    latdif <- abs(ll$y - as.numeric(rownames(pre)))
-    londif <- abs(ll$x%%360 - as.numeric(colnames(pre)))
-    pre <- pre[which.min(latdif), which.min(londif),]
+  apre <- list()
+  for (y in 1:length(yrs)) {
+    sely <- which(tme$year + 1900 == yrs[y])
+    mths <- unique(tme$mon[sely] + 1)
+    ll <- data.frame(x = long, y = lat)
+    pre <- NCEP.gather('prate.sfc', level = 'gaussian',
+                       years.minmax = c(min(yrs[y]),max(yrs[y])),
+                       months.minmax = c(min(mths):max(mths)),
+                       lat.southnorth = c(ll$y,ll$y), lon.westeast = c(ll$x,ll$x),
+                       return.units = FALSE, status.bar = FALSE, reanalysis2 = reanalysis2)
+    if (is.null(dim(pre)) == F) {
+      latdif <- abs(ll$y - as.numeric(rownames(pre)))
+      londif <- abs(ll$x%%360 - as.numeric(colnames(pre)))
+      pre <- pre[which.min(latdif), which.min(londif),]
+    }
+    apre[[y]] <-as.numeric(pre)
   }
+  pre <- as.vector(unlist(apre))
   pre <- pre * 6 * 3600
   tma <- 0
   dm <- c(31,28,31,30,31,30,31,31,30,31,30,31) * 4 - 1
