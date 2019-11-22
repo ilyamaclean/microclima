@@ -14,8 +14,8 @@ runauto(r, dstart, dfinish, hgt = 0.05, l, x, habitat = NA,
 }
 \arguments{
 \item{r}{a raster object defining the extent and resolution for which microclimate
-temperature data are required. Supplied raster must have a projection such that x and
-y distances are identical (i.e. do not use lat long projection)}
+temperature data are required. Supplied raster must have a projection such that the units of
+x, y and z are identical, and grid cells are square.}
 
 \item{dstart}{start date as character of time period required in format DD/MM/YYYY}
 

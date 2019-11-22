@@ -83,7 +83,7 @@ get_dem <- function(r = NA, lat, long, resolution = 30, zmin = 0, xdims = 200, y
   m2[is.na(m2)] <- zmin
   r2 <- if_raster(m2, r2)
   return(r2)
-}
+  }
 #' Obtains NCEP data required to run microclima
 #'
 #' @param tme a POSIXlt object covering the duration for which data are required.
@@ -287,19 +287,19 @@ siflat <- function(localtime, lat, long, julian, merid = round(long / 15, 0) * 1
 #' @return a dataframe with the following variables:
 #' \describe{
 #'   \item{obs_time}{POSIXlt object of times in UTC}
-#'   \item{temperature}{Temperatures at 2m (ºC)}
-#'   \item{humidity}{Specific humidity at 2m (Kg / Kg)}
-#'   \item{pressure}{Surface pressure (Pa)}
-#'   \item{windspeed}{Wind speed at 2m (metres per second)}
-#'   \item{winddir}{Wind direction (degrees from N)}
-#'   \item{emissivity}{Emissivity of the atmosphere (0 - 1, downlong / uplong)}
+#'   \item{temperature}{emperatures at 2m (ºC)}
+#'   \item{humidity}{specific humidity at 2m (Kg / Kg)}
+#'   \item{pressure}{surface pressure (Pa)}
+#'   \item{windspeed}{wind speed at 2m (metres per second}
+#'   \item{winddir}{wind direction (degrees from N)}
+#'   \item{emissivity}{emissivity of the atmosphere (0 - 1, downlong / uplong)}
 #'   \item{netlong}{Net longwave radiation (\ifelse{html}{\out{MJ m<sup>-2</sup> hr<sup>-1</sup>}}{\eqn{MJ m^-2 hr^{-1}}})}
 #'   \item{uplong}{Upward longwave radiation (\ifelse{html}{\out{MJ m<sup>-2</sup> hr<sup>-1</sup>}}{\eqn{MJ m^-2 hr^{-1}}})}
 #'   \item{downlong}{Downward longwave radiation (\ifelse{html}{\out{MJ m<sup>-2</sup> hr<sup>-1</sup>}}{\eqn{MJ m^-2 hr^{-1}}})}
 #'   \item{rad_dni}{Direct radiation normal to the solar beam (\ifelse{html}{\out{MJ m<sup>-2</sup> hr<sup>-1</sup>}}{\eqn{MJ m^-2 hr^{-1}}})}
 #'   \item{rad_dif}{Diffuse radiation (\ifelse{html}{\out{MJ m<sup>-2</sup> hr<sup>-1</sup>}}{\eqn{MJ m^-2 hr^{-1}}})}
-#'   \item{szenith}{The zenith angle (degrees)}
-#'   \item{cloudcover}{Cloud cover (Percentage)}
+#'   \item{szenith}{the zenith angle (degrees)}
+#'   \item{cloudcover}{cloud cover (Percentage)}
 #' }
 #' @export
 #' @import zoo
@@ -587,8 +587,8 @@ dailyprecipNCEP <- function(lat, long, tme, reanalysis2 = TRUE) {
     ha[i] <- ha36[saz]
   }
   sw <-.shortwave.ts(hourlydata$rad_dni, hourlydata$rad_dif, jd, tme$hour,
-                      lat, long, slope, aspect, ha, svf, x, l, albr, merid = 0,
-                      difani = difani)
+                     lat, long, slope, aspect, ha, svf, x, l, albr, merid = 0,
+                     difani = difani)
   windsp <- hourlydata$windspeed
   hourlyrad <- data.frame(swrad = sw$swrad, skyviewfact = svf, canopyfact = sw$canopyfact,
                           whselt = wsheltatground, windspeed = wshelt *  windsp,
@@ -619,7 +619,7 @@ dailyprecipNCEP <- function(lat, long, tme, reanalysis2 = TRUE) {
 # Calculates elevation effects
 #' @export
 .eleveffects <- function(hourlydata, dem, lat, long, windthresh = 4.5,
-                          emthresh = 0.78) {
+                         emthresh = 0.78) {
   xy <- data.frame(x = long, y = lat)
   elevncep <- extract(demworld, xy)
   coordinates(xy) = ~x + y
@@ -1111,8 +1111,8 @@ microclimaforNMR <- function(lat, long, dstart, dfinish, l, x, coastal = TRUE, h
 #' it runs the microclimate model in hourly timesteps to generate an array of temperatures.
 #'
 #' @param r a raster object defining the extent and resolution for which microclimate
-#' temperature data are required. Supplied raster must have a projection such that x and
-#' y distances are identical (i.e. do not use lat long projection)
+#' temperature data are required. Supplied raster must have a projection such that the units of
+#' x, y and z are identical, and grid cells are square.
 #' @param dstart start date as character of time period required in format DD/MM/YYYY
 #' @param dfinish end date as character of time period required in format DD/MM/YYYY
 #' @param hgt the height (in m) above or below ground for which temperature estimates
@@ -1333,8 +1333,8 @@ runauto <- function(r, dstart, dfinish, hgt = 0.05, l, x, habitat = NA,
     y
   }
   if (!requireNamespace("NicheMapR", quietly = TRUE)) {
-  #  stop("package 'NicheMapR' is needed. Please install it from Github: 'mrke/NicheMapR'",
-  #       call. = FALSE)
+    #  stop("package 'NicheMapR' is needed. Please install it from Github: 'mrke/NicheMapR'",
+    #       call. = FALSE)
   }
   # Lat long and time
   lat <- latlongfromraster(r)$lat
@@ -1416,8 +1416,8 @@ runauto <- function(r, dstart, dfinish, hgt = 0.05, l, x, habitat = NA,
   dem[dem == zmin] <- NA
   r[r == zmin] <- NA
   micronmr <- micro_ncep(dstart = dstart, dfinish = dfinish, dem = r, dem2 = dem, LAI = 0,
-                           loc = loc, Usrhyt = hgt2, Refhyt = 2, coastal = coastal,
-                           DEP = dep, save = save, hourlydata = hourlydata, dailyprecip = dailyprecip)
+                         loc = loc, Usrhyt = hgt2, Refhyt = 2, coastal = coastal,
+                         DEP = dep, save = save, hourlydata = hourlydata, dailyprecip = dailyprecip)
   ma <- micronmr$microclima.out
   hourlydata <- ma$hourlydata
   #####################
