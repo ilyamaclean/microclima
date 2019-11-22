@@ -1133,7 +1133,7 @@ clearskyrad <- function(tme, lat, long, h = 0.00697, tc = 15, p = 101300, G = 2.
 #' @description
 #' `cloudfromrad` is used to derive a cloud cover index as 1 - the ratio of measured to clearksy radiation
 #' missing values (e.g. at night) are interpolated
-#' @param rad a single numeric value or vector of solar irradiance(s). Units must be the same
+#' @param rad a single numeric value or vector of global solar irradiance(s). Units must be the same
 #' as those for `Ie`. Default is Watts /m^2.
 #' @param tme a single value or vector of POSIXlt objects indicating the time(s)
 #' for which clearksy radiation is required.

@@ -287,19 +287,19 @@ siflat <- function(localtime, lat, long, julian, merid = round(long / 15, 0) * 1
 #' @return a dataframe with the following variables:
 #' \describe{
 #'   \item{obs_time}{POSIXlt object of times in UTC}
-#'   \item{temperature}{emperatures at 2m (ºC)}
-#'   \item{humidity}{specific humidity at 2m (Kg / Kg)}
-#'   \item{pressure}{surface pressure (Pa)}
-#'   \item{windspeed}{wind speed at 2m (metres per second}
-#'   \item{winddir}{wind direction (degrees from N)}
-#'   \item{emissivity}{emissivity of the atmosphere (0 - 1, downlong / uplong)}
+#'   \item{temperature}{Temperatures at 2m (ºC)}
+#'   \item{humidity}{Specific humidity at 2m (Kg / Kg)}
+#'   \item{pressure}{Surface pressure (Pa)}
+#'   \item{windspeed}{Wind speed at 2m (metres per second)}
+#'   \item{winddir}{Wind direction (degrees from N)}
+#'   \item{emissivity}{Emissivity of the atmosphere (0 - 1, downlong / uplong)}
 #'   \item{netlong}{Net longwave radiation (\ifelse{html}{\out{MJ m<sup>-2</sup> hr<sup>-1</sup>}}{\eqn{MJ m^-2 hr^{-1}}})}
 #'   \item{uplong}{Upward longwave radiation (\ifelse{html}{\out{MJ m<sup>-2</sup> hr<sup>-1</sup>}}{\eqn{MJ m^-2 hr^{-1}}})}
 #'   \item{downlong}{Downward longwave radiation (\ifelse{html}{\out{MJ m<sup>-2</sup> hr<sup>-1</sup>}}{\eqn{MJ m^-2 hr^{-1}}})}
 #'   \item{rad_dni}{Direct radiation normal to the solar beam (\ifelse{html}{\out{MJ m<sup>-2</sup> hr<sup>-1</sup>}}{\eqn{MJ m^-2 hr^{-1}}})}
 #'   \item{rad_dif}{Diffuse radiation (\ifelse{html}{\out{MJ m<sup>-2</sup> hr<sup>-1</sup>}}{\eqn{MJ m^-2 hr^{-1}}})}
-#'   \item{szenith}{the zenith angle (degrees)}
-#'   \item{cloudcover}{cloud cover (Percentage)}
+#'   \item{szenith}{The zenith angle (degrees)}
+#'   \item{cloudcover}{Cloud cover (Percentage)}
 #' }
 #' @export
 #' @import zoo
