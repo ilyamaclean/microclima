@@ -936,7 +936,10 @@ coastalNCEP <- function(landsea, ncephourly, steps = 8, use.raster = T, zmin = 0
   cat("Applying coastal effects \n")
   for (i in 1:length(tme)) {
     d1 <- bound((1 - lsr2[,,wd[i]] + 2) / 3)
-    pdT <- dT[i] + p1[i] * d1^b1[i] + p2[i] * d2^b2[i]
+    xx <- p1[i] * d1^b1[i] + p2[i] * d2^b2[i]
+    xx[xx > 6] <- 6
+    xx[xx < -6] <- -6
+    pdT <- dT[i] + xx
     aout[,,i] <- (pdT - sst[i]) * (-1)
     if (plot.progress == T & i%%500 == 0) {
       plot(if_raster(aout[,,i], landsea), main = tme[i])
@@ -1086,13 +1089,8 @@ microclimaforNMR <- function(lat, long, dstart, dfinish, l, x, coastal = TRUE, h
     m[m == zmin] <- NA
     dem <- if_raster(m, dem)
     acoast <- coastalNCEP(dem, hourlydata, steps, use.raster, zmin, plot.progress, tidyr = FALSE)
-    xy <- SpatialPoints(data.frame(x = long, y = lat))
-    proj4string(xy) = crs("+init=epsg:4326")
-    pr <- crs(dem, asText = T)
-    xy <- spTransform(xy, CRS(pr))
-    e <- extent(dem)
-    xi <- round((xy$x - e@xmin) / res(dem)[1] + 0.5, 0)
-    yi <- round((xy$y - e@ymin) / res(dem)[2] + 0.5, 0)
+    xi <- floor(dim(dem)[1] / 2)
+    yi <- floor(dim(dem)[2] / 2)
     ce <- acoast[xi, yi, ]
     if (is.na(ce[1])) ce <- apply(acoast, 3, mean, na.rm = T)
     elev$tref <- ce - elev$tref + elev$telev
@@ -1113,7 +1111,8 @@ microclimaforNMR <- function(lat, long, dstart, dfinish, l, x, coastal = TRUE, h
 #' it runs the microclimate model in hourly timesteps to generate an array of temperatures.
 #'
 #' @param r a raster object defining the extent and resolution for which microclimate
-#' temperature data are required.
+#' temperature data are required. Supplied raster must have a projection such that x and
+#' y distances are identical (i.e. do not use lat long projection)
 #' @param dstart start date as character of time period required in format DD/MM/YYYY
 #' @param dfinish end date as character of time period required in format DD/MM/YYYY
 #' @param hgt the height (in m) above or below ground for which temperature estimates
