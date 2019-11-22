@@ -1112,7 +1112,8 @@ microclimaforNMR <- function(lat, long, dstart, dfinish, l, x, coastal = TRUE, h
 #'
 #' @param r a raster object defining the extent and resolution for which microclimate
 #' temperature data are required. Supplied raster must have a projection such that the units of
-#' x, y and z are identical, and grid cells are square.
+#' x, y and z are identical, and grid cells are square. NA values are assumed to be sea, which
+#' is important in the calculation of coastal and cold air drainage effects.
 #' @param dstart start date as character of time period required in format DD/MM/YYYY
 #' @param dfinish end date as character of time period required in format DD/MM/YYYY
 #' @param hgt the height (in m) above or below ground for which temperature estimates
