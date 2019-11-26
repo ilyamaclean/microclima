@@ -538,7 +538,7 @@ arrayspline <- function(a, tme, nfact = 24, out = NA) {
 #' `fitmicro` is used to fit a micro- or mesoclimate model using field temperature readings, and estimates of reference temperature, net radiation
 #' and wind speed at the locations of those readings.
 #'
-#' @param microfitdata a data.frame with at least the following columns (see, for example, microfit data):
+#' @param microfitdata a data.frame with at least the following columns (see, for example, microfitdata):
 #' \describe{
 #'   \item{temperature}{microclimate temperature readings}
 #'   \item{reftemp}{Reference (e.g. coarse-scale or weather station) temperatures}
