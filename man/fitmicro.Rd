@@ -8,7 +8,7 @@ fitmicro(microfitdata, alldata = FALSE, windthresh = NA,
   continuous = FALSE, iter = 999)
 }
 \arguments{
-\item{microfitdata}{a data.frame with at least the following columns (see, for example, microfit data):
+\item{microfitdata}{a data.frame with at least the following columns (see, for example, microfitdata):
 \describe{
 \item{temperature}{microclimate temperature readings}
 \item{reftemp}{Reference (e.g. coarse-scale or weather station) temperatures}

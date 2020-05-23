@@ -60,7 +60,7 @@ x <- leaf_geometry(veg_hgt)
 l <- lai(aerial_image[,,3], aerial_image[,,4])
 l <- lai_adjust(l, veg_hgt)
 svv <- skyviewveg(dtm1m, l, x)
-fr <- canopy(l, x)
+fr <- canopy(l)
 alb <- albedo(aerial_image[,,1], aerial_image[,,2], aerial_image[,,3],
              aerial_image[,,4])
 albc <- albedo2(alb, fr, ground = FALSE)

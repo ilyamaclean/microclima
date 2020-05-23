@@ -956,7 +956,7 @@ shortwaveveg <- function(dni, dif, julian, localtime, lat = NA, long = NA,
   fdf <- isor + refr
   saltitude <- solalt(localtime, lat, long, julian, merid, dst)
   albl <- albedo2(alb, fr,  ground = FALSE)
-  s <- sqrt(1 - albl)
+  s <- 1 - is_raster(albl)
   kk <- ((x ^ 2 + 1 / (tan(saltitude * (pi / 180)) ^ 2)) ^ 0.5) /
     (x + 1.774 * (x + 1.182) ^ (-0.733))
   trd <- exp(-kk * s * l)

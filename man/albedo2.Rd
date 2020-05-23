@@ -41,8 +41,7 @@ alb <- albedo(aerial_image[,,1], aerial_image[,,2], aerial_image[,,3],
 # Calculate canopy cover
 # ======================
 l <- lai(aerial_image[,,3], aerial_image[,,4])
-x <- leaf_geometry(veg_hgt)
-fr <- canopy(l, x)
+fr <- canopy(l)
 # ===========================================
 # Calculate and plot ground and canopy albedo
 # ===========================================
