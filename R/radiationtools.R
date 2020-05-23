@@ -204,43 +204,30 @@ leaf_geometry <- function(veghgt, maxx = 20) {
 #' @description `canopy` is used to calculate fractional canopy cover.
 #'
 #' @param l a raster object, two-dimensional array or matrix of leaf area index values as returned by [lai()].
-#' @param x a raster object, two-dimensional array of numeric values representing the ratio of vertical to horizontal projections of leaf foliage as returned by [leaf_geometry()].
+#' @param ref leaf reflectivity.
 #' @import raster
 #' @export
 #'
 #' @return a raster object or a two-dimensional array of numeric values representing fractional canopy cover estimated as the proportion of isotropic radiation transmitted through the canopy.
 #' @details
 #' Canopy cover calculated by this function is defined as 1 - the proportion of isotropic
-#' radiation transmitted through the canopy. If `l` is a raster object, a raster object is
-#' returned.
+#' radiation transmitted through the canopy. This is effectively te same as canopy
+#' cover if `ref` = 0, but if `ref` is greater than zero, scattered light is also considered.
+#' If `l` is a raster object, a raster object is returned.
 #'
 #' @examples
 #' library(raster)
 #' l <- lai(aerial_image[,,3], aerial_image[,,4])
 #' l <- if_raster(l, dtm1m) # convert to raster
-#' x <- leaf_geometry(veg_hgt)
-#' fr <- canopy(l, x)
+#' fr <- canopy(l)
+#' fr[is.na(dtm1m)] <- NA
 #' plot(fr, main = "Fractional canopy cover")
-canopy <- function(l, x) {
+canopy <- function(l, ref = 0) {
   r <- l
   l <- is_raster(l)
-  x <- is_raster(x)
-  xs <- c(0.01, 0.02, 0.05, 0.1, 0.2, 0.5, 1, 2, 5, 10)
-  p1s <- c(-25.287, -25.254, -25.196, -24.932, -24.278, -22.088, -19.097,
-           -15.255, -10.159, -7.105)
-  p2s <- c(86.439, 86.42, 86.399, 86.306, 86.078, 85.517, 85.168, 85.228,
-           85.963, 86.708)
-  xp1 <- spline(xs, p1s, n = 1000)
-  xp2 <- spline(xs, p2s, n = 1000)
-  xl <- round(x * 100, 0)
-  xl <- ifelse(xl < 1, 1, xl)
-  xl <- ifelse(xl > 1000, 1000, xl)
-  p1 <- array(xp1$y[xl], dim = dim(x))
-  p2 <- array(xp2$y[xl], dim = dim(x))
-  a <- p1 * l ^ (1 / 3) + p2
-  arad <- a * (pi / 180)
-  k <- sqrt(x ^ 2 + tan(arad) ^ 2) / (x + 1.774 * (x + 1.182) ^ -0.733)
-  fr <- 1 - exp(-k * l)
+  ref <- is_raster(ref)
+  s <- sqrt(1 - ref)
+  fr <- 1 - exp(-s * l)
   if_raster(fr, r)
 }
 #' Partitions surface albedo between ground and canopy albedo
@@ -276,8 +263,7 @@ canopy <- function(l, x) {
 #' # Calculate canopy cover
 #' # ======================
 #' l <- lai(aerial_image[,,3], aerial_image[,,4])
-#' x <- leaf_geometry(veg_hgt)
-#' fr <- canopy(l, x)
+#' fr <- canopy(l)
 #' # ===========================================
 #' # Calculate and plot ground and canopy albedo
 #' # ===========================================
@@ -619,7 +605,7 @@ longwavetopo <- function(h, tc, p = 101300, n, svf = 1, co = 1.24) {
 #' l <- lai(aerial_image[,,3], aerial_image[,,4])
 #' l <- lai_adjust(l, veg_hgt)
 #' svv <- skyviewveg(dtm1m, l, x)
-#' fr <- canopy(l, x)
+#' fr <- canopy(l)
 #' alb <- albedo(aerial_image[,,1], aerial_image[,,2], aerial_image[,,3],
 #'              aerial_image[,,4])
 #' albc <- albedo2(alb, fr, ground = FALSE)
@@ -649,7 +635,9 @@ longwaveveg <- function(h, tc, p = 101300, n, x, fr, svv = 1, albc = 0.23, co = 
   em <- n + (1 - n) * eo
   le0 <- 2.043e-10 * (tc + 273.15) ^ 4
   lwsky <- em * le0
-  lw1 <- (1 - fr) * lwsky
+  l <- -log(1-fr)
+  fr2 <- canopy(l,albc)
+  lw1 <- (1 - fr2) * lwsky
   lr <- (2 / 3) * log(x + 1)
   r <- 1 / (1 + exp(-1 * lr))
   lw2 <- albc * r * fr * lwsky
@@ -905,7 +893,7 @@ shortwavetopo <- function(dni, dif, julian, localtime, lat = NA, long = NA,
 #' x <- leaf_geometry(veg_hgt)
 #' l <- lai(aerial_image[,,3], aerial_image[,,4])
 #' l <- lai_adjust(l, veg_hgt)
-#' fr <- canopy(l, x)
+#' fr <- canopy(l)
 #' alb <- albedo(aerial_image[,,1], aerial_image[,,2], aerial_image[,,3],
 #'              aerial_image[,,4])
 #' albg <- albedo2(alb, fr)
@@ -921,7 +909,7 @@ shortwavetopo <- function(dni, dif, julian, localtime, lat = NA, long = NA,
 shortwaveveg <- function(dni, dif, julian, localtime, lat = NA, long = NA,
                          dtm = array(0, dim = c(1, 1)), slope = NA, aspect = NA,
                          svv = 1, albg = 0.23, fr, albr = 0.23, ha = 0,
-                         res = 1, merid = round(long / 15, 0) * 15, dst = 0, shadow = TRUE,
+                         res = 1, merid = NA, dst = 0, shadow = TRUE,
                          x, l, difani = TRUE) {
   r <- dtm
   if (class(slope) == "logical" & class(r) == "RasterLayer") {
@@ -938,6 +926,7 @@ shortwaveveg <- function(dni, dif, julian, localtime, lat = NA, long = NA,
   }
   if (class(lat) == "logical" & class(crs(r)) != "CRS")
     stop("Latitude not defined and cannot be determined from raster")
+  if (class(merid) == "logical") merid <- round(long / 15, 0) * 15
   dni <- is_raster(dni)
   dif <- is_raster(dif)
   slope <- is_raster(slope)
@@ -966,10 +955,12 @@ shortwaveveg <- function(dni, dif, julian, localtime, lat = NA, long = NA,
   fd <- dirr + cisr
   fdf <- isor + refr
   saltitude <- solalt(localtime, lat, long, julian, merid, dst)
+  albl <- albedo2(alb, fr,  ground = FALSE)
+  s <- sqrt(1 - albl)
   kk <- ((x ^ 2 + 1 / (tan(saltitude * (pi / 180)) ^ 2)) ^ 0.5) /
-        (x + 1.774 * (x + 1.182) ^ (-0.733))
-  trd <- exp(-kk * l)
-  trf <- (1 - fr)
+    (x + 1.774 * (x + 1.182) ^ (-0.733))
+  trd <- exp(-kk * s * l)
+  trf <- exp(-s * l)
   fgd <- fd * trd * (1 - albg)
   fged <- fdf * trf * (1 - albg) * svv
   fgc <- fgd + fged

@@ -516,7 +516,7 @@ dailyprecipNCEP <- function(lat, long, tme, reanalysis2 = TRUE) {
   kk <- ((x ^ 2 + 1 / (tan(sa * (pi / 180)) ^ 2)) ^ 0.5) /
     (x + 1.774 * (x + 1.182) ^ (-0.733))
   trd <- exp(-kk * l)
-  fr <- as.vector(canopy(array(l, dim = c(1,1)), array(x, dim = c(1,1))))
+  fr <- as.vector(canopy(array(l, dim = c(1,1))))
   trf <- (1 - fr)
   fgd <- fd * trd
   fged <- fdf * trf * svv
@@ -563,7 +563,7 @@ dailyprecipNCEP <- function(lat, long, tme, reanalysis2 = TRUE) {
     aspect <- terrain(dem, opt = 'aspect', unit = 'degrees')
     aspect <- extract(aspect, xy)
   }
-  fr <- canopy(array(l, dim = dim(dem)[1:2]), array(x, dim = dim(dem)[1:2]))
+  fr <- canopy(array(l, dim = dim(dem)[1:2]))
   if (class(svf) == "logical") {
     svf <- skyviewveg(dem, array(l, dim = dim(dem)[1:2]),
                       array(x, dim = dim(dem)[1:2]), res = reso)
@@ -1522,7 +1522,7 @@ runauto <- function(r, dstart, dfinish, hgt = 0.05, l, x, habitat = NA,
       svv <- skyviewveg(is_raster(r2), la, x, steps = 36, res = reso)
       ha <- mean_slope(is_raster(r2), res = reso)
     }
-    fr <- canopy(la, x)
+    fr <- canopy(la)
     radsw <- shortwaveveg(hourlydata$rad_dni[i], hourlydata$rad_dif[i], jd[i],
                           tme$hour[i], dtm = r2, svv = svv, albg = albg,
                           fr = fr, albr = albr, ha = ha, res = reso, merid = 0,
