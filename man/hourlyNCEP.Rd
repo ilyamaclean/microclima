@@ -4,7 +4,7 @@
 \alias{hourlyNCEP}
 \title{Interpolate NCEP data for running microclima to hourly}
 \usage{
-hourlyNCEP(ncepdata = NA, lat, long, tme, reanalysis2 = TRUE)
+hourlyNCEP(ncepdata = NA, lat, long, tme, reanalysis2 = FALSE)
 }
 \arguments{
 \item{ncepdata}{an optional  data frame of climate variables as returned by \code{\link[=get_NCEP]{get_NCEP()}}.}

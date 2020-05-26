@@ -9,7 +9,7 @@ runauto(r, dstart, dfinish, hgt = 0.05, l, x, habitat = NA,
   coastal = TRUE, r.is.dem = TRUE, save = 0, albg = 0.15,
   albr = 0.15, albc = 0.23, mesoresolution = 100, zmin = 0,
   slope = NA, aspect = NA, windthresh = 4.5, emthresh = 0.78,
-  reanalysis2 = TRUE, steps = 8, plot.progress = TRUE,
+  reanalysis2 = FALSE, steps = 8, plot.progress = TRUE,
   continuous = TRUE, summarydata = TRUE, save.memory = FALSE)
 }
 \arguments{

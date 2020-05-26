@@ -4,7 +4,7 @@
 \alias{get_NCEP}
 \title{Obtains NCEP data required to run microclima}
 \usage{
-get_NCEP(lat, long, tme, reanalysis2 = TRUE)
+get_NCEP(lat, long, tme, reanalysis2 = FALSE)
 }
 \arguments{
 \item{lat}{the latitude of the location for which data are required}

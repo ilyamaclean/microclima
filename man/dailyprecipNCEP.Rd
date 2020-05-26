@@ -4,7 +4,7 @@
 \alias{dailyprecipNCEP}
 \title{Obtain daily precipitation from NCEP}
 \usage{
-dailyprecipNCEP(lat, long, tme, reanalysis2 = TRUE)
+dailyprecipNCEP(lat, long, tme, reanalysis2 = FALSE)
 }
 \arguments{
 \item{lat}{the latitude of the location for which data are required}

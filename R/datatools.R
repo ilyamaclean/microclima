@@ -121,7 +121,7 @@ get_dem <- function(r = NA, lat, long, resolution = 30, zmin = 0, xdims = 200, y
 #' @examples
 #' tme <- as.POSIXlt(c(1:15) * 24 * 3600, origin = "2015-01-15", tz = 'UTC')
 #' head(get_NCEP(50, -5, tme))
-get_NCEP <- function(lat, long, tme, reanalysis2 = TRUE) {
+get_NCEP <- function(lat, long, tme, reanalysis2 = FALSE) {
   ncepget1 <- function(climvar, tme2, ll) {
     yrs <- unique(tme2$year + 1900)
     vv <- list()
@@ -320,7 +320,7 @@ siflat <- function(localtime, lat, long, julian, merid = round(long / 15, 0) * 1
 #' head(hdata)
 #' plot(temperature ~ as.POSIXct(obs_time), data = hdata, type = "l", xlab = "Month")
 #' plot(rad_dif ~ as.POSIXct(obs_time), data = hdata, type = "l", xlab = "Month")
-hourlyNCEP <- function(ncepdata = NA, lat, long, tme, reanalysis2 = TRUE) {
+hourlyNCEP <- function(ncepdata = NA, lat, long, tme, reanalysis2 = FALSE) {
   bound <- function(x, mn = 0, mx = 1) {
     x[x > mx] <- mx
     x[x < mn] <- mn
@@ -440,7 +440,7 @@ hourlyNCEP <- function(ncepdata = NA, lat, long, tme, reanalysis2 = TRUE) {
 #' @examples
 #' tme <- as.POSIXlt(c(1:15) * 24 * 3600, origin = "2015-01-15", tz = 'UTC')
 #' dailyprecipNCEP(50, -5, tme)
-dailyprecipNCEP <- function(lat, long, tme, reanalysis2 = TRUE) {
+dailyprecipNCEP <- function(lat, long, tme, reanalysis2 = FALSE) {
   tmeout <- tme
   tme <- .tme.sort(tme)
   long <- ifelse(long > 180, long - 360, long)
@@ -1048,7 +1048,7 @@ coastalNCEP <- function(landsea, ncephourly, steps = 8, use.raster = T, zmin = 0
 microclimaforNMR <- function(lat, long, dstart, dfinish, l, x, coastal = TRUE, hourlydata = NA,
                              dailyprecip = NA, dem = NA, demmeso = dem, albr =0.15,
                              resolution = 100, zmin = 0, slope = NA, aspect = NA, horizon = NA,
-                             svf = NA, difani = TRUE, windthresh = 4.5, emthresh = 0.78, reanalysis2 = TRUE,
+                             svf = NA, difani = TRUE, windthresh = 4.5, emthresh = 0.78, reanalysis2 = FALSE,
                              steps = 8, use.raster = TRUE, plot.progress = TRUE, tidyr = FALSE) {
   tme <- seq(as.POSIXlt(dstart, format = "%d/%m/%Y", origin = "01/01/1900", tz = "UTC"),
              as.POSIXlt(dfinish, format = "%d/%m/%Y", origin = "01/01/1900", tz = "UTC")
@@ -1238,7 +1238,7 @@ runauto <- function(r, dstart, dfinish, hgt = 0.05, l, x, habitat = NA,
                     hourlydata = NA, dailyprecip = NA, use.raster = FALSE,
                     coastal = TRUE, r.is.dem = TRUE, save = 0, albg = 0.15, albr =0.15,
                     albc = 0.23, mesoresolution = 100, zmin = 0, slope = NA,
-                    aspect = NA, windthresh = 4.5, emthresh = 0.78, reanalysis2 = TRUE,
+                    aspect = NA, windthresh = 4.5, emthresh = 0.78, reanalysis2 = FALSE,
                     steps = 8, plot.progress = TRUE, continuous = TRUE,
                     summarydata = TRUE, save.memory = FALSE) {
   longwaveveg2 <- function(le0, lwsky, x, fr, svv, albc) {
