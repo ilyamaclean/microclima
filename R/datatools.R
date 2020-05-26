@@ -473,6 +473,8 @@ dailyprecipNCEP <- function(lat, long, tme, reanalysis2 = FALSE) {
   dm <- c(31,28,31,30,31,30,31,31,30,31,30,31) * 4 - 1
   for (yr in min(yrs):max(yrs)) {
     dm[2] <- ifelse(yr%%4 == 0, 115, 111)
+    sely <- which(tme$year + 1900 == yr)
+    mths <- unique(tme$mon[sely] + 1)
     for (mth in min(mths):max(mths)) {
       tmym <- as.POSIXct(c(0:dm[mth]) * 3600 * 6,
                          origin = paste0(yr,"-",mth,"-01 00:00"),
