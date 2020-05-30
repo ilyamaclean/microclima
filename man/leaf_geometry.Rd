@@ -4,7 +4,7 @@
 \alias{leaf_geometry}
 \title{Calculates leaf orientation}
 \usage{
-leaf_geometry(veghgt, maxx = 20)
+leaf_geometry(veghgt, maxx = 8)
 }
 \arguments{
 \item{veghgt}{a raster object, two-dimensional array or matrix of vegetation heights (m).}

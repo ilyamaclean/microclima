@@ -1104,7 +1104,7 @@ microclimaforNMR <- function(lat, long, dstart, dfinish, l, x, coastal = TRUE, h
 #' Function for automatically generating microclimate surfaces for anywhere in the word
 #'
 #' @description This function generating microclimate temperature surfaces for anywhere
-#' in the word. It first downloads coarse-resolution climate and radiation data from the
+#' in the word. If hourly weather data are not provided, it first downloads coarse-resolution climate and radiation data from the
 #' NCEP-NCAR or NCEP–DOE Atmospheric Model Intercomparison Project (Kanamitso et al
 #' 2002) and interpolates these data to hourly. It calculates mesoclimatic effects and derives parameters for fitting the
 #' microclimate model using the `NicheMapR` package (Kearny & Porter 2016). Using digital

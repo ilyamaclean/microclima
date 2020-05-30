@@ -137,7 +137,7 @@ though note that edge cells are NA as slopes cannot be calculated for these cell
 }
 \description{
 This function generating microclimate temperature surfaces for anywhere
-in the word. It first downloads coarse-resolution climate and radiation data from the
+in the word. If hourly weather data are not provided, it first downloads coarse-resolution climate and radiation data from the
 NCEP-NCAR or NCEP–DOE Atmospheric Model Intercomparison Project (Kanamitso et al
 2002) and interpolates these data to hourly. It calculates mesoclimatic effects and derives parameters for fitting the
 microclimate model using the \code{NicheMapR} package (Kearny & Porter 2016). Using digital

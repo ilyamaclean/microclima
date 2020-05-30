@@ -191,7 +191,7 @@ lai_adjust <- function(l, veghgt, hgt = 0.05) {
 #' library(raster)
 #' x <- leaf_geometry(veg_hgt)
 #' plot(x, main = "Leaf geometry")
-leaf_geometry <- function(veghgt, maxx = 20) {
+leaf_geometry <- function(veghgt, maxx = 8) {
   r <- veghgt
   veghgt <- is_raster(veghgt)
   logx <- 5.5246 * log(veghgt + 1) - 1.4384
