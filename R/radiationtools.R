@@ -955,6 +955,10 @@ shortwaveveg <- function(dni, dif, julian, localtime, lat = NA, long = NA,
   saltitude <- solalt(localtime, lat, long, julian, merid, dst)
   albl <- albedo2(alb, fr,  ground = FALSE)
   albg <- albedo2(alb, fr,  ground = TRUE)
+  if (is.na(mean(albl,na.rm = T))) {
+    albl <- 0.5
+    albg <- 0.15
+  }
   s <- 1 - is_raster(albl)
   zen <- 90 - saltitude
   kk <- sqrt((x^2 + (tan(zen * (pi/180))^2)))/(x + 1.774 * (x + 1.182)^(-0.733))
