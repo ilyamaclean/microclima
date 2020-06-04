@@ -1419,7 +1419,7 @@ runauto <- function(r, dstart, dfinish, hgt = 0.05, l, x, habitat = NA,
   dem[dem == zmin] <- NA
   r[r == zmin] <- NA
   micronmr <- micro_ncep(dstart = dstart, dfinish = dfinish, dem = r, dem2 = dem, LAI = 0,
-                         loc = loc, Usrhyt = hgt2, Refhyt = 2, coastal = coastal,
+                         loc = loc, Usrhyt = hgt2, Refhyt = 2, coastal = coastal, reanalysis = reanalysis2,
                          DEP = dep, save = save, hourlydata = hourlydata, dailyprecip = dailyprecip)
   ma <- micronmr$microclima.out
   hourlydata <- ma$hourlydata
