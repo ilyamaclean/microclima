@@ -6,7 +6,7 @@
 \usage{
 shortwaveveg(dni, dif, julian, localtime, lat = NA, long = NA,
   dtm = array(0, dim = c(1, 1)), slope = NA, aspect = NA, svv = 1,
-  albg = 0.23, fr, albr = 0.23, ha = 0, res = 1, merid = NA,
+  alb = 0.23, fr, albr = 0.23, ha = 0, res = 1, merid = NA,
   dst = 0, shadow = TRUE, x, l, difani = TRUE)
 }
 \arguments{
@@ -30,7 +30,7 @@ shortwaveveg(dni, dif, julian, localtime, lat = NA, long = NA,
 
 \item{svv}{an optional raster object, two-dimensional array or matrix of values representing the proportion of isotropic radiation received by a surface partially obscured by topography relative to the full hemisphere underneath vegetation as returned by \code{\link[=skyviewveg]{skyviewveg()}}.}
 
-\item{albg}{an optional single value, raster object, two-dimensional array or matrix of values representing the albedo(s) of the ground as returned by \code{\link[=albedo2]{albedo2()}}.}
+\item{alb}{an optional single value, raster object, two-dimensional array or matrix of values representing albedo(s) as returned by \code{\link[=albedo]{albedo()}}.}
 
 \item{fr}{a raster object, two-dimensional array or matrix of fractional canopy cover as returned by \code{\link[=canopy]{canopy()}}.}
 
@@ -114,14 +114,13 @@ l <- lai_adjust(l, veg_hgt)
 fr <- canopy(l)
 alb <- albedo(aerial_image[,,1], aerial_image[,,2], aerial_image[,,3],
              aerial_image[,,4])
-albg <- albedo2(alb, fr)
 sv <- skyviewveg(dtm1m, l, x)
 jd <- julday(2010, 5, 24)
 ha <- mean_slope(dtm1m)
 # ===============================================================
 # Calculate and plot net shortwave radiation for 2010-05-24 11:00
 # ===============================================================
-netshort1m <- shortwaveveg(dni, dif, jd, 11, dtm = dtm1m, svv = sv, albg = albg,
+netshort1m <- shortwaveveg(dni, dif, jd, 11, dtm = dtm1m, svv = sv, alb = alb,
                            fr = fr, ha = ha, x = x, l = l)
 plot(mask(netshort1m, dtm1m), main = "Net shortwave radiation")
 }

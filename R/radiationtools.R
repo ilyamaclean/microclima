@@ -824,7 +824,7 @@ shortwavetopo <- function(dni, dif, julian, localtime, lat = NA, long = NA,
 #' @param slope an optional single value, raster object, two-dimensional array or matrix of slopes (º). If an array or matrix, then orientated as if derived using [is_raster()]. I.e. `[1, 1]` is the NW corner.
 #' @param aspect an optional single value, raster object, two-dimensional array or matrix of aspects (º). If an array or matrix, then orientated as if derived using [is_raster()]. I.e. `[1, 1]` is the NW corner.
 #' @param svv an optional raster object, two-dimensional array or matrix of values representing the proportion of isotropic radiation received by a surface partially obscured by topography relative to the full hemisphere underneath vegetation as returned by [skyviewveg()].
-#' @param albg an optional single value, raster object, two-dimensional array or matrix of values representing the albedo(s) of the ground as returned by [albedo2()].
+#' @param alb an optional single value, raster object, two-dimensional array or matrix of values representing albedo(s) as returned by [albedo()].
 #' @param fr a raster object, two-dimensional array or matrix of fractional canopy cover as returned by [canopy()].
 #' @param albr an optional single value, raster object, two-dimensional array or matrix of values representing the albedo(s) of adjacent surfaces as returned by [albedo_reflected()].
 #' @param ha an optional raster object, two-dimensional array or matrix of values representing the mean slope to the horizon (decimal degrees) of surrounding surfaces from which radiation is reflected for each cell of `dtm` as returned by [mean_slope()].
@@ -896,19 +896,18 @@ shortwavetopo <- function(dni, dif, julian, localtime, lat = NA, long = NA,
 #' fr <- canopy(l)
 #' alb <- albedo(aerial_image[,,1], aerial_image[,,2], aerial_image[,,3],
 #'              aerial_image[,,4])
-#' albg <- albedo2(alb, fr)
 #' sv <- skyviewveg(dtm1m, l, x)
 #' jd <- julday(2010, 5, 24)
 #' ha <- mean_slope(dtm1m)
 #' # ===============================================================
 #' # Calculate and plot net shortwave radiation for 2010-05-24 11:00
 #' # ===============================================================
-#' netshort1m <- shortwaveveg(dni, dif, jd, 11, dtm = dtm1m, svv = sv, albg = albg,
+#' netshort1m <- shortwaveveg(dni, dif, jd, 11, dtm = dtm1m, svv = sv, alb = alb,
 #'                            fr = fr, ha = ha, x = x, l = l)
 #' plot(mask(netshort1m, dtm1m), main = "Net shortwave radiation")
 shortwaveveg <- function(dni, dif, julian, localtime, lat = NA, long = NA,
                          dtm = array(0, dim = c(1, 1)), slope = NA, aspect = NA,
-                         svv = 1, albg = 0.23, fr, albr = 0.23, ha = 0,
+                         svv = 1, alb = 0.23, fr, albr = 0.23, ha = 0,
                          res = 1, merid = NA, dst = 0, shadow = TRUE,
                          x, l, difani = TRUE) {
   r <- dtm
@@ -932,7 +931,6 @@ shortwaveveg <- function(dni, dif, julian, localtime, lat = NA, long = NA,
   slope <- is_raster(slope)
   aspect <- is_raster(aspect)
   svv <- is_raster(svv)
-  albg <- is_raster(albg)
   fr <- is_raster(fr)
   albr <- is_raster(albr)
   ha <- is_raster(ha)
@@ -956,6 +954,7 @@ shortwaveveg <- function(dni, dif, julian, localtime, lat = NA, long = NA,
   fdf <- isor + refr
   saltitude <- solalt(localtime, lat, long, julian, merid, dst)
   albl <- albedo2(alb, fr,  ground = FALSE)
+  albg <- albedo2(alb, fr,  ground = TRUE)
   s <- 1 - is_raster(albl)
   zen <- 90 - saltitude
   kk <- sqrt((x^2 + (tan(zen * (pi/180))^2)))/(x + 1.774 * (x + 1.182)^(-0.733))

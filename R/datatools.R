@@ -1524,9 +1524,10 @@ runauto <- function(r, dstart, dfinish, hgt = 0.05, l, x, habitat = NA,
       svv <- skyviewveg(is_raster(r2), la, x, steps = 36, res = reso)
       ha <- mean_slope(is_raster(r2), res = reso)
     }
-    fr <- canopy(la)
+    fr <- canopy(la, 0.23)
+    alb <- fr * albc + (1 - fr) * albg
     radsw <- shortwaveveg(hourlydata$rad_dni[i], hourlydata$rad_dif[i], jd[i],
-                          tme$hour[i], dtm = r2, svv = svv, albg = albg,
+                          tme$hour[i], dtm = r2, svv = svv, alb = alb,
                           fr = fr, albr = albr, ha = ha, res = reso, merid = 0,
                           x = x, l = la)
     radlw <- longwaveveg2(hourlydata$uplong[i], hourlydata$downlong[i], x, fr,
