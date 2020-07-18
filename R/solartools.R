@@ -18,7 +18,7 @@
 #' class(r2) # is a matrix
 if_raster <- function(x, r) {
   if (class(r) == "RasterLayer")
-    x <- raster(x, template = r)
+    x <- raster(is_raster(x), template = r)
   x
 }
 #' Checks whether object is a raster and returns a matrix if yes

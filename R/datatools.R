@@ -621,7 +621,7 @@ dailyprecipNCEP <- function(lat, long, tme, reanalysis2 = FALSE) {
 # Calculates elevation effects
 #' @export
 .eleveffects <- function(hourlydata, dem, lat, long, windthresh = 4.5,
-                         emthresh = 0.78) {
+                         emthresh = 0.78, elev.effects = TRUE) {
   xy <- data.frame(x = long, y = lat)
   elevncep <- extract(demworld, xy)
   coordinates(xy) = ~x + y
@@ -630,8 +630,10 @@ dailyprecipNCEP <- function(lat, long, tme, reanalysis2 = FALSE) {
   elev <- extract(dem, xy)
   if (is.na(elev)) elev <- 0
   # elevation effect
-  lr <- lapserate(hourlydata$temperature, hourlydata$humidity,
+  if (elev.effects) {
+    lr <- lapserate(hourlydata$temperature, hourlydata$humidity,
                   hourlydata$pressure)
+  } else lr <- 0
   elevt <- lr * (elev - elevncep) + hourlydata$temperature
   tme <- as.POSIXlt(hourlydata$obs_time)
   jds <- julday(tme$year[1] + 1900, tme$mday[1] + 1, tme$mday[1])
@@ -1051,7 +1053,7 @@ microclimaforNMR <- function(lat, long, dstart, dfinish, l, x, coastal = TRUE, h
                              dailyprecip = NA, dem = NA, demmeso = dem, albr =0.15,
                              resolution = 100, zmin = 0, slope = NA, aspect = NA, horizon = NA,
                              svf = NA, difani = TRUE, windthresh = 4.5, emthresh = 0.78, reanalysis2 = FALSE,
-                             steps = 8, use.raster = TRUE, plot.progress = TRUE, tidyr = FALSE) {
+                             steps = 8, use.raster = TRUE, plot.progress = TRUE, tidyr = FALSE, elev.effects = TRUE) {
   tme <- seq(as.POSIXlt(dstart, format = "%d/%m/%Y", origin = "01/01/1900", tz = "UTC"),
              as.POSIXlt(dfinish, format = "%d/%m/%Y", origin = "01/01/1900", tz = "UTC")
              + 3600 * 24, by = 'hours')
@@ -1084,7 +1086,7 @@ microclimaforNMR <- function(lat, long, dstart, dfinish, l, x, coastal = TRUE, h
   radwind <- .pointradwind(hourlydata, dem, lat, long, l, x, albr, zmin, slope, aspect,
                            horizon, svf, difani)
   cat("Calculating elevation and cold-air drainage effects \n")
-  info <- .eleveffects(hourlydata, demmeso, lat, long, windthresh, emthresh)
+  info <- .eleveffects(hourlydata, demmeso, lat, long, windthresh, emthresh, elev.effects)
   elev <- info$tout
   if (coastal) {
     m <- is_raster(dem)

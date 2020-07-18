@@ -25,6 +25,8 @@ The difference between near-surface temperature and reference air temperature is
 
 ```
 # = = = = = = = = = Example = = = = = = = = = = = = = = 
+library(raster)
+library(microclima)
 head(microfitdata) # example field data
 fitmicro(microfitdata) # derive model coefficients
 ```
@@ -73,7 +75,6 @@ In the example above, 0.05° resolution direct and diffuse radiation are first e
 ```
 # = Example: vegetation and topographic = = = = = = 
 # = = = effects on shortwave radiation  = = = = = =
-#
 #=================================
 # Extract data for 2010-05-24 11:00
 # =================================
@@ -88,17 +89,17 @@ l <- lai_adjust(l, veg_hgt)
 fr <- canopy(l)
 alb <- albedo(aerial_image[,,1], aerial_image[,,2], aerial_image[,,3],
              aerial_image[,,4])
-albg <- albedo2(alb, fr)
+# Calculate sky view and horizon angles (takes a minute or so)
 sv <- skyviewveg(dtm1m, l, x)
 ha <- mean_slope(dtm1m)
 jd <- julday(2010, 5, 24)
 # ===============================================================
 # Calculate and plot net shortwave radiation for 2010-05-24 11:00
 # ===============================================================
-netshort1m <- shortwaveveg(dni, dif, jd, 11, dtm = dtm1m, svv = sv, 
-                           albg = albg, fr = fr, ha = ha, x = x, l = l)
+netshort1m <- shortwaveveg(dni, dif, jd, 11, dtm = dtm1m, svv = sv,
+                           alb = alb, fr = fr, ha = ha, x = x, l = l)
 plot(mask(netshort1m, dtm1m), 
-     main = expression("Net shortwave radiation" ~ (MJ ~ m^{-2} ~     hour^{-1})))
+     main = expression("Net shortwave radiation" ~ (MJ ~ m^{-2} ~ hour^{-1})))
 ```
 In the example above, point direct and diffuse radiation are first extracted from the radiation datasets included with the package for 2010-05-24 11:00. Next, as vertically oriented leaves shade out more radiation at low solar angles, the ratio of vertical to horizontal projections of leaf foliage are calculated from a one m resolution vegetation height dataset using function `leaf_geometry`, by assuming an allometric relationship between the two. The vegetation height dataset was originally derived as the difference between a dsm and dtm. Radiation transmission is also affected by leaf area, and this is calculated from a multispectral aerial image using function `lai`, by assuming a relationship between area and NDVI. Next, as diffuse radiation is downscaled by accounting for the proportion of the sky hemisphere in view, this is calculated using function `skyviewveg`. As previously, the mean horizon angle and astronomical Julian day are also calculated. To determine the net radiation absorbed at the ground below vegetation canopies, it is necessary to know both ground and canopy albedos. These are derived from aerial imagery using the functions `alb`, which calculates the albedo of the image, and `albg`, which partitions this value between ground and canopy albedo based on knowledge of fractional canopy cover, itself determined using function `canopy`. Finally, the total shortwave radiation flux reaching inclined surfaces underneath vegetation is calculated using function `shortwaveveg`. The code above produces the plot below.
 
@@ -325,7 +326,7 @@ Prior to applying function `pcad`, cold air drainage basins must be delineated a
 ```
 # = =   Example of calculating accumulated flow 
 # delineate basins
-basins <- basindelin(dtm100m) # takes a few seconds
+basins <- basindelin(dtm100m) # takes ~ 40 seconds
 # Calculate flow accumulation
 fa <- flowacc(dtm100m)
 par(mfrow=c(1,2))
@@ -363,7 +364,6 @@ In the example below in which the microclimate model is run, the `fitmicro` func
 params <- fitmicro(microfitdata)
 netrad <- netshort1m - netlong1m
 tempanom <- runmicro(params, netrad, wind1m)
-tempanom <-if_raster(tempanom, dtm1m) # converts to raster
 reftemp <- raster(temp100[,,564])
 extent(reftemp) <- extent(dtm1m)
 reftemp <- resample(reftemp, dtm1m)
@@ -379,7 +379,7 @@ In the example below the mesoclimate model is run from first principles. First, 
 ```
 #====================================================================
 # Run mesoclimate model for 2010-05-01 11:00 from first principles
-#====================================================================
+#====================================================================-
 # -------------------------
 # Resample raster function
 # -------------------------
@@ -402,9 +402,9 @@ get24 <- function(a) {
   }
   ao
 }
-# ----------------------------
+# ---------------------------
 # Derive hourly temperatures
-# ----------------------------
+# ---------------------------
 tmax <- tas[,,121] + dtr[,,121] / 2
 tmin <- tas[,,121] - dtr[,,121] / 2
 tme <- as.POSIXct(c(0:364) * 24 * 3600, origin="2010-01-01", tz = "GMT")

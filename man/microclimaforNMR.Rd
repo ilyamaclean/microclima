@@ -10,7 +10,7 @@ microclimaforNMR(lat, long, dstart, dfinish, l, x, coastal = TRUE,
   aspect = NA, horizon = NA, svf = NA, difani = TRUE,
   windthresh = 4.5, emthresh = 0.78, reanalysis2 = FALSE,
   steps = 8, use.raster = TRUE, plot.progress = TRUE,
-  tidyr = FALSE)
+  tidyr = FALSE, elev.effects = TRUE)
 }
 \arguments{
 \item{lat}{the latitude (in decimal degrees) of the location for point data are required.}
