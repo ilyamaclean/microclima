@@ -4,12 +4,14 @@
 \name{habitats}
 \alias{habitats}
 \title{A table of habitat types}
-\format{a data.frame with 17 rows and two columns:
+\format{
+a data.frame with 17 rows and two columns:
 \describe{
 \item{number}{Numeric values for each habitat type}
 \item{descriptor}{A description of the habitat type}
 }
-#' @source \url{https://modis.gsfc.nasa.gov/data/}}
+#' @source \url{https://modis.gsfc.nasa.gov/data/}
+}
 \usage{
 habitats
 }

@@ -4,8 +4,13 @@
 \alias{fitmicro}
 \title{Fits micro- or mesoclimate model}
 \usage{
-fitmicro(microfitdata, alldata = FALSE, windthresh = NA,
-  continuous = FALSE, iter = 999)
+fitmicro(
+  microfitdata,
+  alldata = FALSE,
+  windthresh = NA,
+  continuous = FALSE,
+  iter = 999
+)
 }
 \arguments{
 \item{microfitdata}{a data.frame with at least the following columns (see, for example, microfitdata):
@@ -55,7 +60,7 @@ varies as a function of a wind speed factor, such that different slope values
 are assumed under high and low wind conditions.  Hence, as a default, \code{fitmicro}
 fits a linear model of the form \code{lm((temperature - reftemp) ~ netrad * windfact)}
 where windfact is given by \code{ifelse(wind > windthresh, 1, 0)} If \code{continuous} is
-set to TRUE, then a linear model of the form \code{lm((temperature - reftemp) ~ netrad * log(wind + 1)}
+set to TRUE, then a linear model of the form \verb{lm((temperature - reftemp) ~ netrad * log(wind + 1)}
 is fitted. If \code{alldata} is FALSE, random subsets of the data are selected and the analyses repeated
 \code{iter} times to reduce the effects of of temporal autocorrelation. Parameter
 estimates are derived as the median of all runs. If \code{continuous} is set to FALSE

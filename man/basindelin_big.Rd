@@ -21,17 +21,9 @@ a raster object with individual basins numbered sequentially as integers.
 delineate hydrological or cold-air drainage basins.
 }
 \details{
-\code{basindelin_big} divides the large dataset into tiles and then
+The function \code{basindelin_big} divides the large dataset into tiles and then
 uses \code{\link[=basindelin]{basindelin()}} to delineate basins for each tile before mosaicing back
-together and merging basins along tile edges if not seperated by a boundary
-\enumerate{
-\item If \code{dirout} is unspecified, then a directory \code{basinsout} is
-temporarily created within the working directory. If \code{trace} is TRUE (the
-default) then progress is tracked during three stages: (1) the basins
-of each tile are plotted, (2) basins after mosaicing, but prior
-to merging are plotted and (3) on each merge iteration, the number of basins
-to merge is printed and processed basin is plotted.
-}
+together and merging basins along tile edges if not seperated by a boundaryIf dirout is unspecified, then a directory basinsout istemporarily created within the working directory. If trace is TRUE (thedefault) then progress is tracked during three stages: (1) the basinsof each tile are plotted, (2) basins after mosaicing, but priorto merging are plotted and (3) on each merge iteration, the number of basinsto merge is printed and processed basin is plotted.
 }
 \examples{
 library(raster)

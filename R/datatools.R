@@ -621,50 +621,70 @@ dailyprecipNCEP <- function(lat, long, tme, reanalysis2 = FALSE) {
 # Calculates elevation effects
 #' @export
 .eleveffects <- function(hourlydata, dem, lat, long, windthresh = 4.5,
-                         emthresh = 0.78, elev.effects = TRUE) {
+                         emthresh = 0.78,  weather.elev, cad.effects) {
   xy <- data.frame(x = long, y = lat)
-  elevncep <- extract(demworld, xy)
+  if (weather.elev == 'ncep') {
+    elevncep <- extract(demworld, xy)
+  } else if (weather.elev == 'era5') {
+    lar<-round(lat*4,0)/4
+    lor<-round(long*4,0)/4
+    e<-extent(lor-0.875,lor+0.875,lar-0.875,lar+0.875)
+    e5d<-get_dem(r=NA,lat,long,resolution = 10000, xdims = 10, ydims = 10)
+    e5d<-projectRaster(e5d,crs="+init=epsg:4326")
+    rte<-raster(e)
+    res(rte)<-0.25
+    e5d<-resample(e5d,rte)
+    xy <- data.frame(x = long, y = lat)
+    elevncep <- extract(e5d, xy)
+  } else elevncep<-as.numeric(weather.elev)
+  if (is.na(elevncep)) {
+    warnings("elevation of input weather data NA. Setting to zero")
+    elevncep<-0
+  }
   coordinates(xy) = ~x + y
   proj4string(xy) = "+init=epsg:4326"
   xy <- as.data.frame(spTransform(xy, crs(dem)))
   elev <- extract(dem, xy)
   if (is.na(elev)) elev <- 0
-  # elevation effect
-  if (elev.effects) {
-    lr <- lapserate(hourlydata$temperature, hourlydata$humidity,
-                  hourlydata$pressure)
-  } else lr <- 0
+  lr <- lapserate(hourlydata$temperature, hourlydata$humidity, hourlydata$pressure)
   elevt <- lr * (elev - elevncep) + hourlydata$temperature
   tme <- as.POSIXlt(hourlydata$obs_time)
-  jds <- julday(tme$year[1] + 1900, tme$mday[1] + 1, tme$mday[1])
-  cad <- .cadconditions2(hourlydata$emissivity, hourlydata$windspeed,
-                         jds, lat, long, starttime = tme$hour[1], hourint = 1,
-                         windthresh = windthresh, emthresh = emthresh)
-  pxls <- dim(dem)[1] * dim(dem)[2]
-  if (pxls > 300 * 300) {
-    basins <- basindelin_big(dem)
+  ## cad effects
+  if (cad.effects) {
+    jds <- julday(tme$year[1] + 1900, tme$mday[1] + 1, tme$mday[1])
+    cad <- .cadconditions2(hourlydata$emissivity, hourlydata$windspeed,
+                           jds, lat, long, starttime = tme$hour[1], hourint = 1,
+                           windthresh = windthresh, emthresh = emthresh)
+    pxls <- dim(dem)[1] * dim(dem)[2]
+    if (pxls > 300 * 300) {
+      basins <- basindelin_big(dem)
+    } else {
+      basins <- basindelin(dem)
+    }
+    basins <- basinmerge(dem, basins, 2)
+    basins <- basinsort(dem, basins)
+    fa <- flowacc(dem)
+    pfa <- is_raster(fa) * 0
+    td <- is_raster(fa) * 0
+    bm <- is_raster(basins)
+    dm <- is_raster(dem)
+    for (b in 1:max(bm, na.rm = TRUE)) {
+      sel <- which(bm == b)
+      fao <- log(is_raster(fa)[sel])
+      pfa[sel] <- fao/max(fao, na.rm = TRUE)
+      ed <- max(dm[sel], na.rm = TRUE) - dm[sel]
+      td[sel] <- ed
+    }
+    cdif <- pfa * td
+    cdif <- if_raster(cdif, dem)
+    cdif <- extract(cdif, xy)
+    if (is.na(cdif)) cdif <- 0
+    cadt <- cdif * lr * cad
   } else {
-    basins <- basindelin(dem)
+    basins<-dem*0+1
+    flowacc<-basins
+    cadt<-rep(0,length(tme))
   }
-  basins <- basinmerge(dem, basins, 2)
-  basins <- basinsort(dem, basins)
-  fa <- flowacc(dem)
-  pfa <- is_raster(fa) * 0
-  td <- is_raster(fa) * 0
-  bm <- is_raster(basins)
-  dm <- is_raster(dem)
-  for (b in 1:max(bm, na.rm = TRUE)) {
-    sel <- which(bm == b)
-    fao <- log(is_raster(fa)[sel])
-    pfa[sel] <- fao/max(fao, na.rm = TRUE)
-    ed <- max(dm[sel], na.rm = TRUE) - dm[sel]
-    td[sel] <- ed
-  }
-  cdif <- pfa * td
-  cdif <- if_raster(cdif, dem)
-  cdif <- extract(cdif, xy)
-  if (is.na(cdif)) cdif <- 0
-  cadt <- cdif * lr * cad
   tout <- data.frame(tref = hourlydata$temperature,
                      elev = elev, elevncep = elevncep,
                      telev = elevt, tcad = cadt, lapserate = lr)
@@ -988,6 +1008,11 @@ coastalNCEP <- function(landsea, ncephourly, steps = 8, use.raster = T, zmin = 0
 #' @param use.raster an optional logical value indicating whether to mask the output values by `landsea`.
 #' @param plot.progress logical value indicating whether to produce plots to track progress.
 #' @param tidyr logical value indicating whether to download 30m resolution digital elevation data.
+#' @param weather.elev optional value indicating the elevation of values in `hourlydata`. Either a numeric value, corresponding to
+#' the elevation in (m) of the location from which `hourlydata` were obtained, or one of `ncep` (default, data derive
+#' from NOAA-NCEP reanalysis) project or `era5` (derived from Copernicus ERA5 climate reanalysis).
+#' @param cad.effects optional logical indicating whether to calaculate cold air drainage effects
+#' (TRUE = Yes, slower. FALSE =  No, quicker)
 #'
 #' @return a list with the following objects:
 #'
@@ -1053,7 +1078,8 @@ microclimaforNMR <- function(lat, long, dstart, dfinish, l, x, coastal = TRUE, h
                              dailyprecip = NA, dem = NA, demmeso = dem, albr =0.15,
                              resolution = 100, zmin = 0, slope = NA, aspect = NA, horizon = NA,
                              svf = NA, difani = TRUE, windthresh = 4.5, emthresh = 0.78, reanalysis2 = FALSE,
-                             steps = 8, use.raster = TRUE, plot.progress = TRUE, tidyr = FALSE, elev.effects = TRUE) {
+                             steps = 8, use.raster = TRUE, plot.progress = TRUE, tidyr = FALSE,
+                             weather.elev = 'ncep', cad.effects = TRUE) {
   tme <- seq(as.POSIXlt(dstart, format = "%d/%m/%Y", origin = "01/01/1900", tz = "UTC"),
              as.POSIXlt(dfinish, format = "%d/%m/%Y", origin = "01/01/1900", tz = "UTC")
              + 3600 * 24, by = 'hours')
@@ -1086,7 +1112,7 @@ microclimaforNMR <- function(lat, long, dstart, dfinish, l, x, coastal = TRUE, h
   radwind <- .pointradwind(hourlydata, dem, lat, long, l, x, albr, zmin, slope, aspect,
                            horizon, svf, difani)
   cat("Calculating elevation and cold-air drainage effects \n")
-  info <- .eleveffects(hourlydata, demmeso, lat, long, windthresh, emthresh, elev.effects)
+  info <- .eleveffects(hourlydata, demmeso, lat, long, windthresh, emthresh, weather.elev, cad.effects)
   elev <- info$tout
   if (coastal) {
     m <- is_raster(dem)
@@ -1195,6 +1221,11 @@ microclimaforNMR <- function(lat, long, dstart, dfinish, l, x, coastal = TRUE, h
 #' @param summarydata an optional logical indicating whether to calculate summary data
 #' (frost hours and maximum, minimum and mean temperature) for each pixel and return these to the output.
 #' @param save.memory An optional logical indicatign whether to save
+#' @param weather.elev optional value indicating the elevation of values in `hourlydata`. Either a numeric value, corresponding to
+#' the elevation in (m) of the location from which `hourlydata` were obtained, or one of `ncep` (default, data derive
+#' from NOAA-NCEP reanalysis) project or `era5` (derived from Copernicus ERA5 climate reanalysis).
+#' @param cad.effects optional logical indicating whether to calaculate cold air drainage effects
+#' (TRUE = Yes, slower. FALSE =  No, quicker)
 #' memory by storing temperature x 1000 as an integer values.
 #'
 #' @references Kearney MR,  Porter WP (2016) NicheMapR – an R package for biophysical
@@ -1244,7 +1275,8 @@ runauto <- function(r, dstart, dfinish, hgt = 0.05, l, x, habitat = NA,
                     albc = 0.23, mesoresolution = 100, zmin = 0, slope = NA,
                     aspect = NA, windthresh = 4.5, emthresh = 0.78, reanalysis2 = FALSE,
                     steps = 8, plot.progress = TRUE, continuous = TRUE,
-                    summarydata = TRUE, save.memory = FALSE) {
+                    summarydata = TRUE, save.memory = FALSE, weather.elev = 'ncep',
+                    cad.effects = TRUE) {
   longwaveveg2 <- function(le0, lwsky, x, fr, svv, albc) {
     lw1 <- (1 - fr) * lwsky
     lr <- (2 / 3) * log(x + 1)
@@ -1422,7 +1454,8 @@ runauto <- function(r, dstart, dfinish, hgt = 0.05, l, x, habitat = NA,
   r[r == zmin] <- NA
   micronmr <- micro_ncep(dstart = dstart, dfinish = dfinish, dem = r, dem2 = dem, LAI = 0,
                          loc = loc, Usrhyt = hgt2, Refhyt = 2, coastal = coastal, reanalysis = reanalysis2,
-                         DEP = dep, save = save, hourlydata = hourlydata, dailyprecip = dailyprecip)
+                         DEP = dep, save = save, hourlydata = hourlydata, dailyprecip = dailyprecip,
+                         weather.elev = weather.elev, cad.effects = cad.effects)
   ma <- micronmr$microclima.out
   hourlydata <- ma$hourlydata
   #####################

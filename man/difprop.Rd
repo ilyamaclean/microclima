@@ -4,8 +4,18 @@
 \alias{difprop}
 \title{Calculates the diffuse fraction from incoming shortwave radiation}
 \usage{
-difprop(rad, julian, localtime, lat, long, hourly = FALSE,
-  watts = TRUE, merid = round(long/15, 0) * 15, dst = 0, corr = 1)
+difprop(
+  rad,
+  julian,
+  localtime,
+  lat,
+  long,
+  hourly = FALSE,
+  watts = TRUE,
+  merid = round(long/15, 0) * 15,
+  dst = 0,
+  corr = 1
+)
 }
 \arguments{
 \item{rad}{a vector of incoming shortwave radiation values (either \ifelse{html}{\out{MJ m<sup>-2</sup> hr<sup>-1</sup>}}{\eqn{MJ m^{-2} hr^{-1}}} or \ifelse{html}{\out{W m<sup>-2</sup>}}{\eqn{W m^{-2}}})}

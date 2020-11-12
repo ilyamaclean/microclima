@@ -4,8 +4,21 @@
 \alias{hourlytemp}
 \title{Derives hourly temperatures from daily data}
 \usage{
-hourlytemp(julian, em = NA, h, n, p = 100346.13, dni, dif, mintemp,
-  maxtemp, lat, long, merid = round(long/15, 0) * 15, dst = 0)
+hourlytemp(
+  julian,
+  em = NA,
+  h,
+  n,
+  p = 100346.13,
+  dni,
+  dif,
+  mintemp,
+  maxtemp,
+  lat,
+  long,
+  merid = round(long/15, 0) * 15,
+  dst = 0
+)
 }
 \arguments{
 \item{julian}{vector of julian days expressed as integers for every day for which \code{mintemp} and \code{maxtemp} are provided, as returned by function \code{\link[=julday]{julday()}}.}

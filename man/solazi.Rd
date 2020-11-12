@@ -4,8 +4,7 @@
 \alias{solazi}
 \title{Calculates the solar azimuth}
 \usage{
-solazi(localtime, lat, long, julian, merid = round(long/15, 0) * 15,
-  dst = 0)
+solazi(localtime, lat, long, julian, merid = round(long/15, 0) * 15, dst = 0)
 }
 \arguments{
 \item{localtime}{local time (decimal hour, 24 hour clock).}

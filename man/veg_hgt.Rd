@@ -4,7 +4,9 @@
 \name{veg_hgt}
 \alias{veg_hgt}
 \title{A 1 m resolution raster object of vegetation height.}
-\format{A matrix with 1000 rows and 1000 columns.}
+\format{
+A matrix with 1000 rows and 1000 columns.
+}
 \source{
 \url{http://www.tellusgb.ac.uk/}
 }

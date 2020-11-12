@@ -283,7 +283,8 @@ basindelin <- function(dem) {
 #' @export
 #' @seealso [basindelin()] for working with smaller datasets.
 #'
-#' @details `basindelin_big` divides the large dataset into tiles and then
+#' @details
+#' The function `basindelin_big` divides the large dataset into tiles and then
 #' uses [basindelin()] to delineate basins for each tile before mosaicing back
 #' together and merging basins along tile edges if not seperated by a boundary
 #' > 0. If `dirout` is unspecified, then a directory `basinsout` is

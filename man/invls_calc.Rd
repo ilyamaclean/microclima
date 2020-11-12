@@ -4,8 +4,19 @@
 \alias{invls_calc}
 \title{invls_calc}
 \usage{
-invls_calc(lsm, resolution, xmin, ymax, s, direction, slr, slr_xmin,
-  slr_xmax, slr_ymin, slr_ymax)
+invls_calc(
+  lsm,
+  resolution,
+  xmin,
+  ymax,
+  s,
+  direction,
+  slr,
+  slr_xmin,
+  slr_xmax,
+  slr_ymin,
+  slr_ymax
+)
 }
 \description{
 This function returns a numeric matrix identifying

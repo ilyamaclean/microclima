@@ -4,14 +4,24 @@
 \alias{solarindex}
 \title{Calculates the solar index}
 \usage{
-solarindex(slope = NA, aspect, localtime, lat = NA, long, julian,
-  dtm = array(0, dim = c(1, 1)), res = 1, merid = round(long/15, 0) *
-  15, dst = 0, shadow = TRUE)
+solarindex(
+  slope = NA,
+  aspect,
+  localtime,
+  lat = NA,
+  long,
+  julian,
+  dtm = array(0, dim = c(1, 1)),
+  res = 1,
+  merid = round(long/15, 0) * 15,
+  dst = 0,
+  shadow = TRUE
+)
 }
 \arguments{
-\item{slope}{a single value, raster object, two-dimensional array or matrix of slopes (º). If an array or matrix, then orientated as if derived using \code{\link[=is_raster]{is_raster()}}. I.e. \code{[1, 1]} is the NW corner.}
+\item{slope}{a single value, raster object, two-dimensional array or matrix of slopes (º). If an array or matrix, then orientated as if derived using \code{\link[=is_raster]{is_raster()}}. I.e. \verb{[1, 1]} is the NW corner.}
 
-\item{aspect}{a single value, raster object, two-dimensional array or matrix of aspects (º). If an array or matrix, then orientated as if derived using \code{\link[=is_raster]{is_raster()}}. I.e. \code{[1, 1]} is the NW corner.}
+\item{aspect}{a single value, raster object, two-dimensional array or matrix of aspects (º). If an array or matrix, then orientated as if derived using \code{\link[=is_raster]{is_raster()}}. I.e. \verb{[1, 1]} is the NW corner.}
 
 \item{localtime}{a single numeric value representing local time (decimal hour, 24 hour clock).}
 
@@ -21,7 +31,7 @@ solarindex(slope = NA, aspect, localtime, lat = NA, long, julian,
 
 \item{julian}{a single integer representing the Julian day as returned by \code{\link[=julday]{julday()}}.}
 
-\item{dtm}{an optional raster object, two-dimensional array or matrix of elevations (m). If not a raster, orientated as if derived from a raster using \code{\link[=is_raster]{is_raster()}}. I.e. \code{[1, 1]} is the NW corner.}
+\item{dtm}{an optional raster object, two-dimensional array or matrix of elevations (m). If not a raster, orientated as if derived from a raster using \code{\link[=is_raster]{is_raster()}}. I.e. \verb{[1, 1]} is the NW corner.}
 
 \item{res}{a single numeric value representing the spatial resolution of \code{dtm} (m).}
 

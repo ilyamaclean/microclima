@@ -4,7 +4,9 @@
 \name{pres}
 \alias{pres}
 \title{A 1 km resolution dataset of interpolated daily sea-level pressure values}
-\format{An array with 19 rows, 22 columns and 365 daily values}
+\format{
+An array with 19 rows, 22 columns and 365 daily values
+}
 \source{
 \url{https://eip.ceh.ac.uk/chess/}
 }

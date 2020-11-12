@@ -4,11 +4,13 @@
 \name{wind2010}
 \alias{wind2010}
 \title{Six-hourly wind speed at 10 m for 2010.}
-\format{A data frame with 1460 rows and 2 variables:
+\format{
+A data frame with 1460 rows and 2 variables:
 \describe{
 \item{obs_time}{Time at date in yyyy-mm-dd HH:MM format}
 \item{wind10m}{Wind speed 10m above the ground (\ifelse{html}{\out{m s<sup>-1</sup> }}{\eqn{m s^{-1}}})}
-}}
+}
+}
 \source{
 \url{http://www.ncep.noaa.gov/}
 }

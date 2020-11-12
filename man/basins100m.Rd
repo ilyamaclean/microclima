@@ -4,7 +4,9 @@
 \name{basins100m}
 \alias{basins100m}
 \title{A raster of basins numbered as integers}
-\format{A raster object with 187 rows and 214 columns.}
+\format{
+A raster object with 187 rows and 214 columns.
+}
 \usage{
 basins100m
 }

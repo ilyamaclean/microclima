@@ -4,8 +4,7 @@
 \alias{longwaveveg}
 \title{Calculates net longwave radiation below canopy}
 \usage{
-longwaveveg(h, tc, p = 101300, n, x, fr, svv = 1, albc = 0.23,
-  co = 1.24)
+longwaveveg(h, tc, p = 101300, n, x, fr, svv = 1, albc = 0.23, co = 1.24)
 }
 \arguments{
 \item{h}{a single numeric value, raster object, two-dimensional array or matrix of specific humidities (\ifelse{html}{\out{kg kg<sup>{-1}</sup> }}{\eqn{kg kg^{-1}}}).}

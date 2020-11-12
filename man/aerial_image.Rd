@@ -4,13 +4,15 @@
 \name{aerial_image}
 \alias{aerial_image}
 \title{A 1 m resolution aerial image.}
-\format{An array with 1000 rows, 1000 columns and 4 layers:
+\format{
+An array with 1000 rows, 1000 columns and 4 layers:
 \describe{
 \item{1}{blue band reflectance values (430 to 490 nm), in the range 0 to 255}
 \item{2}{green band reflectance values (535 to 585 nm), in the range 0 to 255}
 \item{3}{red band reflectance values (610 to 660 nm), in the range 0 to 255}
 \item{4}{near-infrared band reflectance values (835 to 885 nm), in the range 0 to 255}
-}}
+}
+}
 \source{
 \url{https://www.bluesky-world.com/}
 }

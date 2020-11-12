@@ -4,7 +4,9 @@
 \name{netshort100m}
 \alias{netshort100m}
 \title{A 100 metre resolution matrix of net shortwave radiation}
-\format{A matrix with 187 rows and 214 columns.}
+\format{
+A matrix with 187 rows and 214 columns.
+}
 \usage{
 netshort100m
 }

@@ -4,7 +4,9 @@
 \name{netlong100m}
 \alias{netlong100m}
 \title{A 100 m resolution matrix of net longwave radiation}
-\format{A matrix with 187 rows and 214 columns.}
+\format{
+A matrix with 187 rows and 214 columns.
+}
 \usage{
 netlong100m
 }

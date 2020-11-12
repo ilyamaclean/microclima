@@ -4,8 +4,7 @@
 \alias{solartime}
 \title{Calculates the solar time}
 \usage{
-solartime(localtime, long, julian, merid = round(long/15, 0) * 15,
-  dst = 0)
+solartime(localtime, long, julian, merid = round(long/15, 0) * 15, dst = 0)
 }
 \arguments{
 \item{localtime}{local time (decimal hour, 24 hour clock).}
@@ -34,5 +33,5 @@ local are used, with the meridian set to round(long / 15, 0) * 15.
 }
 \examples{
 jd <- julday (2010, 6, 21) # Julian day
-solartime(12, -5, jd) # solartime at noon on 21 June 2010, 5ºW
+solartime(12, -5, jd) # solartime at noon on 21 June 2010, 5ÂºW
 }

@@ -4,8 +4,7 @@
 \alias{siflat}
 \title{Calculates the solar index for a flat surface}
 \usage{
-siflat(localtime, lat, long, julian, merid = round(long/15, 0) * 15,
-  dst = 0)
+siflat(localtime, lat, long, julian, merid = round(long/15, 0) * 15, dst = 0)
 }
 \arguments{
 \item{localtime}{local time (decimal hour, 24 hour clock).}

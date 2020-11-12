@@ -4,7 +4,9 @@
 \name{dnirad}
 \alias{dnirad}
 \title{A 0.05º resolution dataset of hourly direct radiation normal to the direction of the solar beam}
-\format{An array with 5 rows, 8 columns and 8670 hourly values}
+\format{
+An array with 5 rows, 8 columns and 8670 hourly values
+}
 \source{
 \url{http://www.cmsaf.eu/}
 }

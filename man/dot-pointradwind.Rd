@@ -4,8 +4,21 @@
 \alias{.pointradwind}
 \title{get radiation and wind for use with NicheMapR}
 \usage{
-.pointradwind(hourlydata, dem, lat, long, l, x, albr = 0.15, zmin = 0,
-  slope = NA, aspect = NA, horizon = NA, svf = NA, difani = TRUE)
+.pointradwind(
+  hourlydata,
+  dem,
+  lat,
+  long,
+  l,
+  x,
+  albr = 0.15,
+  zmin = 0,
+  slope = NA,
+  aspect = NA,
+  horizon = NA,
+  svf = NA,
+  difani = TRUE
+)
 }
 \description{
 get radiation and wind for use with NicheMapR

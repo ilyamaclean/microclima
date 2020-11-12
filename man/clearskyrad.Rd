@@ -4,8 +4,18 @@
 \alias{clearskyrad}
 \title{calculates clearsky radiation}
 \usage{
-clearskyrad(tme, lat, long, h = 0.00697, tc = 15, p = 101300,
-  G = 2.78, Ie = 1352.778, merid = round(long/15, 0) * 15, dst = 0)
+clearskyrad(
+  tme,
+  lat,
+  long,
+  h = 0.00697,
+  tc = 15,
+  p = 101300,
+  G = 2.78,
+  Ie = 1352.778,
+  merid = round(long/15, 0) * 15,
+  dst = 0
+)
 }
 \arguments{
 \item{tme}{a single value or vector of POSIXlt objects indicating the time(s)

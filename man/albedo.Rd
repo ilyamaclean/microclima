@@ -4,9 +4,17 @@
 \alias{albedo}
 \title{Calculates surface albedo}
 \usage{
-albedo(blue, green, red, nir, maxval = 255, bluerange = c(430, 490),
-  greenrange = c(535, 585), redrange = c(610, 660), nirrange = c(835,
-  885))
+albedo(
+  blue,
+  green,
+  red,
+  nir,
+  maxval = 255,
+  bluerange = c(430, 490),
+  greenrange = c(535, 585),
+  redrange = c(610, 660),
+  nirrange = c(835, 885)
+)
 }
 \arguments{
 \item{blue}{a raster object, two-dimensional array or matrix of reflectance values in the blue spectral band (0 to \code{max.val}).}

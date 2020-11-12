@@ -4,7 +4,9 @@
 \name{dtr}
 \alias{dtr}
 \title{A 1 km resolution dataset of diurnal temperature ranges}
-\format{An array with 19 rows, 22 columns and 365 daily values}
+\format{
+An array with 19 rows, 22 columns and 365 daily values
+}
 \source{
 \url{https://www.metoffice.gov.uk/}
 }

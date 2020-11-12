@@ -4,8 +4,19 @@
 \alias{cloudfromrad}
 \title{calculates cloud cover form shortwave radiation}
 \usage{
-cloudfromrad(rad, tme, lat, long, h = 0.00697, tc = 15, p = 101300,
-  G = 2.78, Ie = 1352.778, merid = round(long/15, 0) * 15, dst = 0)
+cloudfromrad(
+  rad,
+  tme,
+  lat,
+  long,
+  h = 0.00697,
+  tc = 15,
+  p = 101300,
+  G = 2.78,
+  Ie = 1352.778,
+  merid = round(long/15, 0) * 15,
+  dst = 0
+)
 }
 \arguments{
 \item{rad}{a single numeric value or vector of global solar irradiance(s). Units must be the same

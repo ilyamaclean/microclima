@@ -4,9 +4,23 @@
 \alias{runauto2}
 \title{Function for automatically generating microclimate surfaces for areas with variable habitat}
 \usage{
-runauto2(dem, hourlydata = NA, dstart, dfinish, lat = NA, long = NA,
-  hgt = 0.05, l, x, veghgt, alb, wind.agg = 10, merid = 0, dst = 0,
-  plot.progress = TRUE)
+runauto2(
+  dem,
+  hourlydata = NA,
+  dstart,
+  dfinish,
+  lat = NA,
+  long = NA,
+  hgt = 0.05,
+  l,
+  x,
+  veghgt,
+  alb,
+  wind.agg = 10,
+  merid = 0,
+  dst = 0,
+  plot.progress = TRUE
+)
 }
 \arguments{
 \item{dem}{a raster object of elevations. Also defines extent and resolution of returned

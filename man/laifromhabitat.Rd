@@ -4,8 +4,17 @@
 \alias{laifromhabitat}
 \title{Derives leaf area index, leaf geometry and canopy height from habitat}
 \usage{
-laifromhabitat(habitat, lat, long, year, meantemp = NA, cvtemp = NA,
-  rainfall = NA, cvrain = NA, wetmonth = NA)
+laifromhabitat(
+  habitat,
+  lat,
+  long,
+  year,
+  meantemp = NA,
+  cvtemp = NA,
+  rainfall = NA,
+  cvrain = NA,
+  wetmonth = NA
+)
 }
 \arguments{
 \item{habitat}{a character string or numeric value indicating the habitat type. See \code{\link[=habitats]{habitats()}}}

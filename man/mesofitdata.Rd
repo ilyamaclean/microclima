@@ -4,14 +4,16 @@
 \name{mesofitdata}
 \alias{mesofitdata}
 \title{2010 Data for fitting mesoclimate model.}
-\format{A data frame with 65772 rows and 7 variables:
+\format{
+A data frame with 65772 rows and 7 variables:
 \describe{
 \item{obs_time}{The time of the logger recording, in DD/MM/YY HH:MM:SS format}
 \item{temperature}{The mean hourly logger temperature reading (ºC)}
 \item{reftemp}{The predicted reference temperature at the logger location as derived from coarse-scale data after adjusted for elevation, cold air drainage and coastal effects (ºC)}
 \item{wind}{The predicted wind speed at the logger locations (\ifelse{html}{\out{m s<sup>-1</sup> }}{\eqn{m s^{-1}}})}
 \item{netrad}{The predicted net radiation at the logger locations (\ifelse{html}{\out{MJ m<sup>-2</sup> hr<sup>-1</sup>}}{\eqn{MJ m^{-2} hr^{-1}}})}
-}}
+}
+}
 \usage{
 mesofitdata
 }

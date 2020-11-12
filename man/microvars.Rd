@@ -4,7 +4,8 @@
 \name{microvars}
 \alias{microvars}
 \title{Climate variables for  May 2010.}
-\format{A data frame with 744 rows and 9 variables:
+\format{
+A data frame with 744 rows and 9 variables:
 \describe{
 \item{dni}{Direct Normal Radiation (\ifelse{html}{\out{MJ m<sup>-2</sup> hr<sup>-1</sup>}}{\eqn{MJ m^{-2} hr^{-1}}})}
 \item{dif}{Diffuse Radiation (\ifelse{html}{\out{MJ m<sup>-2</sup> hr<sup>-1</sup>}}{\eqn{MJ m^{-2} hr^{-1}}})}
@@ -15,7 +16,8 @@
 \item{month}{Numeric month}
 \item{day}{Day of month}
 \item{hour}{Hour of day}
-}}
+}
+}
 \usage{
 microvars
 }

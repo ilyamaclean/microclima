@@ -4,7 +4,9 @@
 \name{wind1m}
 \alias{wind1m}
 \title{A one metre resolution matrix of windspeed}
-\format{A matrix with 1000 rows and 1000 columns.}
+\format{
+A matrix with 1000 rows and 1000 columns.
+}
 \usage{
 wind1m
 }

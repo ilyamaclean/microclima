@@ -4,7 +4,9 @@
 \name{modis}
 \alias{modis}
 \title{A ~500 m resolution dataset of MODIS-derived albedo values}
-\format{A matrix with 18 rows and 36 columns.}
+\format{
+A matrix with 18 rows and 36 columns.
+}
 \source{
 \url{https://lpdaac.usgs.gov/}
 }

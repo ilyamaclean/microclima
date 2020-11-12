@@ -7,7 +7,7 @@
 humidityconvert(h, intype = "relative", tc = 20, p = 101300)
 }
 \arguments{
-\item{h}{humidity value(s). Units as follows: specific humidity (\ifelse{html}{\out{kg kg<sup>-1</sup>}}{\eqn{kg kg^{-1}}}), absolute humidity (\ifelse{html}{\out{kg m<sup>-3</sup> }}{\eqn{kg m^{-3}}}), relative humidity (\%), vapour pressure (kPa).}
+\item{h}{humidity value(s). Units as follows: specific humidity (\ifelse{html}{\out{kg kg<sup>-1</sup>}}{\eqn{kg kg^{-1}}}), absolute humidity (\ifelse{html}{\out{kg m<sup>-3</sup> }}{\eqn{kg m^{-3}}}), relative humidity (\\%), vapour pressure (kPa).}
 
 \item{intype}{a character string description of the humidity type of \code{h}. One of "relative", "absolute" or "specific".}
 
@@ -18,7 +18,7 @@ humidityconvert(h, intype = "relative", tc = 20, p = 101300)
 \value{
 a list of numeric humidity values with the following components:
 
-\code{relative} relative humidity (\%).
+\code{relative} relative humidity (\\%).
 
 \code{absolute}  absolute humidity (\ifelse{html}{\out{kg m<sup>-3</sup> }}{\eqn{kg m^{-3}}}).
 
@@ -36,7 +36,7 @@ temperature. It returns a list of relative, absolute and specific
 humidity and vapour pressure. If \code{intype} is unspecified, then \code{h} is
 assumed to be relative humidity. If \code{p} is unspecified, pressure assumed
 to be 101300, a typical value for sea-level pressure. If one or more of the
-relative humidity values exceeds 100\% a warning is given.
+relative humidity values exceeds 100\\% a warning is given.
 }
 \examples{
 humidityconvert(90, 'relative', 20)

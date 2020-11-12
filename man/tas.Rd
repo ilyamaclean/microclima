@@ -4,7 +4,9 @@
 \name{tas}
 \alias{tas}
 \title{A 1km resolution dataset of daily sea-level temperature}
-\format{An array with 19 rows, 22 columns and 365 daily values}
+\format{
+An array with 19 rows, 22 columns and 365 daily values
+}
 \source{
 \url{https://eip.ceh.ac.uk/chess/}
 }

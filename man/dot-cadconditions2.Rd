@@ -4,8 +4,18 @@
 \alias{.cadconditions2}
 \title{Cold air drainage direct from emissivity}
 \usage{
-.cadconditions2(em, wind, startjul, lat, long, starttime = 0,
-  hourint = 1, windthresh = 4.5, emthresh = 0.725, con = TRUE)
+.cadconditions2(
+  em,
+  wind,
+  startjul,
+  lat,
+  long,
+  starttime = 0,
+  hourint = 1,
+  windthresh = 4.5,
+  emthresh = 0.725,
+  con = TRUE
+)
 }
 \description{
 Cold air drainage direct from emissivity

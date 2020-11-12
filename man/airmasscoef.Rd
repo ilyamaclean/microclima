@@ -4,8 +4,14 @@
 \alias{airmasscoef}
 \title{Calculates the airmass coefficient}
 \usage{
-airmasscoef(localtime, lat, long, julian, merid = round(long/15, 0) * 15,
-  dst = 0)
+airmasscoef(
+  localtime,
+  lat,
+  long,
+  julian,
+  merid = round(long/15, 0) * 15,
+  dst = 0
+)
 }
 \arguments{
 \item{localtime}{local time (decimal hour, 24 hour clock).}

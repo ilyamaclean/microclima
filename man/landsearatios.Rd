@@ -4,7 +4,9 @@
 \name{landsearatios}
 \alias{landsearatios}
 \title{Inverse-distance weighted land-sea ratios in 36 directions}
-\format{An array with 187 rows, 214 columns and 36 directional values.}
+\format{
+An array with 187 rows, 214 columns and 36 directional values.
+}
 \usage{
 landsearatios
 }

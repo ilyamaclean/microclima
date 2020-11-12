@@ -4,13 +4,36 @@
 \alias{microclimaforNMR}
 \title{Extract NCEP data and run microclima for use with NicheMapR}
 \usage{
-microclimaforNMR(lat, long, dstart, dfinish, l, x, coastal = TRUE,
-  hourlydata = NA, dailyprecip = NA, dem = NA, demmeso = dem,
-  albr = 0.15, resolution = 100, zmin = 0, slope = NA,
-  aspect = NA, horizon = NA, svf = NA, difani = TRUE,
-  windthresh = 4.5, emthresh = 0.78, reanalysis2 = FALSE,
-  steps = 8, use.raster = TRUE, plot.progress = TRUE,
-  tidyr = FALSE, elev.effects = TRUE)
+microclimaforNMR(
+  lat,
+  long,
+  dstart,
+  dfinish,
+  l,
+  x,
+  coastal = TRUE,
+  hourlydata = NA,
+  dailyprecip = NA,
+  dem = NA,
+  demmeso = dem,
+  albr = 0.15,
+  resolution = 100,
+  zmin = 0,
+  slope = NA,
+  aspect = NA,
+  horizon = NA,
+  svf = NA,
+  difani = TRUE,
+  windthresh = 4.5,
+  emthresh = 0.78,
+  reanalysis2 = FALSE,
+  steps = 8,
+  use.raster = TRUE,
+  plot.progress = TRUE,
+  tidyr = FALSE,
+  weather.elev = "ncep",
+  cad.effects = TRUE
+)
 }
 \arguments{
 \item{lat}{the latitude (in decimal degrees) of the location for point data are required.}
@@ -69,6 +92,13 @@ from Reanalysis I (data prior to 1979).}
 \item{plot.progress}{logical value indicating whether to produce plots to track progress.}
 
 \item{tidyr}{logical value indicating whether to download 30m resolution digital elevation data.}
+
+\item{weather.elev}{optional value indicating the elevation of values in \code{hourlydata}. Either a numeric value, corresponding to
+the elevation in (m) of the location from which \code{hourlydata} were obtained, or one of \code{ncep} (default, data derive
+from NOAA-NCEP reanalysis) project or \code{era5} (derived from Copernicus ERA5 climate reanalysis).}
+
+\item{cad.effects}{optional logical indicating whether to calaculate cold air drainage effects
+(TRUE = Yes, slower. FALSE =  No, quicker)}
 }
 \value{
 a list with the following objects:

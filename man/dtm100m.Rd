@@ -4,7 +4,9 @@
 \name{dtm100m}
 \alias{dtm100m}
 \title{A 100 m resolution raster object of elevation for the Lizard Peninsula, Cornwall, UK.}
-\format{A raster object with 187 rows and 214 columns.}
+\format{
+A raster object with 187 rows and 214 columns.
+}
 \source{
 \url{http://www.tellusgb.ac.uk/}
 }

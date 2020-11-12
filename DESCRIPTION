@@ -36,7 +36,7 @@ Imports:
     ncdf4,
     fields,
 	Rcpp
-RoxygenNote: 6.1.1
+RoxygenNote: 7.1.1
 Roxygen: list(markdown = TRUE) 
 Suggests: knitr,
     rmarkdown,

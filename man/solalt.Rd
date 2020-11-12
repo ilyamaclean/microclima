@@ -4,8 +4,7 @@
 \alias{solalt}
 \title{Calculates the solar altitude}
 \usage{
-solalt(localtime, lat, long, julian, merid = round(long/15, 0) * 15,
-  dst = 0)
+solalt(localtime, lat, long, julian, merid = round(long/15, 0) * 15, dst = 0)
 }
 \arguments{
 \item{localtime}{local time (decimal hour, 24 hour clock).}

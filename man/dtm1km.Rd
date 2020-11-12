@@ -4,7 +4,9 @@
 \name{dtm1km}
 \alias{dtm1km}
 \title{A 1 km resolution raster object of elevation for the Lizard Peninsula, Cornwall, UK.}
-\format{A raster object with 19 rows and 22 columns.}
+\format{
+A raster object with 19 rows and 22 columns.
+}
 \source{
 \url{http://www.tellusgb.ac.uk/}
 }

@@ -7,7 +7,7 @@
 windcoef(dsm, direction, hgt = 1, res = 1)
 }
 \arguments{
-\item{dsm}{raster object, two-dimensional array or matrix of elevations (m) derived either from a digital terrain or digital surface model, and orientated as if derived using \code{\link[=is_raster]{is_raster()}}. I.e. \code{[1, 1]} is the NW corner.}
+\item{dsm}{raster object, two-dimensional array or matrix of elevations (m) derived either from a digital terrain or digital surface model, and orientated as if derived using \code{\link[=is_raster]{is_raster()}}. I.e. \verb{[1, 1]} is the NW corner.}
 
 \item{direction}{a single numeric value specifying the direction from which the wind is blowing (º).}
 

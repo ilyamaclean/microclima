@@ -4,7 +4,9 @@
 \name{temp100}
 \alias{temp100}
 \title{A 100 m resolution array of hourly reference temperatures.}
-\format{An array with 10 rows, 10 columns and 744 hourly values.}
+\format{
+An array with 10 rows, 10 columns and 744 hourly values.
+}
 \usage{
 temp100
 }

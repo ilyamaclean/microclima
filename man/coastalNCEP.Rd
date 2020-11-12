@@ -4,8 +4,15 @@
 \alias{coastalNCEP}
 \title{Calculates coastal effects from NCEP data}
 \usage{
-coastalNCEP(landsea, ncephourly, steps = 8, use.raster = T, zmin = 0,
-  plot.progress = T, tidyr = F)
+coastalNCEP(
+  landsea,
+  ncephourly,
+  steps = 8,
+  use.raster = T,
+  zmin = 0,
+  plot.progress = T,
+  tidyr = F
+)
 }
 \arguments{
 \item{landsea}{a raster object with NAs (representing sea) or any non-NA value and a projection system defined.}

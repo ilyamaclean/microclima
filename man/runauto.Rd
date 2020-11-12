@@ -4,13 +4,38 @@
 \alias{runauto}
 \title{Function for automatically generating microclimate surfaces for anywhere in the word}
 \usage{
-runauto(r, dstart, dfinish, hgt = 0.05, l, x, habitat = NA,
-  hourlydata = NA, dailyprecip = NA, use.raster = FALSE,
-  coastal = TRUE, r.is.dem = TRUE, save = 0, albg = 0.15,
-  albr = 0.15, albc = 0.23, mesoresolution = 100, zmin = 0,
-  slope = NA, aspect = NA, windthresh = 4.5, emthresh = 0.78,
-  reanalysis2 = FALSE, steps = 8, plot.progress = TRUE,
-  continuous = TRUE, summarydata = TRUE, save.memory = FALSE)
+runauto(
+  r,
+  dstart,
+  dfinish,
+  hgt = 0.05,
+  l,
+  x,
+  habitat = NA,
+  hourlydata = NA,
+  dailyprecip = NA,
+  use.raster = FALSE,
+  coastal = TRUE,
+  r.is.dem = TRUE,
+  save = 0,
+  albg = 0.15,
+  albr = 0.15,
+  albc = 0.23,
+  mesoresolution = 100,
+  zmin = 0,
+  slope = NA,
+  aspect = NA,
+  windthresh = 4.5,
+  emthresh = 0.78,
+  reanalysis2 = FALSE,
+  steps = 8,
+  plot.progress = TRUE,
+  continuous = TRUE,
+  summarydata = TRUE,
+  save.memory = FALSE,
+  weather.elev = "ncep",
+  cad.effects = TRUE
+)
 }
 \arguments{
 \item{r}{a raster object defining the extent and resolution for which microclimate
@@ -60,8 +85,7 @@ downloaded using \code{\link[=hourlyNCEP]{hourlyNCEP()}}
 \item{cloudcover}{Cloud cover (Percentage)}
 }}
 
-\item{dailyprecip}{a vector of daily rainfall (mm / day) for the period specified.
-If not supplied downloaded using \code{\link[=dailyprecipNCEP]{dailyprecipNCEP()}}.}
+\item{dailyprecip}{Optional data.frame of daily precipitation data as returned by \code{\link[=dailyprecipNCEP]{dailyprecipNCEP()}}}
 
 \item{use.raster}{optional logical value indicating whether to use \code{r} in the
 calculation of coastal effects. If used, NAs or values corresponding to \code{zmin}
@@ -119,10 +143,15 @@ default 8 is specified, coastal effects are calculated at 45º intervals.}
 \item{summarydata}{an optional logical indicating whether to calculate summary data
 (frost hours and maximum, minimum and mean temperature) for each pixel and return these to the output.}
 
-\item{save.memory}{An optional logical indicatign whether to save
-memory by storing temperature x 1000 as an integer values.}
+\item{save.memory}{An optional logical indicatign whether to save}
 
-\item{dailyprecip}{Optional data.frame of daily precipitation data as returned by \code{\link[=dailyprecipNCEP]{dailyprecipNCEP()}}}
+\item{weather.elev}{optional value indicating the elevation of values in \code{hourlydata}. Either a numeric value, corresponding to
+the elevation in (m) of the location from which \code{hourlydata} were obtained, or one of \code{ncep} (default, data derive
+from NOAA-NCEP reanalysis) project or \code{era5} (derived from Copernicus ERA5 climate reanalysis).}
+
+\item{cad.effects}{optional logical indicating whether to calaculate cold air drainage effects
+(TRUE = Yes, slower. FALSE =  No, quicker)
+memory by storing temperature x 1000 as an integer values.}
 }
 \value{
 a list with the following objects:

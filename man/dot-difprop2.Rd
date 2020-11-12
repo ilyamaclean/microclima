@@ -4,8 +4,17 @@
 \alias{.difprop2}
 \title{Calculates the diffuse fraction from incoming shortwave radiation (time series)}
 \usage{
-.difprop2(rad, julian, localtime, lat, long, hourly = FALSE,
-  watts = TRUE, merid = 0, dst = 0)
+.difprop2(
+  rad,
+  julian,
+  localtime,
+  lat,
+  long,
+  hourly = FALSE,
+  watts = TRUE,
+  merid = 0,
+  dst = 0
+)
 }
 \description{
 Calculates the diffuse fraction from incoming shortwave radiation (time series)

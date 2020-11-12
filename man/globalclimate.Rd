@@ -4,14 +4,16 @@
 \name{globalclimate}
 \alias{globalclimate}
 \title{A dataset of global climate variables}
-\format{An array with 94 rows, 192 columns and the following five climate vaiables:
+\format{
+An array with 94 rows, 192 columns and the following five climate vaiables:
 \describe{
 \item{1}{mean annual temperature (ºC)}
 \item{2}{coefficient of variation in temperature (K)}
 \item{3}{mean annual temperature (mm per year)}
 \item{4}{coefficient of variation in annual rainfall (mm per 0.25 days)}
 \item{5}{numeric month with the most rainfall (1-12)}
-}}
+}
+}
 \source{
 \url{http://www.ncep.noaa.gov/}
 }

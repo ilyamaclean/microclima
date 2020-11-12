@@ -4,10 +4,29 @@
 \alias{shortwaveveg}
 \title{Downscales net shortwave radiation accounting for topography and vegetation}
 \usage{
-shortwaveveg(dni, dif, julian, localtime, lat = NA, long = NA,
-  dtm = array(0, dim = c(1, 1)), slope = NA, aspect = NA, svv = 1,
-  alb = 0.23, fr, albr = 0.23, ha = 0, res = 1, merid = NA,
-  dst = 0, shadow = TRUE, x, l, difani = TRUE)
+shortwaveveg(
+  dni,
+  dif,
+  julian,
+  localtime,
+  lat = NA,
+  long = NA,
+  dtm = array(0, dim = c(1, 1)),
+  slope = NA,
+  aspect = NA,
+  svv = 1,
+  alb = 0.23,
+  fr,
+  albr = 0.23,
+  ha = 0,
+  res = 1,
+  merid = NA,
+  dst = 0,
+  shadow = TRUE,
+  x,
+  l,
+  difani = TRUE
+)
 }
 \arguments{
 \item{dni}{a single numeric value, raster object, two-dimensional array or matrix of coarse-resolution direct radiation perpendicular to the solar beam (\ifelse{html}{\out{MJ m<sup>-2</sup> hr<sup>-1</sup>}}{\eqn{MJ m^{-2} hr^{-1}}}).}
@@ -22,11 +41,11 @@ shortwaveveg(dni, dif, julian, localtime, lat = NA, long = NA,
 
 \item{long}{an optional single numeric value representing the mean longitude of the location for which downscaled radiation is required (decimal degrees, -ve west of Greenwich meridian).}
 
-\item{dtm}{an optional raster object, two-dimensional array or matrix of elevations (m), orientated as if derived using \code{\link[=is_raster]{is_raster()}}. I.e. \code{[1, 1]} is the NW corner.}
+\item{dtm}{an optional raster object, two-dimensional array or matrix of elevations (m), orientated as if derived using \code{\link[=is_raster]{is_raster()}}. I.e. \verb{[1, 1]} is the NW corner.}
 
-\item{slope}{an optional single value, raster object, two-dimensional array or matrix of slopes (º). If an array or matrix, then orientated as if derived using \code{\link[=is_raster]{is_raster()}}. I.e. \code{[1, 1]} is the NW corner.}
+\item{slope}{an optional single value, raster object, two-dimensional array or matrix of slopes (º). If an array or matrix, then orientated as if derived using \code{\link[=is_raster]{is_raster()}}. I.e. \verb{[1, 1]} is the NW corner.}
 
-\item{aspect}{an optional single value, raster object, two-dimensional array or matrix of aspects (º). If an array or matrix, then orientated as if derived using \code{\link[=is_raster]{is_raster()}}. I.e. \code{[1, 1]} is the NW corner.}
+\item{aspect}{an optional single value, raster object, two-dimensional array or matrix of aspects (º). If an array or matrix, then orientated as if derived using \code{\link[=is_raster]{is_raster()}}. I.e. \verb{[1, 1]} is the NW corner.}
 
 \item{svv}{an optional raster object, two-dimensional array or matrix of values representing the proportion of isotropic radiation received by a surface partially obscured by topography relative to the full hemisphere underneath vegetation as returned by \code{\link[=skyviewveg]{skyviewveg()}}.}
 

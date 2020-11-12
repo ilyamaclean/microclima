@@ -4,8 +4,7 @@
 \alias{get_dem}
 \title{Gets raster of elevations}
 \usage{
-get_dem(r = NA, lat, long, resolution = 30, zmin = 0, xdims = 200,
-  ydims = 200)
+get_dem(r = NA, lat, long, resolution = 30, zmin = 0, xdims = 200, ydims = 200)
 }
 \arguments{
 \item{r}{optional raster object covering the location for which elevations are

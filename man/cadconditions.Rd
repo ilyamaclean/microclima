@@ -4,9 +4,23 @@
 \alias{cadconditions}
 \title{Calculates whether conditions are right for cold air drainage}
 \usage{
-cadconditions(h, tc, n, p = 100346.13, wind, startjul, lat, long,
-  starttime = 0, hourint = 1, windthresh = 4.5, emthresh = 0.5,
-  merid = round(long/15, 0) * 15, dst = 0, con = TRUE)
+cadconditions(
+  h,
+  tc,
+  n,
+  p = 100346.13,
+  wind,
+  startjul,
+  lat,
+  long,
+  starttime = 0,
+  hourint = 1,
+  windthresh = 4.5,
+  emthresh = 0.5,
+  merid = round(long/15, 0) * 15,
+  dst = 0,
+  con = TRUE
+)
 }
 \arguments{
 \item{h}{a vector of hourly specific humidities (\ifelse{html}{\out{kg kg<sup>-1</sup> }}{\eqn{kg kg^{-1}}}).}
