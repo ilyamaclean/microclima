@@ -1111,7 +1111,7 @@ microclimaforNMR <- function(lat, long, dstart, dfinish, l, x, coastal = TRUE, h
   cat("Downscaling radiation and wind speed \n")
   radwind <- .pointradwind(hourlydata, dem, lat, long, l, x, albr, zmin, slope, aspect,
                            horizon, svf, difani)
-  cat("Calculating elevation and cold-air drainage effects \n")
+  cat("Calculating meso-scale terrain effects \n")
   info <- .eleveffects(hourlydata, demmeso, lat, long, windthresh, emthresh, weather.elev, cad.effects)
   elev <- info$tout
   if (coastal) {
