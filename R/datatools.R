@@ -682,7 +682,7 @@ dailyprecipNCEP <- function(lat, long, tme, reanalysis2 = FALSE) {
     cadt <- cdif * lr * cad
   } else {
     basins<-dem*0+1
-    flowacc<-basins
+    fa<-basins
     cadt<-rep(0,length(tme))
   }
   tout <- data.frame(tref = hourlydata$temperature,
