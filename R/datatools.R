@@ -49,7 +49,7 @@ get_dem <- function(r = NA, lat, long, resolution = 30, zmin = 0, xdims = 200, y
     warning("Higher resolution data only available for some locations. DEM
             may be derived by interpolation")
   }
-  if (class(r) != "RasterLayer") {
+  if (class(r)[1] != "RasterLayer") {
     xy <- data.frame(x = long, y = lat)
     coordinates(xy) = ~x + y
     proj4string(xy) = "+init=epsg:4326"
@@ -560,21 +560,21 @@ dailyprecipNCEP <- function(lat, long, tme, reanalysis2 = FALSE) {
     wshelt[i] <- wsc36[daz]
     wsheltatground[i] <- wsc36atground[daz]
   }
-  if (class(slope) == "logical") {
+  if (class(slope)[1] == "logical") {
     slope <- terrain(dem, unit = 'degrees')
     slope <- extract(slope, xy)
   }
-  if (class(aspect) == "logical") {
+  if (class(aspect)[1] == "logical") {
     aspect <- terrain(dem, opt = 'aspect', unit = 'degrees')
     aspect <- extract(aspect, xy)
   }
   fr <- canopy(array(l, dim = dim(dem)[1:2]))
-  if (class(svf) == "logical") {
+  if (class(svf)[1] == "logical") {
     svf <- skyviewveg(dem, array(l, dim = dim(dem)[1:2]),
                       array(x, dim = dim(dem)[1:2]), res = reso)
     svf <- extract(svf, xy)
   }
-  if (class(horizon) == "logical") {
+  if (class(horizon)[1] == "logical") {
     ha36 <- 0
     for (i in 0:35) {
       har <- horizonangle(dem, i*10, reso)
@@ -1098,11 +1098,11 @@ microclimaforNMR <- function(lat, long, dstart, dfinish, l, x, coastal = TRUE, h
   }
   tme <- tme[-length(tme)]
   tme <- as.POSIXlt(tme)
-  if (class(dem) == "logical") {
+  if (class(dem)[1] == "logical") {
     cat("Downloading digital elevation data \n")
     dem <- get_dem(r = NA, lat = lat, long = long, resolution = resolution, zmin = zmin)
   }
-  if (class(demmeso) == "logical") demmeso <- dem
+  if (class(demmeso)[1] == "logical") demmeso <- dem
   if (class(hourlydata) == "logical") {
     cat("Extracting climate data from NCEP \n")
     hourlydata <- hourlyNCEP(ncepdata = NA, lat, long, tme, reanalysis2)
@@ -1306,7 +1306,7 @@ runauto <- function(r, dstart, dfinish, hgt = 0.05, l, x, habitat = NA,
     yr <- tme$year[i] + 1900
     hoy <- (as.numeric(strftime(tme[i], format = "%j")) - 1) * 24 +
       as.numeric(tme$hour[i]) + 1
-    if (class(habitat) == "matrix") {
+    if (class(habitat)[1] == "matrix") {
       u <- unique(as.vector(habitat))
       u <- u[is.na(u) == F]
       la <- array(NA, dim = c(dim(r)[1:2]))
@@ -1325,46 +1325,46 @@ runauto <- function(r, dstart, dfinish, hgt = 0.05, l, x, habitat = NA,
         la <- array(l, dim = dim(r)[1:2])
       } else la <- array(l[i], dim = dim(r)[1:2])
     }
-    if (class(l) == "matrix") la <- l
-    if (class(l) == "array") la <- l[,,i]
+    if (class(l)[1] == "matrix") la <- l
+    if (class(l)[1] == "array") la <- l[,,i]
     la
   }
   checkfun <- function(l, x, habitat, r, tme) {
-    if (class(l) == "logical" & class(habitat) == "logical") {
+    if (class(l)[1] == "logical" & class(habitat)[1] == "logical") {
       stop ("No habitat or leaf area provided")
     }
-    if (class(x) == "logical" & class(habitat) == "logical") {
+    if (class(x)[1] == "logical" & class(habitat)[1] == "logical") {
       stop ("No habitat or leaf angle distribution provided")
     }
-    if (class(l) == "matrix" | class(l) == "array") {
+    if (class(l)[1] == "matrix" | class(l)[1] == "array") {
       if (dim(l)[1] != dim(r)[1] & dim(l)[2] != dim(r)[2]) {
         stop ("l must have same xy dimensions as r")
       }
     }
-    if (class(l)== "array") {
+    if (class(l)[1] == "array") {
       if (dim(l)[3] != length(tme)) {
         stop ("Length of l must equal 1 or number of hours in time sequence")
       }
     }
-    if (class(l)== "numeric" | class(l) == "integer") {
+    if (class(l)[1] == "numeric" | class(l)[1] == "integer") {
       if (length(l) != 1 & length(l)  != length(tme)) {
         stop ("Length of l must equal 1 or number of hours in time sequence")
       }
     }
-    if (class(habitat) == "matrix") {
+    if (class(habitat)[1] == "matrix") {
       if (dim(habitat)[1] != dim(r)[1] & dim(habitat)[2] != dim(r)[2]) {
         stop("habitat must have same dimensions as r")
       }
     }
-    if (class(x) == "matrix") {
+    if (class(x)[1] == "matrix") {
       if (dim(x)[1] != dim(r)[1] & dim(x)[2] != dim(r)[2]) {
         stop("x must have same dimensions as r")
       }
     }
-    if (class(x) == "numeric" | class(x) == "integer") {
+    if (class(x)[1] == "numeric" | class(x) == "integer") {
       if (length(x) > 1) stop("varying x through time not supported")
     }
-    if (class(x) == "array") stop("varying x through time not supported")
+    if (class(x)[1] == "array") stop("varying x through time not supported")
   }
   frost <- function(x) {
     sel <- which(x <= 0)
@@ -1399,10 +1399,10 @@ runauto <- function(r, dstart, dfinish, hgt = 0.05, l, x, habitat = NA,
   x <- is_raster(x)
   habitat <- is_raster(habitat)
   checkfun(l, x, habitat, r, tme)
-  if (class(x) == "numeric" | class(x) == "integer") x <- array(x, dim = dim(r)[1:2])
-  if (class(x) == "logical") {
-    if (class(habitat)  == "numeric" | class(habitat) == "integer" |
-        class(habitat) == "character") {
+  if (class(x)[1] == "numeric" | class(x)[1] == "integer") x <- array(x, dim = dim(r)[1:2])
+  if (class(x)[1] == "logical") {
+    if (class(habitat)[1]  == "numeric" | class(habitat)[1] == "integer" |
+        class(habitat)[1] == "character") {
       x <- laifromhabitat(habitat[1], lat, long, year = 2015)$x
       x <- array(x, dim = dim(r)[1:2])
     } else {

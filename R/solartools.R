@@ -288,19 +288,19 @@ solarindex <- function(slope = NA, aspect, localtime, lat = NA, long, julian,
                       dtm = array(0, dim = c(1, 1)), res = 1, merid = round(long / 15, 0) * 15,
                       dst = 0, shadow = TRUE) {
   r <- dtm
-  if (class(slope) == "logical" & class(r) == "RasterLayer") {
+  if (class(slope)[1] == "logical" & class(r)[1] == "RasterLayer") {
     slope <- terrain(r, opt = "slope", unit = "degrees")
     aspect <- terrain(r, opt = "aspect", unit = "degrees")
   }
-  if (class(slope) == "logical" & class(r) != "RasterLayer") {
+  if (class(slope)[1] == "logical" & class(r)[1] != "RasterLayer") {
     slope <- 0
     aspect <- 0
   }
-  if (class(lat) == "logical" & class(crs(r)) == "CRS") {
+  if (class(lat)[1] == "logical" & class(crs(r)) == "CRS") {
     lat <- latlongfromraster(r)$lat
     long <- latlongfromraster(r)$long
   }
-  if (class(lat) == "logical" & class(crs(r)) != "CRS")
+  if (class(lat)[1] == "logical" & class(crs(r)) != "CRS")
     stop("Latitude not defined and cannot be determined from raster")
   dtm <- is_raster(dtm)
   slope <- is_raster(slope)

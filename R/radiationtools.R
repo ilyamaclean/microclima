@@ -758,19 +758,19 @@ shortwavetopo <- function(dni, dif, julian, localtime, lat = NA, long = NA,
                           ha = 0, res = 100, merid = round(long / 15, 0) * 15, dst = 0,
                           shadow = TRUE, component = "sw", difani = TRUE) {
   r <- dtm
-  if (class(slope) == "logical" & class(r) == "RasterLayer") {
+  if (class(slope)[1] == "logical" & class(r)[1] == "RasterLayer") {
     slope <- terrain(r, opt = "slope", unit = "degrees")
     aspect <- terrain(r, opt = "aspect", unit = "degrees")
   }
-  if (class(slope) == "logical" & class(r) != "RasterLayer") {
+  if (class(slope)[1] == "logical" & class(r)[1] != "RasterLayer") {
     slope <- 0
     aspect <- 0
   }
-  if (class(lat) == "logical" & class(crs(r)) == "CRS") {
+  if (class(lat)[1] == "logical" & class(crs(r)) == "CRS") {
     lat <- latlongfromraster(r)$lat
     long <- latlongfromraster(r)$long
   }
-  if (class(lat) == "logical" & class(crs(r)) != "CRS")
+  if (class(lat)[1] == "logical" & class(crs(r)) != "CRS")
     stop("Latitude not defined and cannot be determined from raster")
   dni <- is_raster(dni)
   dif <- is_raster(dif)
@@ -911,19 +911,19 @@ shortwaveveg <- function(dni, dif, julian, localtime, lat = NA, long = NA,
                          res = 1, merid = NA, dst = 0, shadow = TRUE,
                          x, l, difani = TRUE) {
   r <- dtm
-  if (class(slope) == "logical" & class(r) == "RasterLayer") {
+  if (class(slope)[1] == "logical" & class(r)[1] == "RasterLayer") {
     slope <- terrain(r, opt = "slope", unit = "degrees")
     aspect <- terrain(r, opt = "aspect", unit = "degrees")
   }
-  if (class(slope) == "logical" & class(r) != "RasterLayer") {
+  if (class(slope)[1] == "logical" & class(r)[1] != "RasterLayer") {
     slope <- 0
     aspect <- 0
   }
-  if (class(lat) == "logical" & class(crs(r)) == "CRS") {
+  if (class(lat)[1] == "logical" & class(crs(r)) == "CRS") {
     lat <- latlongfromraster(r)$lat
     long <- latlongfromraster(r)$long
   }
-  if (class(lat) == "logical" & class(crs(r)) != "CRS")
+  if (class(lat)[1] == "logical" & class(crs(r)) != "CRS")
     stop("Latitude not defined and cannot be determined from raster")
   if (class(merid) == "logical") merid <- round(long / 15, 0) * 15
   dni <- is_raster(dni)
