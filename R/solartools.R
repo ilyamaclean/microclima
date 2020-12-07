@@ -17,7 +17,7 @@
 #' class(r1) # is a RasterLayer
 #' class(r2) # is a matrix
 if_raster <- function(x, r) {
-  if (class(r) == "RasterLayer")
+  if (class(r)[1] == "RasterLayer")
     x <- raster(is_raster(x), template = r)
   x
 }
@@ -40,7 +40,7 @@ if_raster <- function(x, r) {
 #' plot(r) # not a raster
 #' plot(raster(r)) # converts to raster
 is_raster <- function(r) {
-  if (class(r) == "RasterLayer")
+  if (class(r)[1] == "RasterLayer")
     r <- getValues(r, format = "matrix")
   r
 }

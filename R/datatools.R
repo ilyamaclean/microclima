@@ -83,7 +83,7 @@ get_dem <- function(r = NA, lat, long, resolution = 30, zmin = 0, xdims = 200, y
   m2[is.na(m2)] <- zmin
   r2 <- if_raster(m2, r2)
   return(r2)
-  }
+}
 #' Obtains NCEP data required to run microclima
 #'
 #' @param tme a POSIXlt object covering the duration for which data are required.
