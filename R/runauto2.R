@@ -411,6 +411,7 @@ runauto2 <- function(dem, hourlydata = NA, dstart, dfinish, lat = NA, long = NA,
       ln1s[,,i] <- is_raster(ln1)
     }
   }
+  tme<-as.POSIXlt(hourlydata$obs_time)
   # Convert to arrays
   l <- .rastertoarray(l, length(tme))
   x <- .rastertoarray(x, length(tme))
