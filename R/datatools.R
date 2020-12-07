@@ -76,14 +76,17 @@ get_dem <- function(r = NA, lat, long, resolution = 30, zmin = 0, xdims = 200, y
   }
   z = ceiling(log((cos(lat * pi/180) * 2 * pi * 6378137) / (256 * resolution), 2))
   z <- ifelse(z > 14, 14, z)
-  r2 <-get_elev_raster(r, z = z, src = "aws")
+  p <- as(extent(r), 'SpatialPoints')
+  p<-as.data.frame(p)
+  xx<-sp::proj4string(r)
+  r2 <-get_elev_raster(p, z = z, src = "aws", prj = xx)
   r2<- resample(r2, r)
   m2 <- getValues(r2, format = "matrix")
   m2[m2 < zmin] <- zmin
   m2[is.na(m2)] <- zmin
   r2 <- if_raster(m2, r2)
   return(r2)
-}
+  }
 #' Obtains NCEP data required to run microclima
 #'
 #' @param tme a POSIXlt object covering the duration for which data are required.

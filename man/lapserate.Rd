@@ -14,7 +14,7 @@ lapserate(tc, h, p = 101300)
 \item{p}{an optional single numeric value, raster object, two-dimensional array or matrix of atmospheric pressure (Pa).}
 }
 \value{
-the lapse rate (\ifelse{html}{\out{Âº m<sup>-1</sup> }}{\eqn{ Âº m^{-1}}}).
+the lapse rate (\ifelse{html}{\out{º m<sup>-1</sup> }}{\eqn{ º m^{-1}}}).
 }
 \description{
 \code{lapserate} is used to calculate changes in temperature with height.
