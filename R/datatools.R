@@ -626,27 +626,25 @@ dailyprecipNCEP <- function(lat, long, tme, reanalysis2 = FALSE) {
                          emthresh = 0.78,  weather.elev, cad.effects) {
   xy <- data.frame(x = long, y = lat)
   if (weather.elev == 'ncep') {
-    elevncep <- extract(demworld, xy)
+    elevncep <- raster::extract(demworld, xy)
   } else if (weather.elev == 'era5') {
-    lar<-round(lat*4,0)/4
-    lor<-round(long*4,0)/4
-    e<-extent(lor-0.875,lor+0.875,lar-0.875,lar+0.875)
-    e5d<-get_dem(r=NA,lat,long,resolution = 10000, xdims = 10, ydims = 10)
-    e5d<-projectRaster(e5d,crs="+init=epsg:4326")
-    rte<-raster(e)
-    res(rte)<-0.25
-    e5d<-resample(e5d,rte)
-    xy <- data.frame(x = long, y = lat)
-    elevncep <- extract(e5d, xy)
-  } else elevncep<-as.numeric(weather.elev)
+    lar <- round(lat*4,0)/4
+    lor <- round(long*4,0)/4
+    e <- extent(lor-0.875,lor+0.875,lar-0.875,lar+0.875)
+    e5d <- get_dem(r = NA, lat, long, resolution = 10000, xdims = 10, ydims = 10)
+    e5d <- projectRaster(e5d, crs = sf::st_crs(4326)$wkt) 
+    rte <- raster(e)
+    res(rte) <- 0.25
+    e5d <- resample(e5d,rte)
+    elevncep <- raster:: extract(e5d, xy)
+  } else elevncep <- as.numeric(weather.elev)
   if (is.na(elevncep)) {
     warnings("elevation of input weather data NA. Setting to zero")
-    elevncep<-0
+    elevncep <- 0
   }
-  coordinates(xy) = ~x + y
-  proj4string(xy) = "+init=epsg:4326"
-  xy <- as.data.frame(spTransform(xy, crs(dem)))
-  elev <- extract(dem, xy)
+  xy <- sf::st_as_sf(xy, coords = c("x", "y"), crs = 4326)
+  xy <- sf::st_transform(xy, sf::st_crs(dem)$wkt)
+  elev <- raster::extract(dem, xy)
   if (is.na(elev)) elev <- 0
   lr <- lapserate(hourlydata$temperature, hourlydata$humidity, hourlydata$pressure)
   elevt <- lr * (elev - elevncep) + hourlydata$temperature
@@ -683,9 +681,9 @@ dailyprecipNCEP <- function(lat, long, tme, reanalysis2 = FALSE) {
     if (is.na(cdif)) cdif <- 0
     cadt <- cdif * lr * cad
   } else {
-    basins<-dem*0+1
-    fa<-basins
-    cadt<-rep(0,length(tme))
+    basins <- dem*0+1
+    fa <- basins
+    cadt <- rep(0,length(tme))
   }
   tout <- data.frame(tref = hourlydata$temperature,
                      elev = elev, elevncep = elevncep,
