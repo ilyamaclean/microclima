@@ -59,15 +59,14 @@ is_raster <- function(r) {
 #' @examples
 #' latlongfromraster(dtm1m)
 #' latlongfromraster(dtm100m)
-latlongfromraster <- function(r) {
+latlongfromraster <- function (r) {
   e <- extent(r)
-  xy <- data.frame(x = (e@xmin + e@xmax) / 2,
-                   y = (e@ymin + e@ymax) / 2)
-  coordinates(xy) = ~x+y
-  proj4string(xy) = crs(r)
-  ll <- as.data.frame(spTransform(xy, CRS("+init=epsg:4326")))
-  ll <- data.frame(lat = ll$y, long = ll$x)
-  ll
+  xy <- data.frame(x = (e@xmin + e@xmax)/2, y = (e@ymin + e@ymax)/2)
+  xy <- sf::st_as_sf(xy, coords = c('x', 'y'), crs = sf::st_crs(r)$wkt)
+  ll <- sf::st_transform(xy, 4326)
+  ll <- data.frame(lat = sf::st_coordinates(ll)[2], 
+                   long = sf::st_coordinates(ll)[1])
+  return(ll)
 }
 #' Calculates the astronomical Julian day
 #'
