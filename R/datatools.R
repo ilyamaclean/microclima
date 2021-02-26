@@ -51,36 +51,36 @@ get_dem <- function(r = NA, lat, long, resolution = 30, zmin = 0, xdims = 200, y
   }
   if (class(r)[1] != "RasterLayer") {
     xy <- data.frame(x = long, y = lat)
-    coordinates(xy) = ~x + y
-    proj4string(xy) = "+init=epsg:4326"
+    xy <- sf::st_as_sf(xy, coords = c('x', 'y'), crs = 4326)
+	
     if (lat >= -80 & lat <= 84)
-      xy <- as.data.frame(spTransform(xy, CRS("+init=epsg:3395")))
+      xy <- sf::st_transform(xy, 3395)
     if (lat > 84)
-      xy <- as.data.frame(spTransform(xy, CRS("+init=epsg:3413")))
+      xy <- sf::st_transform(xy, 3413)
     if (lat < -80)
-      xy <- as.data.frame(spTransform(xy, CRS("+init=epsg:3976")))
-    e <- extent(c(xy$x - floor(xdims / 2) * resolution, xy$x + ceiling(xdims / 2) * resolution,
-                  xy$y - floor(ydims / 2) * resolution, xy$y + ceiling(ydims / 2) * resolution))
+      xy <- sf::st_transform(xy, 3976)
+	  
+      e <- extent(c(sf::st_coordinates(xy)[1] - floor(xdims/2) * resolution,
+                    sf::st_coordinates(xy)[1] + ceiling(xdims/2) * resolution,
+                    sf::st_coordinates(xy)[2] - floor(ydims/2) * resolution,
+                    sf::st_coordinates(xy)[2] + ceiling(ydims/2) * resolution))
+					
     r <- raster(e)
     res(r) <- resolution
-    if (lat >= -80 & lat <= 84)
-      crs(r) <- "+init=epsg:3395"
-    if (lat > 84)
-      crs(r) <- "+init=epsg:3413"
-    if (lat < -80)
-      crs(r) <- "+init=epsg:3976"
+	crs(r) <- CRS(SRS_string = st_crs(xy)$wkt)
+    
   } else {
     lat <- latlongfromraster(r)$lat
     long <- latlongfromraster(r)$long
     res(r) <- resolution
   }
-  z = ceiling(log((cos(lat * pi/180) * 2 * pi * 6378137) / (256 * resolution), 2))
+  z <- ceiling(log((cos(lat * pi/180) * 2 * pi * 6378137) / (256 * resolution), 2))
   z <- ifelse(z > 14, 14, z)
   p <- as(extent(r), 'SpatialPoints')
-  p<-as.data.frame(p)
-  xx<-sp::proj4string(r)
-  r2 <-get_elev_raster(p, z = z, src = "aws", prj = xx)
-  r2<- resample(r2, r)
+  p <- as.data.frame(p)
+  xx <- sp::proj4string(r)
+  r2 <- elevatr::get_elev_raster(p, z = z, src = "aws", prj = xx)
+  r2 <- resample(r2, r)
   m2 <- getValues(r2, format = "matrix")
   m2[m2 < zmin] <- zmin
   m2[is.na(m2)] <- zmin
