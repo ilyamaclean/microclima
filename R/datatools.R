@@ -726,12 +726,12 @@ dailyprecipNCEP <- function(lat, long, tme, reanalysis2 = FALSE) {
   ll <- latlongfromraster(r)
   xs <- seq(0, by = 1.875, length.out = 192)
   ys <- seq(-88.542, by = 1.904129, length.out = 94)
-  xc <-xs[which.min(abs(xs - ll$long%%360))]
-  yc <-ys[which.min(abs(ys - ll$lat))]
+  xc <- xs[which.min(abs(xs - ll$long%%360))]
+  yc <- ys[which.min(abs(ys - ll$lat))]
   rll <- raster(matrix(0, nrow = 3, ncol = 3))
   extent(rll) <- extent(xc -  2.8125, xc +  2.8125,
                         yc - 2.856193, yc + 2.856193)
-  crs(rll) <- "+init=epsg:4326"
+  crs(rll) <- sf::st_crs(4326)$wkt
   ress <- c(30, 90, 500, 1000, 10000)
   ress <- ress[ress > mean(res(r))]
   ress <- c(mean(res(r)), ress)
@@ -739,9 +739,9 @@ dailyprecipNCEP <- function(lat, long, tme, reanalysis2 = FALSE) {
   # Create a list of dems
   cat("Downloading land sea data \n")
   dem.list <- list()
-  rmet <- projectRaster(rll, crs = crs(r))
+  rmet <- projectRaster(rll, crs = sf::st_crs(r)$wkt)
   dem <- get_dem(rmet, resolution = ress[1], zmin = zmin)
-  dem.list[[1]] <- projectRaster(dem, crs = crs(r))
+  dem.list[[1]] <- projectRaster(dem, crs = sf::st_crs(r)$wkt)
   dc <- ceiling(max(dim(r)) / 2)
   rres <- mean(res(r))
   for (i in 2:(length(ress)-1)) {
@@ -756,16 +756,16 @@ dailyprecipNCEP <- function(lat, long, tme, reanalysis2 = FALSE) {
                    xy[2] - d * ress[i], xy[2] + d * ress[i]))
     rr <- raster()
     extent(rr) <- e2
-    crs(rr) <- crs(r)
+    crs(rr) <- sf::st_crs(r)$wkt
     dem <- suppressWarnings(get_dem(rr, resolution = ress[i], zmin = zmin))
-    dem.list[[i]] <- projectRaster(dem, crs = crs(r))
+    dem.list[[i]] <- projectRaster(dem, crs = st_crs(r)$wkt)
   }
   if (tidyr & mean(res(r)) <= 30)
     warning("raster tidying ignored as resolution <= 30")
   if (tidyr & mean(res(r)) > 30) {
     rx <- raster(extent(r))
     res(rx) <- 30
-    crs(rx) <- crs(r)
+    crs(rx) <- sf::st_crs(r)$wkt
     rfine <- get_dem(rx, resolution = 30, zmin = zmin)
     r <- tidydems(rfine, r)
   }
@@ -820,7 +820,7 @@ dailyprecipNCEP <- function(lat, long, tme, reanalysis2 = FALSE) {
   eone <- extent(xc - 1.875 / 2, xc + 1.875 / 2,
                  yc - 1.904129 / 2, yc + 1.904129 / 2)
   rllo <- crop(rll, eone)
-  rone <- projectRaster(rllo, crs = crs(r))
+  rone <- projectRaster(rllo, crs = sf::st_crs(r)$wkt)
   rone[is.na(rone)] <- zmin
   dem <- dem.list[[1]]
   m <- is_raster(dem)
@@ -829,8 +829,7 @@ dailyprecipNCEP <- function(lat, long, tme, reanalysis2 = FALSE) {
   e <- extent(r)
   xy <- data.frame(x = (e@xmin + e@xmax) / 2,
                    y = (e@ymin + e@ymax) / 2)
-  coordinates(xy) = ~x+y
-  proj4string(xy) = crs(r)
+  xy <- sf::st_as_sf(xy, coords = c("x","y"), crs = st_crs(r)$wkt)
   for (dct in 0:(steps - 1)) {
     direction <- dct * (360 / steps)
     lsa <- invls(dem, extent(rone), direction)
