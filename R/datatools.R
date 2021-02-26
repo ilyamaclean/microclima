@@ -539,17 +539,16 @@ dailyprecipNCEP <- function(lat, long, tme, reanalysis2 = FALSE) {
   m[m < zmin] <- zmin
   dem <- if_raster(m, dem)
   xy <- data.frame(x = long, y = lat)
-  coordinates(xy) = ~x + y
-  proj4string(xy) = "+init=epsg:4326"
-  xy <- as.data.frame(spTransform(xy, crs(dem)))
+  xy <- sf::st_as_sf(xy, coords = c("x","y"), crs = 4326)
+  xy <- st_transform(xy, st_crs(dem)$wkt)
   reso <- res(dem)[1]
   wsc36 <- 0
   wsc36atground <- 0
   for (i in 0:35) {
     wscr <- windcoef(dem, i*10, hgt = 2, res = reso)
     wscr2 <- windcoef(dem, i*10, hgt = 0, res = reso)
-    wsc36[i + 1] <- extract(wscr, xy)
-    wsc36atground[i + 1] <- extract(wscr2, xy)
+    wsc36[i + 1] <- raster::extract(wscr, xy)
+    wsc36atground[i + 1] <- raster::extract(wscr2, xy)
   }
   wshelt <- 0
   wsheltatground <- 0
@@ -562,23 +561,23 @@ dailyprecipNCEP <- function(lat, long, tme, reanalysis2 = FALSE) {
   }
   if (class(slope)[1] == "logical") {
     slope <- terrain(dem, unit = 'degrees')
-    slope <- extract(slope, xy)
+    slope <- raster::extract(slope, xy)
   }
   if (class(aspect)[1] == "logical") {
     aspect <- terrain(dem, opt = 'aspect', unit = 'degrees')
-    aspect <- extract(aspect, xy)
+    aspect <- raster::extract(aspect, xy)
   }
   fr <- canopy(array(l, dim = dim(dem)[1:2]))
   if (class(svf)[1] == "logical") {
     svf <- skyviewveg(dem, array(l, dim = dim(dem)[1:2]),
                       array(x, dim = dim(dem)[1:2]), res = reso)
-    svf <- extract(svf, xy)
+    svf <- raster::extract(svf, xy)
   }
   if (class(horizon)[1] == "logical") {
     ha36 <- 0
     for (i in 0:35) {
       har <- horizonangle(dem, i*10, reso)
-      ha36[i + 1] <- atan(extract(har, xy)) * (180/pi)
+      ha36[i + 1] <- atan(raster::extract(har, xy)) * (180/pi)
     }
   } else ha36 <- rep(horizon, 36)
   tme <- as.POSIXlt(hourlydata$obs_time)
@@ -598,7 +597,7 @@ dailyprecipNCEP <- function(lat, long, tme, reanalysis2 = FALSE) {
   hourlyrad <- data.frame(swrad = sw$swrad, skyviewfact = svf, canopyfact = sw$canopyfact,
                           whselt = wsheltatground, windspeed = wshelt *  windsp,
                           slope = slope, aspect = aspect)
-  hourlyrad
+  return(hourlyrad)
 }
 #' Cold air drainage direct from emissivity
 #' @export
