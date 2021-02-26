@@ -35,7 +35,8 @@ Imports:
     rnoaa,
     ncdf4,
     fields,
-	Rcpp
+	Rcpp,
+	sf(>= 0.9-7)
 RoxygenNote: 7.1.1
 Roxygen: list(markdown = TRUE) 
 Suggests: knitr,
