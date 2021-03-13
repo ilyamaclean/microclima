@@ -51,36 +51,36 @@ get_dem <- function(r = NA, lat, long, resolution = 30, zmin = 0, xdims = 200, y
   }
   if (class(r)[1] != "RasterLayer") {
     xy <- data.frame(x = long, y = lat)
-    coordinates(xy) = ~x + y
-    proj4string(xy) = "+init=epsg:4326"
+    xy <- sf::st_as_sf(xy, coords = c('x', 'y'), crs = 4326)
+	
     if (lat >= -80 & lat <= 84)
-      xy <- as.data.frame(spTransform(xy, CRS("+init=epsg:3395")))
+      xy <- sf::st_transform(xy, 3395)
     if (lat > 84)
-      xy <- as.data.frame(spTransform(xy, CRS("+init=epsg:3413")))
+      xy <- sf::st_transform(xy, 3413)
     if (lat < -80)
-      xy <- as.data.frame(spTransform(xy, CRS("+init=epsg:3976")))
-    e <- extent(c(xy$x - floor(xdims / 2) * resolution, xy$x + ceiling(xdims / 2) * resolution,
-                  xy$y - floor(ydims / 2) * resolution, xy$y + ceiling(ydims / 2) * resolution))
+      xy <- sf::st_transform(xy, 3976)
+	  
+      e <- extent(c(sf::st_coordinates(xy)[1] - floor(xdims/2) * resolution,
+                    sf::st_coordinates(xy)[1] + ceiling(xdims/2) * resolution,
+                    sf::st_coordinates(xy)[2] - floor(ydims/2) * resolution,
+                    sf::st_coordinates(xy)[2] + ceiling(ydims/2) * resolution))
+					
     r <- raster(e)
     res(r) <- resolution
-    if (lat >= -80 & lat <= 84)
-      crs(r) <- "+init=epsg:3395"
-    if (lat > 84)
-      crs(r) <- "+init=epsg:3413"
-    if (lat < -80)
-      crs(r) <- "+init=epsg:3976"
+	crs(r) <- CRS(SRS_string = st_crs(xy)$wkt)
+    
   } else {
     lat <- latlongfromraster(r)$lat
     long <- latlongfromraster(r)$long
     res(r) <- resolution
   }
-  z = ceiling(log((cos(lat * pi/180) * 2 * pi * 6378137) / (256 * resolution), 2))
+  z <- ceiling(log((cos(lat * pi/180) * 2 * pi * 6378137) / (256 * resolution), 2))
   z <- ifelse(z > 14, 14, z)
   p <- as(extent(r), 'SpatialPoints')
-  p<-as.data.frame(p)
-  xx<-sp::proj4string(r)
-  r2 <-get_elev_raster(p, z = z, src = "aws", prj = xx)
-  r2<- resample(r2, r)
+  p <- as.data.frame(p)
+  xx <- sp::proj4string(r)
+  r2 <- elevatr::get_elev_raster(p, z = z, src = "aws", prj = xx)
+  r2 <- resample(r2, r)
   m2 <- getValues(r2, format = "matrix")
   m2[m2 < zmin] <- zmin
   m2[is.na(m2)] <- zmin
@@ -539,17 +539,16 @@ dailyprecipNCEP <- function(lat, long, tme, reanalysis2 = FALSE) {
   m[m < zmin] <- zmin
   dem <- if_raster(m, dem)
   xy <- data.frame(x = long, y = lat)
-  coordinates(xy) = ~x + y
-  proj4string(xy) = "+init=epsg:4326"
-  xy <- as.data.frame(spTransform(xy, crs(dem)))
+  xy <- sf::st_as_sf(xy, coords = c("x","y"), crs = 4326)
+  xy <- st_transform(xy, st_crs(dem)$wkt)
   reso <- res(dem)[1]
   wsc36 <- 0
   wsc36atground <- 0
   for (i in 0:35) {
     wscr <- windcoef(dem, i*10, hgt = 2, res = reso)
     wscr2 <- windcoef(dem, i*10, hgt = 0, res = reso)
-    wsc36[i + 1] <- extract(wscr, xy)
-    wsc36atground[i + 1] <- extract(wscr2, xy)
+    wsc36[i + 1] <- raster::extract(wscr, xy)
+    wsc36atground[i + 1] <- raster::extract(wscr2, xy)
   }
   wshelt <- 0
   wsheltatground <- 0
@@ -562,23 +561,23 @@ dailyprecipNCEP <- function(lat, long, tme, reanalysis2 = FALSE) {
   }
   if (class(slope)[1] == "logical") {
     slope <- terrain(dem, unit = 'degrees')
-    slope <- extract(slope, xy)
+    slope <- raster::extract(slope, xy)
   }
   if (class(aspect)[1] == "logical") {
     aspect <- terrain(dem, opt = 'aspect', unit = 'degrees')
-    aspect <- extract(aspect, xy)
+    aspect <- raster::extract(aspect, xy)
   }
   fr <- canopy(array(l, dim = dim(dem)[1:2]))
   if (class(svf)[1] == "logical") {
     svf <- skyviewveg(dem, array(l, dim = dim(dem)[1:2]),
                       array(x, dim = dim(dem)[1:2]), res = reso)
-    svf <- extract(svf, xy)
+    svf <- raster::extract(svf, xy)
   }
   if (class(horizon)[1] == "logical") {
     ha36 <- 0
     for (i in 0:35) {
       har <- horizonangle(dem, i*10, reso)
-      ha36[i + 1] <- atan(extract(har, xy)) * (180/pi)
+      ha36[i + 1] <- atan(raster::extract(har, xy)) * (180/pi)
     }
   } else ha36 <- rep(horizon, 36)
   tme <- as.POSIXlt(hourlydata$obs_time)
@@ -598,7 +597,7 @@ dailyprecipNCEP <- function(lat, long, tme, reanalysis2 = FALSE) {
   hourlyrad <- data.frame(swrad = sw$swrad, skyviewfact = svf, canopyfact = sw$canopyfact,
                           whselt = wsheltatground, windspeed = wshelt *  windsp,
                           slope = slope, aspect = aspect)
-  hourlyrad
+  return(hourlyrad)
 }
 #' Cold air drainage direct from emissivity
 #' @export
@@ -627,27 +626,25 @@ dailyprecipNCEP <- function(lat, long, tme, reanalysis2 = FALSE) {
                          emthresh = 0.78,  weather.elev, cad.effects) {
   xy <- data.frame(x = long, y = lat)
   if (weather.elev == 'ncep') {
-    elevncep <- extract(demworld, xy)
+    elevncep <- raster::extract(demworld, xy)
   } else if (weather.elev == 'era5') {
-    lar<-round(lat*4,0)/4
-    lor<-round(long*4,0)/4
-    e<-extent(lor-0.875,lor+0.875,lar-0.875,lar+0.875)
-    e5d<-get_dem(r=NA,lat,long,resolution = 10000, xdims = 10, ydims = 10)
-    e5d<-projectRaster(e5d,crs="+init=epsg:4326")
-    rte<-raster(e)
-    res(rte)<-0.25
-    e5d<-resample(e5d,rte)
-    xy <- data.frame(x = long, y = lat)
-    elevncep <- extract(e5d, xy)
-  } else elevncep<-as.numeric(weather.elev)
+    lar <- round(lat*4,0)/4
+    lor <- round(long*4,0)/4
+    e <- extent(lor-0.875,lor+0.875,lar-0.875,lar+0.875)
+    e5d <- get_dem(r = NA, lat, long, resolution = 10000, xdims = 10, ydims = 10)
+    e5d <- projectRaster(e5d, crs = sf::st_crs(4326)$wkt) 
+    rte <- raster(e)
+    res(rte) <- 0.25
+    e5d <- resample(e5d,rte)
+    elevncep <- raster:: extract(e5d, xy)
+  } else elevncep <- as.numeric(weather.elev)
   if (is.na(elevncep)) {
     warnings("elevation of input weather data NA. Setting to zero")
-    elevncep<-0
+    elevncep <- 0
   }
-  coordinates(xy) = ~x + y
-  proj4string(xy) = "+init=epsg:4326"
-  xy <- as.data.frame(spTransform(xy, crs(dem)))
-  elev <- extract(dem, xy)
+  xy <- sf::st_as_sf(xy, coords = c("x", "y"), crs = 4326)
+  xy <- sf::st_transform(xy, sf::st_crs(dem)$wkt)
+  elev <- raster::extract(dem, xy)
   if (is.na(elev)) elev <- 0
   lr <- lapserate(hourlydata$temperature, hourlydata$humidity, hourlydata$pressure)
   elevt <- lr * (elev - elevncep) + hourlydata$temperature
@@ -684,9 +681,9 @@ dailyprecipNCEP <- function(lat, long, tme, reanalysis2 = FALSE) {
     if (is.na(cdif)) cdif <- 0
     cadt <- cdif * lr * cad
   } else {
-    basins<-dem*0+1
-    fa<-basins
-    cadt<-rep(0,length(tme))
+    basins <- dem*0+1
+    fa <- basins
+    cadt <- rep(0,length(tme))
   }
   tout <- data.frame(tref = hourlydata$temperature,
                      elev = elev, elevncep = elevncep,
@@ -729,12 +726,12 @@ dailyprecipNCEP <- function(lat, long, tme, reanalysis2 = FALSE) {
   ll <- latlongfromraster(r)
   xs <- seq(0, by = 1.875, length.out = 192)
   ys <- seq(-88.542, by = 1.904129, length.out = 94)
-  xc <-xs[which.min(abs(xs - ll$long%%360))]
-  yc <-ys[which.min(abs(ys - ll$lat))]
+  xc <- xs[which.min(abs(xs - ll$long%%360))]
+  yc <- ys[which.min(abs(ys - ll$lat))]
   rll <- raster(matrix(0, nrow = 3, ncol = 3))
   extent(rll) <- extent(xc -  2.8125, xc +  2.8125,
                         yc - 2.856193, yc + 2.856193)
-  crs(rll) <- "+init=epsg:4326"
+  crs(rll) <- sf::st_crs(4326)$wkt
   ress <- c(30, 90, 500, 1000, 10000)
   ress <- ress[ress > mean(res(r))]
   ress <- c(mean(res(r)), ress)
@@ -742,9 +739,9 @@ dailyprecipNCEP <- function(lat, long, tme, reanalysis2 = FALSE) {
   # Create a list of dems
   cat("Downloading land sea data \n")
   dem.list <- list()
-  rmet <- projectRaster(rll, crs = crs(r))
+  rmet <- projectRaster(rll, crs = sf::st_crs(r)$wkt)
   dem <- get_dem(rmet, resolution = ress[1], zmin = zmin)
-  dem.list[[1]] <- projectRaster(dem, crs = crs(r))
+  dem.list[[1]] <- projectRaster(dem, crs = sf::st_crs(r)$wkt)
   dc <- ceiling(max(dim(r)) / 2)
   rres <- mean(res(r))
   for (i in 2:(length(ress)-1)) {
@@ -759,16 +756,16 @@ dailyprecipNCEP <- function(lat, long, tme, reanalysis2 = FALSE) {
                    xy[2] - d * ress[i], xy[2] + d * ress[i]))
     rr <- raster()
     extent(rr) <- e2
-    crs(rr) <- crs(r)
+    crs(rr) <- sf::st_crs(r)$wkt
     dem <- suppressWarnings(get_dem(rr, resolution = ress[i], zmin = zmin))
-    dem.list[[i]] <- projectRaster(dem, crs = crs(r))
+    dem.list[[i]] <- projectRaster(dem, crs = st_crs(r)$wkt)
   }
   if (tidyr & mean(res(r)) <= 30)
     warning("raster tidying ignored as resolution <= 30")
   if (tidyr & mean(res(r)) > 30) {
     rx <- raster(extent(r))
     res(rx) <- 30
-    crs(rx) <- crs(r)
+    crs(rx) <- sf::st_crs(r)$wkt
     rfine <- get_dem(rx, resolution = 30, zmin = zmin)
     r <- tidydems(rfine, r)
   }
@@ -823,7 +820,7 @@ dailyprecipNCEP <- function(lat, long, tme, reanalysis2 = FALSE) {
   eone <- extent(xc - 1.875 / 2, xc + 1.875 / 2,
                  yc - 1.904129 / 2, yc + 1.904129 / 2)
   rllo <- crop(rll, eone)
-  rone <- projectRaster(rllo, crs = crs(r))
+  rone <- projectRaster(rllo, crs = sf::st_crs(r)$wkt)
   rone[is.na(rone)] <- zmin
   dem <- dem.list[[1]]
   m <- is_raster(dem)
@@ -832,8 +829,7 @@ dailyprecipNCEP <- function(lat, long, tme, reanalysis2 = FALSE) {
   e <- extent(r)
   xy <- data.frame(x = (e@xmin + e@xmax) / 2,
                    y = (e@ymin + e@ymax) / 2)
-  coordinates(xy) = ~x+y
-  proj4string(xy) = crs(r)
+  xy <- sf::st_as_sf(xy, coords = c("x","y"), crs = st_crs(r)$wkt)
   for (dct in 0:(steps - 1)) {
     direction <- dct * (360 / steps)
     lsa <- invls(dem, extent(rone), direction)
