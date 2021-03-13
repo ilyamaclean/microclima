@@ -16,8 +16,7 @@
 #' @param ydims optional numeric value specifying the number of latitudinal grid cells
 #'
 #' @return a raster object of elevations in metres.
-#' @import raster
-#' @import elevatr
+#' @import raster elevatr sf
 #' @export
 #'
 #' @details Currently, `get_dem` utilises the Amazon Web Services (AWS)
@@ -52,23 +51,23 @@ get_dem <- function(r = NA, lat, long, resolution = 30, zmin = 0, xdims = 200, y
   if (class(r)[1] != "RasterLayer") {
     xy <- data.frame(x = long, y = lat)
     xy <- sf::st_as_sf(xy, coords = c('x', 'y'), crs = 4326)
-	
+
     if (lat >= -80 & lat <= 84)
       xy <- sf::st_transform(xy, 3395)
     if (lat > 84)
       xy <- sf::st_transform(xy, 3413)
     if (lat < -80)
       xy <- sf::st_transform(xy, 3976)
-	  
+
       e <- extent(c(sf::st_coordinates(xy)[1] - floor(xdims/2) * resolution,
                     sf::st_coordinates(xy)[1] + ceiling(xdims/2) * resolution,
                     sf::st_coordinates(xy)[2] - floor(ydims/2) * resolution,
                     sf::st_coordinates(xy)[2] + ceiling(ydims/2) * resolution))
-					
+
     r <- raster(e)
     res(r) <- resolution
 	crs(r) <- CRS(SRS_string = st_crs(xy)$wkt)
-    
+
   } else {
     lat <- latlongfromraster(r)$lat
     long <- latlongfromraster(r)$long
@@ -531,6 +530,7 @@ dailyprecipNCEP <- function(lat, long, tme, reanalysis2 = FALSE) {
   return(xxx=list(swrad = fgc, canopyfact = cfc))
 }
 #' get radiation and wind for use with NicheMapR
+#' @import sf
 #' @export
 .pointradwind <- function(hourlydata, dem, lat, long, l, x, albr = 0.15, zmin = 0,
                           slope = NA, aspect = NA, horizon = NA, svf = NA, difani = TRUE) {
@@ -621,6 +621,7 @@ dailyprecipNCEP <- function(lat, long, tme, reanalysis2 = FALSE) {
   cad
 }
 # Calculates elevation effects
+#' @import sf
 #' @export
 .eleveffects <- function(hourlydata, dem, lat, long, windthresh = 4.5,
                          emthresh = 0.78,  weather.elev, cad.effects) {
@@ -632,7 +633,7 @@ dailyprecipNCEP <- function(lat, long, tme, reanalysis2 = FALSE) {
     lor <- round(long*4,0)/4
     e <- extent(lor-0.875,lor+0.875,lar-0.875,lar+0.875)
     e5d <- get_dem(r = NA, lat, long, resolution = 10000, xdims = 10, ydims = 10)
-    e5d <- projectRaster(e5d, crs = sf::st_crs(4326)$wkt) 
+    e5d <- projectRaster(e5d, crs = sf::st_crs(4326)$wkt)
     rte <- raster(e)
     res(rte) <- 0.25
     e5d <- resample(e5d,rte)
@@ -691,6 +692,7 @@ dailyprecipNCEP <- function(lat, long, tme, reanalysis2 = FALSE) {
   return(list(tout = tout, basins = basins, flowacc = fa))
 }
 #' Calculates coastal exposure automatically
+#' @import sf
 #' @export
 .invls.auto <- function(r, steps = 8, use.raster = T, zmin = 0, plot.progress = TRUE, tidyr = FALSE) {
   tidydems <- function(rfine, rc) {
@@ -914,7 +916,7 @@ dailyprecipNCEP <- function(lat, long, tme, reanalysis2 = FALSE) {
 #'
 #' @return a three-dimension array of hourly temperature values for each pixel of `landsea`
 #' @export
-#' @import raster sp zoo rnoaa ncdf4
+#' @import raster sp zoo rnoaa ncdf4 sf
 #' @examples
 #' library(raster)
 #' # Download NCEP data
@@ -1064,7 +1066,7 @@ coastalNCEP <- function(landsea, ncephourly, steps = 8, use.raster = T, zmin = 0
 #'
 #' @export
 #' @import raster
-#' @import sp
+#' @import sp sf
 #' @import zoo
 #'
 #' @examples

@@ -53,7 +53,7 @@ is_raster <- function(r) {
 #'
 #' @return a data.frame with the latitude and longitude of the centre of the raster
 #' @export
-#' @import raster rgdal
+#' @import raster rgdal sf
 #' @importFrom sp coordinates
 #'
 #' @examples
@@ -64,7 +64,7 @@ latlongfromraster <- function (r) {
   xy <- data.frame(x = (e@xmin + e@xmax)/2, y = (e@ymin + e@ymax)/2)
   xy <- sf::st_as_sf(xy, coords = c('x', 'y'), crs = sf::st_crs(r)$wkt)
   ll <- sf::st_transform(xy, 4326)
-  ll <- data.frame(lat = sf::st_coordinates(ll)[2], 
+  ll <- data.frame(lat = sf::st_coordinates(ll)[2],
                    long = sf::st_coordinates(ll)[1])
   return(ll)
 }
