@@ -197,7 +197,7 @@ solalt <- function(localtime, lat, long, julian, merid = round(long / 15, 0) * 1
 #'
 #' @param dtm a raster object, two-dimensional array or matrix of elevations (m). If not a raster, orientated as if derived from a raster using [is_raster()]. I.e. `[1, 1]` is the NW corner.
 #' @param azimuth a numeric value representing the direction of the horizon as, for example, returned by [solazi()] (º from north).
-#' @param res a single numeric value representing the spatial resolution of `dtm` (m).
+#' @param reso a single numeric value representing the spatial resolution of `dtm` (m).
 #'
 #' @return a raster object or two-dimensional array of numeric values representing the tangent of the angle to the horizon in a specified direction.
 #' @import raster
@@ -214,11 +214,11 @@ solalt <- function(localtime, lat, long, julian, merid = round(long / 15, 0) * 1
 #' library(raster)
 #' ha <- horizonangle(dtm1m, 0)
 #' plot(ha, main = "Tangent of angle to horizon")
-horizonangle <- function(dtm, azimuth, res = 1) {
+horizonangle <- function(dtm, azimuth, reso = 1) {
   r <- dtm
   dtm <- is_raster(r)
   dtm[is.na(dtm)] <- 0
-  dtm <- (dtm * 5) / res
+  dtm <- (dtm * 5) / reso
   azimuth <- azimuth - 90
   azi <- azimuth * (pi / 180)
   horizon <- array(0, dim(dtm))
