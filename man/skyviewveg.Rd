@@ -4,7 +4,7 @@
 \alias{skyviewveg}
 \title{Calculates a sky view correction factor underneath vegetation}
 \usage{
-skyviewveg(dtm, l, x, steps = 36, res = 1)
+skyviewveg(dtm, l, x, steps = 36, reso = 1)
 }
 \arguments{
 \item{dtm}{a raster object, two-dimensional array or matrix of elevations (m).}
@@ -15,7 +15,7 @@ skyviewveg(dtm, l, x, steps = 36, res = 1)
 
 \item{steps}{an optional integer. The sky view is calculated from the horizon angle in specified directions. Steps defines the total number of directions used. If the default 36 is specified, then the horizon angle is calculated at 10º intervals.}
 
-\item{res}{a single numeric value representing the spatial resolution of \code{dtm} (m).}
+\item{reso}{a single numeric value representing the spatial resolution of \code{dtm} (m).}
 }
 \value{
 a raster object or a two-dimensional array of numeric values representing the proportion of isotropic radiation received by a surface partially obscured by topography relative to the full hemisphere underneath vegetation.

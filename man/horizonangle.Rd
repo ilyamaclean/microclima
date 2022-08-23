@@ -4,14 +4,14 @@
 \alias{horizonangle}
 \title{Calculates the tangent of the horizon angle}
 \usage{
-horizonangle(dtm, azimuth, res = 1)
+horizonangle(dtm, azimuth, reso = 1)
 }
 \arguments{
 \item{dtm}{a raster object, two-dimensional array or matrix of elevations (m). If not a raster, orientated as if derived from a raster using \code{\link[=is_raster]{is_raster()}}. I.e. \verb{[1, 1]} is the NW corner.}
 
 \item{azimuth}{a numeric value representing the direction of the horizon as, for example, returned by \code{\link[=solazi]{solazi()}} (º from north).}
 
-\item{res}{a single numeric value representing the spatial resolution of \code{dtm} (m).}
+\item{reso}{a single numeric value representing the spatial resolution of \code{dtm} (m).}
 }
 \value{
 a raster object or two-dimensional array of numeric values representing the tangent of the angle to the horizon in a specified direction.

@@ -277,7 +277,9 @@ albedo2 <- function(alb, fr, ground = TRUE) {
   alb <- is_raster(alb)
   fr <- is_raster(fr)
   mg <- mean(alb[fr < 0.03], na.rm = TRUE)
+  if (is.na(mg)) mg <- 0.15
   mc <- mean(alb[fr > 0.97], na.rm = TRUE)
+  if (is.na(mc)) mc <- 0.23
   alb2 <- alb * fr + mc * (1 - fr)
   if (ground) alb2 <- alb * (1 - fr) + mg * fr
   if_raster(alb2, r)
@@ -320,17 +322,17 @@ albedo_reflected <- function(alb, e = extent(alb)) {
   albr <- array(NA, dim = dim(alb))
   r <- raster(alb)
   extent(r) <- e
-  res <- xres(r)
+  reso <- xres(r)
   maxdist <- max(e@xmax - e@xmin, e@ymax - e@ymin)
-  s <- c((4:2000) / 4) ^ 2 * res
+  s <- c((4:2000) / 4) ^ 2 * reso
   s <- c(0, s)
   s <- s[s <= maxdist]
   dct <- runif(length(s), 0, 360)
   for (yy in 1:dim(alb)[1]) {
     for (xx in 1:dim(alb)[2]) {
       if (is.na(alb[yy, xx]) == FALSE) {
-        x <- xx * res + e@xmin - res / 2
-        y <- e@ymax + res / 2 - yy * res
+        x <- xx * reso + e@xmin - reso / 2
+        y <- e@ymax + reso / 2 - yy * reso
         xdist <- round(s * sin(dct * pi / 180), 0)
         ydist <- round(s * cos(dct * pi / 180), 0)
         xy <- data.frame(x = x + xdist, y = y + ydist)
@@ -348,7 +350,7 @@ albedo_reflected <- function(alb, e = extent(alb)) {
 #'
 #' @param dtm a raster object, two-dimensional array or matrix of elevations (m).
 #' @param steps an optional integer. The mean slope is calculated from the horizon angle in specified directions. Steps defines the total number of directions used. If the default 36 is specified, then the horizon angle is calculated at 10º intervals.
-#' @param res a single numeric value representing the spatial resolution of `dtm` (m).
+#' @param reso a single numeric value representing the spatial resolution of `dtm` (m).
 #'
 #' @return a raster object or a two-dimensional array of the mean slope angle to the horizon in all directions (º).
 #' @import raster
@@ -362,15 +364,15 @@ albedo_reflected <- function(alb, e = extent(alb)) {
 #'
 #' @examples
 #' library(raster)
-#' ms <- mean_slope(dtm100m, res = 100)
+#' ms <- mean_slope(dtm100m, reso = 100)
 #' plot(ms, main = "Mean slope to horizon")
-mean_slope <- function(dtm, steps = 36, res = 1) {
+mean_slope <- function(dtm, steps = 36, reso = 1) {
   r <- dtm
   dtm <- is_raster(dtm)
   dtm[is.na(dtm)] <- 0
   ha <- array(0, dim(dtm))
   for (s in 1:steps) {
-    ha <- ha + atan(horizonangle(dtm, s * 360 / steps, res))
+    ha <- ha + atan(horizonangle(dtm, s * 360 / steps, reso))
   }
   ha <- ha / steps
   ha <- tan(ha) * (180 / pi)
@@ -382,7 +384,7 @@ mean_slope <- function(dtm, steps = 36, res = 1) {
 #'
 #' @param dtm dtm a raster object, two-dimensional array or matrix of elevations (m).
 #' @param steps an optional integer. The sky view is calculated from the horizon angle in specified directions. Steps defines the total number of directions used. If the default 36 is specified, then the horizon angle is calculated at 10º intervals.
-#' @param res a single numeric value representing the spatial resolution of `dtm` (m).
+#' @param reso a single numeric value representing the spatial resolution of `dtm` (m).
 #' @import raster
 #' @export
 #'
@@ -402,10 +404,10 @@ mean_slope <- function(dtm, steps = 36, res = 1) {
 #' library(raster)
 #' sv <- skyviewtopo(dtm100m)
 #' plot(sv, main = "Sky view factor")
-skyviewtopo <- function(dtm, steps = 36, res = 100) {
+skyviewtopo <- function(dtm, steps = 36, reso = 100) {
   r <- dtm
   dtm <- is_raster(dtm)
-  ha <- mean_slope(dtm, steps, res)
+  ha <- mean_slope(dtm, steps, reso)
   ha <- ha * (pi / 180)
   svf <- 0.5 * cos(2 * ha) + 0.5
   if_raster(svf, r)
@@ -421,7 +423,7 @@ skyviewtopo <- function(dtm, steps = 36, res = 100) {
 #' @param l a raster object, two-dimensional array or matrix of leaf area index values as returned by [lai()].
 #' @param x a raster object, two-dimensional array of numeric values representing the ratio of vertical to horizontal projections of leaf foliage as returned by [leaf_geometry()].
 #' @param steps an optional integer. The sky view is calculated from the horizon angle in specified directions. Steps defines the total number of directions used. If the default 36 is specified, then the horizon angle is calculated at 10º intervals.
-#' @param res a single numeric value representing the spatial resolution of `dtm` (m).
+#' @param reso a single numeric value representing the spatial resolution of `dtm` (m).
 #' @import raster
 #' @importFrom  stats runif sd spline
 #' @export
@@ -449,7 +451,7 @@ skyviewtopo <- function(dtm, steps = 36, res = 100) {
 #' x <- leaf_geometry(veg_hgt)
 #' sv <- skyviewveg(dtm1m, l, x)
 #' plot(sv, main = "Sky view factor")
-skyviewveg <- function(dtm, l, x, steps = 36, res = 1) {
+skyviewveg <- function(dtm, l, x, steps = 36, reso = 1) {
   r <- dtm
   dtm <- is_raster(dtm)
   l <- is_raster(l)
@@ -466,7 +468,7 @@ skyviewveg <- function(dtm, l, x, steps = 36, res = 1) {
   xl <- ifelse(xl > 1000, 1000, xl)
   p1 <- array(xp1$y[xl], dim = dim(x))
   p2 <- array(xp2$y[xl], dim = dim(x))
-  ha <- mean_slope(dtm, steps, res)
+  ha <- mean_slope(dtm, steps, reso)
   ha <- ha * (pi / 180)
   a <- p1 * l ^ p2 + 0.564
   H2 <- (pi / 2) * (ha ^ a) / ((pi / 2) ^ a)
@@ -573,7 +575,7 @@ longwavetopo <- function(h, tc, p = 101300, n, svf = 1, co = 1.24) {
 #' @export
 #'
 #' @seealso The function [longwavetopo()] returns the net longwave radiation above vegetation.
-#' The function [humidityconvert()] can be used to derive specific humidy from other meaures of humidity.
+#' The function [humidityconvert()] can be used to derive specific humidity from other measures of humidity.
 #' [cloudfromrad()] can be used to derive derive cloud cover from radiation.
 #'
 #' @return a single numeric value, raster object or two-dimensional array of values representing net longwave radiation (MJ per metre squared per hour).
@@ -666,7 +668,7 @@ longwaveveg <- function(h, tc, p = 101300, n, x, fr, svv = 1, albc = 0.23, co = 
 #' @param alb an optional single value, raster object, two-dimensional array or matrix of surface albedo(s) (range 0 - 1) derived using [albedo()] or [albedo_adjust()].
 #' @param albr an optional single value, raster object, two-dimensional array or matrix of values of albedo(s) of adjacent surfaces (range 0 - 1) as returned by [albedo_reflected()].
 #' @param ha an optional raster object, two-dimensional array or matrix of values representing the mean slope to the horizon (decimal degrees) of surrounding surfaces from which radiation is reflected for each cell of `dtm` as returned by [mean_slope()].
-#' @param res a single numeric value representing the spatial resolution of `dtm` (m).
+#' @param reso a single numeric value representing the spatial resolution of `dtm` (m).
 #' @param merid an optional numeric value representing the longitude (decimal degrees) of the local time zone meridian (0 for GMT). Default is `round(long / 15, 0) * 15`
 #' @param dst an optional numeric value representing the time difference from the timezone meridian (hours, e.g. +1 for BST if `merid` = 0).
 #' @param shadow an optional logical value indicating whether topographic shading should be considered (False = No, True = Yes).
@@ -755,7 +757,7 @@ longwaveveg <- function(h, tc, p = 101300, n, x, fr, svv = 1, albc = 0.23, co = 
 shortwavetopo <- function(dni, dif, julian, localtime, lat = NA, long = NA,
                           dtm = array(0, dim = c(1, 1)), slope = NA,
                           aspect = NA, svf = 1, alb = 0.23, albr = 0.23,
-                          ha = 0, res = 100, merid = round(long / 15, 0) * 15, dst = 0,
+                          ha = 0, reso = 100, merid = round(long / 15, 0) * 15, dst = 0,
                           shadow = TRUE, component = "sw", difani = TRUE) {
   r <- dtm
   if (class(slope)[1] == "logical" & class(r)[1] == "RasterLayer") {
@@ -782,7 +784,7 @@ shortwavetopo <- function(dni, dif, julian, localtime, lat = NA, long = NA,
   ha <- is_raster(ha)
   dtm <- is_raster(dtm)
   dtm[is.na(dtm)] <- 0
-  si <- solarindex(slope, aspect, localtime, lat, long, julian, dtm, res,
+  si <- solarindex(slope, aspect, localtime, lat, long, julian, dtm, reso,
                    merid, dst, shadow)
   dirr <- si * dni
   a <- slope * (pi / 180)
@@ -828,7 +830,7 @@ shortwavetopo <- function(dni, dif, julian, localtime, lat = NA, long = NA,
 #' @param fr a raster object, two-dimensional array or matrix of fractional canopy cover as returned by [canopy()].
 #' @param albr an optional single value, raster object, two-dimensional array or matrix of values representing the albedo(s) of adjacent surfaces as returned by [albedo_reflected()].
 #' @param ha an optional raster object, two-dimensional array or matrix of values representing the mean slope to the horizon (decimal degrees) of surrounding surfaces from which radiation is reflected for each cell of `dtm` as returned by [mean_slope()].
-#' @param res a single numeric value representing the spatial resolution of `dtm` (m).
+#' @param reso a single numeric value representing the spatial resolution of `dtm` (m).
 #' @param merid an optional numeric value representing the longitude (decimal degrees) of the local time zone meridian (0 for GMT). Default is `round(long / 15, 0) * 15`
 #' @param dst an optional numeric value representing the time difference from the timezone meridian (hours, e.g. +1 for BST if `merid` = 0).
 #' @param shadow an optional logical value indicating whether topographic shading should be considered (False = No, True = Yes).
@@ -908,7 +910,7 @@ shortwavetopo <- function(dni, dif, julian, localtime, lat = NA, long = NA,
 shortwaveveg <- function(dni, dif, julian, localtime, lat = NA, long = NA,
                          dtm = array(0, dim = c(1, 1)), slope = NA, aspect = NA,
                          svv = 1, alb = 0.23, fr, albr = 0.23, ha = 0,
-                         res = 1, merid = NA, dst = 0, shadow = TRUE,
+                         reso = 1, merid = NA, dst = 0, shadow = TRUE,
                          x, l, difani = TRUE) {
   r <- dtm
   if (class(slope)[1] == "logical" & class(r)[1] == "RasterLayer") {
@@ -938,7 +940,7 @@ shortwaveveg <- function(dni, dif, julian, localtime, lat = NA, long = NA,
   l <- is_raster(l)
   dtm <- is_raster(dtm)
   dtm[is.na(dtm)] <- 0
-  si <- solarindex(slope, aspect, localtime, lat, long, julian, dtm, res,
+  si <- solarindex(slope, aspect, localtime, lat, long, julian, dtm, reso,
                    merid, dst, shadow)
   dirr <- si * dni
   a <- slope * (pi / 180)
@@ -1117,7 +1119,7 @@ clearskyrad <- function(tme, lat, long, h = 0.00697, tc = 15, p = 101300, G = 2.
   Tw <- 1 - 0.077 * (u * m) ^ 0.3
   Ta <- 0.935 * m
   od <- TrTpg * Tw * Ta
-  Ic <- Ie * (cos(z)) * TrTpg * Tw * Ta
+  Ic <- Ie * (cos(z)) * od
   Ic[Ic > Ie] <- NA
   Ic[Ic < 0] <- NA
   Ic

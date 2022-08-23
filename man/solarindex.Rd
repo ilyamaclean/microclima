@@ -12,7 +12,7 @@ solarindex(
   long,
   julian,
   dtm = array(0, dim = c(1, 1)),
-  res = 1,
+  reso = 1,
   merid = round(long/15, 0) * 15,
   dst = 0,
   shadow = TRUE
@@ -33,7 +33,7 @@ solarindex(
 
 \item{dtm}{an optional raster object, two-dimensional array or matrix of elevations (m). If not a raster, orientated as if derived from a raster using \code{\link[=is_raster]{is_raster()}}. I.e. \verb{[1, 1]} is the NW corner.}
 
-\item{res}{a single numeric value representing the spatial resolution of \code{dtm} (m).}
+\item{reso}{a single numeric value representing the spatial resolution of \code{dtm} (m).}
 
 \item{merid}{an optional numeric value representing the longitude (decimal degrees) of the local time zone meridian (0 for GMT). Default is \code{round(long / 15, 0) * 15}}
 

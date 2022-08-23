@@ -4,14 +4,14 @@
 \alias{mean_slope}
 \title{Calculates the mean slope to the horizon}
 \usage{
-mean_slope(dtm, steps = 36, res = 1)
+mean_slope(dtm, steps = 36, reso = 1)
 }
 \arguments{
 \item{dtm}{a raster object, two-dimensional array or matrix of elevations (m).}
 
 \item{steps}{an optional integer. The mean slope is calculated from the horizon angle in specified directions. Steps defines the total number of directions used. If the default 36 is specified, then the horizon angle is calculated at 10º intervals.}
 
-\item{res}{a single numeric value representing the spatial resolution of \code{dtm} (m).}
+\item{reso}{a single numeric value representing the spatial resolution of \code{dtm} (m).}
 }
 \value{
 a raster object or a two-dimensional array of the mean slope angle to the horizon in all directions (º).
@@ -27,6 +27,6 @@ projection to a Universal Transverse Mercator type projection system.
 }
 \examples{
 library(raster)
-ms <- mean_slope(dtm100m, res = 100)
+ms <- mean_slope(dtm100m, reso = 100)
 plot(ms, main = "Mean slope to horizon")
 }

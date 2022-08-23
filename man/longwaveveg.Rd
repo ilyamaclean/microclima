@@ -72,6 +72,6 @@ plot(nlr, main = "Net longwave radiation")
 }
 \seealso{
 The function \code{\link[=longwavetopo]{longwavetopo()}} returns the net longwave radiation above vegetation.
-The function \code{\link[=humidityconvert]{humidityconvert()}} can be used to derive specific humidy from other meaures of humidity.
+The function \code{\link[=humidityconvert]{humidityconvert()}} can be used to derive specific humidity from other measures of humidity.
 \code{\link[=cloudfromrad]{cloudfromrad()}} can be used to derive derive cloud cover from radiation.
 }

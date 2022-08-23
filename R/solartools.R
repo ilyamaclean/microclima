@@ -247,7 +247,7 @@ horizonangle <- function(dtm, azimuth, reso = 1) {
 #' @param long a single numeric value representing the mean longitude of the location for which the solar index is required (decimal degrees, -ve west of Greenwich meridian).
 #' @param julian a single integer representing the Julian day as returned by [julday()].
 #' @param dtm an optional raster object, two-dimensional array or matrix of elevations (m). If not a raster, orientated as if derived from a raster using [is_raster()]. I.e. `[1, 1]` is the NW corner.
-#' @param res a single numeric value representing the spatial resolution of `dtm` (m).
+#' @param reso a single numeric value representing the spatial resolution of `dtm` (m).
 #' @param merid an optional numeric value representing the longitude (decimal degrees) of the local time zone meridian (0 for GMT). Default is `round(long / 15, 0) * 15`
 #' @param dst an optional numeric value representing the time difference from the timezone meridian (hours, e.g. +1 for BST if `merid` = 0).
 #' @param shadow an optional logical value indicating whether topographic shading should be considered (TRUE = Yes, FALSE = No).
@@ -284,7 +284,7 @@ horizonangle <- function(dtm, azimuth, reso = 1) {
 #' ll <- latlongfromraster(dtm1m)
 #' solarindex(0, 0, 8, lat = ll$lat, long = ll$long, jd)
 solarindex <- function(slope = NA, aspect, localtime, lat = NA, long, julian,
-                      dtm = array(0, dim = c(1, 1)), res = 1, merid = round(long / 15, 0) * 15,
+                      dtm = array(0, dim = c(1, 1)), reso = 1, merid = round(long / 15, 0) * 15,
                       dst = 0, shadow = TRUE) {
   r <- dtm
   if (class(slope)[1] == "logical" & class(r)[1] == "RasterLayer") {
@@ -312,7 +312,7 @@ solarindex <- function(slope = NA, aspect, localtime, lat = NA, long, julian,
   sl <- slope * (pi / 180)
   asp <- aspect * (pi / 180)
   shadowmask <- array(1, dim(dtm))
-  if (shadow) shadowmask[horizonangle(dtm, sazimuth, res) > tan(alt)] <- 0
+  if (shadow) shadowmask[horizonangle(dtm, sazimuth, reso) > tan(alt)] <- 0
   index <- array(0, dim(dtm))
   index <- cos(zen) * cos(sl) + sin(zen) * sin(sl) * cos(azi - asp)
   index[index < 0] <- 0

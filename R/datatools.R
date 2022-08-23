@@ -85,7 +85,7 @@ get_dem <- function(r = NA, lat, long, resolution = 30, zmin = 0, xdims = 200, y
   m2[is.na(m2)] <- zmin
   r2 <- if_raster(m2, r2)
   return(r2)
-  }
+}
 #' Obtains NCEP data required to run microclima
 #'
 #' @param tme a POSIXlt object covering the duration for which data are required.
@@ -545,8 +545,8 @@ dailyprecipNCEP <- function(lat, long, tme, reanalysis2 = FALSE) {
   wsc36 <- 0
   wsc36atground <- 0
   for (i in 0:35) {
-    wscr <- windcoef(dem, i*10, hgt = 2, res = reso)
-    wscr2 <- windcoef(dem, i*10, hgt = 0, res = reso)
+    wscr <- windcoef(dem, i*10, hgt = 2, reso = reso)
+    wscr2 <- windcoef(dem, i*10, hgt = 0, reso = reso)
     wsc36[i + 1] <- raster::extract(wscr, xy)
     wsc36atground[i + 1] <- raster::extract(wscr2, xy)
   }
@@ -570,7 +570,7 @@ dailyprecipNCEP <- function(lat, long, tme, reanalysis2 = FALSE) {
   fr <- canopy(array(l, dim = dim(dem)[1:2]))
   if (class(svf)[1] == "logical") {
     svf <- skyviewveg(dem, array(l, dim = dim(dem)[1:2]),
-                      array(x, dim = dim(dem)[1:2]), res = reso)
+                      array(x, dim = dim(dem)[1:2]), reso = reso)
     svf <- raster::extract(svf, xy)
   }
   if (class(horizon)[1] == "logical") {
@@ -1512,7 +1512,7 @@ runauto <- function(r, dstart, dfinish, hgt = 0.05, l, x, habitat = NA,
   r3 <- resample(r2, rff)
   hgtw <- ifelse(hgt < 0, 0, hgt)
   for (i in 0:15) {
-    wcr <- windcoef(r3, i * 22.5, hgt = hgtw, res = res(r3))
+    wcr <- windcoef(r3, i * 22.5, hgt = hgtw, reso = res(r3))
     wcr <- aggregate(wcr, 8)
     wca[,,i + 1] <- is_raster(resample(wcr, r))
   }
@@ -1531,8 +1531,8 @@ runauto <- function(r, dstart, dfinish, hgt = 0.05, l, x, habitat = NA,
   basin <- mask(ma$basins, dem)
   fa <- mask(ma$flowacc, dem)
   la <-  laitime(l, habitat, lat, long, tme, 1, hgt)
-  svv <- skyviewveg(is_raster(r2), la, x, steps = 36, res = reso)
-  ha <- mean_slope(is_raster(r2), res= reso)
+  svv <- skyviewveg(is_raster(r2), la, x, steps = 36, reso = reso)
+  ha <- mean_slope(is_raster(r2), reso = reso)
   cat("Running model in hourly time-steps \n")
   if (hgt < 0) tout[,,1] <- soiltemp[1]
   if  (plot.progress) {
@@ -1557,14 +1557,14 @@ runauto <- function(r, dstart, dfinish, hgt = 0.05, l, x, habitat = NA,
     }
     if (i%%100 == 0) {
       la <-  laitime(l, habitat, lat, long, tme, i, hgt)
-      svv <- skyviewveg(is_raster(r2), la, x, steps = 36, res = reso)
-      ha <- mean_slope(is_raster(r2), res = reso)
+      svv <- skyviewveg(is_raster(r2), la, x, steps = 36, reso = reso)
+      ha <- mean_slope(is_raster(r2), reso = reso)
     }
     fr <- canopy(la, 0.23)
     alb <- fr * albc + (1 - fr) * albg
     radsw <- shortwaveveg(hourlydata$rad_dni[i], hourlydata$rad_dif[i], jd[i],
                           tme$hour[i], dtm = r2, svv = svv, alb = alb,
-                          fr = fr, albr = albr, ha = ha, res = reso, merid = 0,
+                          fr = fr, albr = albr, ha = ha, reso = reso, merid = 0,
                           x = x, l = la)
     radlw <- longwaveveg2(hourlydata$uplong[i], hourlydata$downlong[i], x, fr,
                           svv, is_raster(albc))

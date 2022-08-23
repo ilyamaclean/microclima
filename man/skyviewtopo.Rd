@@ -4,14 +4,14 @@
 \alias{skyviewtopo}
 \title{calculates the proportion of sky in view}
 \usage{
-skyviewtopo(dtm, steps = 36, res = 100)
+skyviewtopo(dtm, steps = 36, reso = 100)
 }
 \arguments{
 \item{dtm}{dtm a raster object, two-dimensional array or matrix of elevations (m).}
 
 \item{steps}{an optional integer. The sky view is calculated from the horizon angle in specified directions. Steps defines the total number of directions used. If the default 36 is specified, then the horizon angle is calculated at 10º intervals.}
 
-\item{res}{a single numeric value representing the spatial resolution of \code{dtm} (m).}
+\item{reso}{a single numeric value representing the spatial resolution of \code{dtm} (m).}
 }
 \value{
 a raster object or two-dimension array of values representing the proportion of isotropic radiation received by a partially obscured surface relative to the full hemisphere.

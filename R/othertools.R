@@ -240,7 +240,7 @@ windheight <- function(ui, zi, zo) {
 #' @param dsm raster object, two-dimensional array or matrix of elevations (m) derived either from a digital terrain or digital surface model, and orientated as if derived using [is_raster()]. I.e. `[1, 1]` is the NW corner.
 #' @param direction a single numeric value specifying the direction from which the wind is blowing (º).
 #' @param hgt a single numeric value specifying the height (m) at which wind speed is derived or measured. The wind speeds returned are also for this height, and account for the fact topography affords less shelter to wind at greater heights.
-#' @param res a single numeric value specifying the the resolution (m) of `dsm`.
+#' @param reso a single numeric value specifying the the resolution (m) of `dsm`.
 #'
 #' @details If dsm is a raster object, then a raster object is returned.
 #' If elevations are derived from a digital terrain model, then
@@ -259,12 +259,12 @@ windheight <- function(ui, zi, zo) {
 #' dsm <- dtm1m + veg_hgt
 #' wc <- windcoef(dsm, 0)
 #' plot(mask(wc, dtm1m), main ="Northerly wind shelter coefficient")
-windcoef <- function(dsm, direction, hgt = 1, res = 1) {
+windcoef <- function(dsm, direction, hgt = 1, reso = 1) {
   r <- dsm
   dsm <- is_raster(dsm)
   dsm[is.na(dsm)] <- 0
-  dtm <- dsm / res
-  hgt <- hgt / res
+  dtm <- dsm / reso
+  hgt <- hgt / reso
   direction <- direction - 90
   azi <- direction * (pi / 180)
   horizon <- array(0, dim(dtm))
@@ -800,7 +800,7 @@ fitmicro <- function(microfitdata, alldata = FALSE, windthresh = NA,
 #' # ------------------
 #' ws <- array(windheight(wind2010$wind10m, 10, 1), dim = c(1, 1, 8760))
 #' wh <- arrayspline(ws, as.POSIXct(wind2010$obs_time), 6, "2010-05-01 11:00")
-#' ws <- windcoef(dtm100m, 270, res = 100) * wh
+#' ws <- windcoef(dtm100m, 270, reso = 100) * wh
 #'
 #' # ------------------
 #' # Fit and run model

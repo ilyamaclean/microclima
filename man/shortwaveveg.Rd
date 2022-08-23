@@ -19,7 +19,7 @@ shortwaveveg(
   fr,
   albr = 0.23,
   ha = 0,
-  res = 1,
+  reso = 1,
   merid = NA,
   dst = 0,
   shadow = TRUE,
@@ -57,7 +57,7 @@ shortwaveveg(
 
 \item{ha}{an optional raster object, two-dimensional array or matrix of values representing the mean slope to the horizon (decimal degrees) of surrounding surfaces from which radiation is reflected for each cell of \code{dtm} as returned by \code{\link[=mean_slope]{mean_slope()}}.}
 
-\item{res}{a single numeric value representing the spatial resolution of \code{dtm} (m).}
+\item{reso}{a single numeric value representing the spatial resolution of \code{dtm} (m).}
 
 \item{merid}{an optional numeric value representing the longitude (decimal degrees) of the local time zone meridian (0 for GMT). Default is \code{round(long / 15, 0) * 15}}
 

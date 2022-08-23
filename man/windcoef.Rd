@@ -4,7 +4,7 @@
 \alias{windcoef}
 \title{Calculates wind shelter coefficient}
 \usage{
-windcoef(dsm, direction, hgt = 1, res = 1)
+windcoef(dsm, direction, hgt = 1, reso = 1)
 }
 \arguments{
 \item{dsm}{raster object, two-dimensional array or matrix of elevations (m) derived either from a digital terrain or digital surface model, and orientated as if derived using \code{\link[=is_raster]{is_raster()}}. I.e. \verb{[1, 1]} is the NW corner.}
@@ -13,7 +13,7 @@ windcoef(dsm, direction, hgt = 1, res = 1)
 
 \item{hgt}{a single numeric value specifying the height (m) at which wind speed is derived or measured. The wind speeds returned are also for this height, and account for the fact topography affords less shelter to wind at greater heights.}
 
-\item{res}{a single numeric value specifying the the resolution (m) of \code{dsm}.}
+\item{reso}{a single numeric value specifying the the resolution (m) of \code{dsm}.}
 }
 \value{
 a raster object, or two-dimensional array of shelter coefficients. E.g. a shelter coefficient of 0.5 indicates that wind speed at that location is 0.5 times that measured at an unobscured location.
