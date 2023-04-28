@@ -335,7 +335,7 @@ hourlyNCEP <- function(ncepdata = NA, lat, long, tme, reanalysis2 = FALSE) {
   tme <- .tme.sort(tme)
   tmeout <- tme
   tme <- c(tme, tme[length(tme)] + 24 * 3600)
-  if (class(ncepdata) != "logical") {
+  if (class(ncepdata)[1] != "logical") {
     tme <- as.POSIXlt(ncepdata$obs_time)
     tme <- tme[5:(length(tme) - 4)]
   }
@@ -343,7 +343,7 @@ hourlyNCEP <- function(ncepdata = NA, lat, long, tme, reanalysis2 = FALSE) {
   int <- as.numeric(tme[2]) - as.numeric(tme[1])
   lgth <- (length(tme) * int) / (24 * 3600)
   tme2 <- as.POSIXlt(c(0:(lgth - 1)) * 3600 * 24, origin = min(tme), tz = 'UTC')
-  if (class(ncepdata) == "logical") {
+  if (class(ncepdata)[1] == "logical") {
     ncepdata <- get_NCEP(lat, long, tme2, reanalysis2)
   }
   tme6 <- as.POSIXlt(ncepdata$obs_time)
@@ -1101,7 +1101,7 @@ microclimaforNMR <- function(lat, long, dstart, dfinish, l, x, coastal = TRUE, h
     dem <- get_dem(r = NA, lat = lat, long = long, resolution = resolution, zmin = zmin)
   }
   if (class(demmeso)[1] == "logical") demmeso <- dem
-  if (class(hourlydata) == "logical") {
+  if (class(hourlydata)[1] == "logical") {
     cat("Extracting climate data from NCEP \n")
     hourlydata <- hourlyNCEP(ncepdata = NA, lat, long, tme, reanalysis2)
   }
@@ -1318,7 +1318,7 @@ runauto <- function(r, dstart, dfinish, hgt = 0.05, l, x, habitat = NA,
       la <-  habfun(habitat, lat, long, sel = NA, hoy, yr, la, hgt)
       la <- array(la, dim = dim(r)[1:2])
     }
-    if (class(l) == "numeric" | class(l) == "integer") {
+    if (class(l)[1] == "numeric" | class(l)[1] == "integer") {
       if (length(l) == 1) {
         la <- array(l, dim = dim(r)[1:2])
       } else la <- array(l[i], dim = dim(r)[1:2])
