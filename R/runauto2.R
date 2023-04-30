@@ -85,19 +85,19 @@
                            res = 1, merid = NA, dst = 0, shadow = TRUE,
                            x, l, difani = TRUE) {
   r <- dtm
-  if (class(slope) == "logical" & class(r) == "RasterLayer") {
+  if (class(slope)[1] == "logical" & class(r)[1] == "RasterLayer") {
     slope <- terrain(r, opt = "slope", unit = "degrees")
     aspect <- terrain(r, opt = "aspect", unit = "degrees")
   }
-  if (class(slope) == "logical" & class(r) != "RasterLayer") {
+  if (class(slope)[1] == "logical" & class(r)[1] != "RasterLayer") {
     slope <- 0
     aspect <- 0
   }
-  if (class(lat) == "logical" & class(crs(r)) == "CRS") {
+  if (class(lat)[1] == "logical" & class(crs(r)) == "CRS") {
     lat <- latlongfromraster(r)$lat
     long <- latlongfromraster(r)$long
   }
-  if (class(lat) == "logical" & class(crs(r)) != "CRS")
+  if (class(lat)[1] == "logical" & class(crs(r)) != "CRS")
     stop("Latitude not defined and cannot be determined from raster")
   if (class(merid) == "logical") merid <- round(long / 15, 0) * 15
   slope <- is_raster(slope)
@@ -336,7 +336,7 @@
 #'      xlab = "Day", ylab = "Temperature")
 runauto2 <- function(dem, hourlydata = NA, dstart, dfinish, lat = NA, long = NA, hgt = 0.05,
                      l, x, veghgt, alb, wind.agg = 10, merid = 0, dst = 0, plot.progress = TRUE) {
-  if (class(hourlydata) == "logical") {
+  if (class(hourlydata)[1] == "logical") {
     tme <- seq(as.POSIXlt(dstart, format = "%d/%m/%Y", origin = "01/01/1900", tz = "UTC"),
                as.POSIXlt(dfinish, format = "%d/%m/%Y", origin = "01/01/1900", tz = "UTC")
                + 3600 * 24, by = 'hours')
@@ -426,8 +426,8 @@ runauto2 <- function(dem, hourlydata = NA, dstart, dfinish, lat = NA, long = NA,
   wc2 <- .rastertoarray(wc2, length(tme))
   a <- .rastertoarray(a, length(tme))
   # Skyviews
-  if (class(lat) == "logical") lat <- latlongfromraster(r)$lat
-  if (class(long) == "logical") long <- latlongfromraster(r)$long
+  if (class(lat)[1] == "logical") lat <- latlongfromraster(r)$lat
+  if (class(long)[1] == "logical") long <- latlongfromraster(r)$long
   tme<-as.POSIXlt(hourlydata$obs_time)
   reso<- res(r)[1]
   svv <- skyviewveg(dem, l2, x2, steps = 36, res = reso)
