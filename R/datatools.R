@@ -1359,7 +1359,7 @@ runauto <- function(r, dstart, dfinish, hgt = 0.05, l, x, habitat = NA,
         stop("x must have same dimensions as r")
       }
     }
-    if (class(x)[1] == "numeric" | class(x) == "integer") {
+    if (class(x)[1] == "numeric" | class(x)[1] == "integer") {
       if (length(x) > 1) stop("varying x through time not supported")
     }
     if (class(x)[1] == "array") stop("varying x through time not supported")

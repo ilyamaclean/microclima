@@ -286,8 +286,8 @@ basindelin <- function(dem) {
 #' @details
 #' The function `basindelin_big` divides the large dataset into tiles and then
 #' uses [basindelin()] to delineate basins for each tile before mosaicing back
-#' together and merging basins along tile edges if not seperated by a boundary
-#' > 0. If `dirout` is unspecified, then a directory `basinsout` is
+#' together and merging basins along tile edges if not separated by a boundary
+#' greater than 0. If `dirout` is unspecified, then a directory `basinsout` is
 #' temporarily created within the working directory. If `trace` is TRUE (the
 #' default) then progress is tracked during three stages: (1) the basins
 #' of each tile are plotted, (2) basins after mosaicing, but prior
