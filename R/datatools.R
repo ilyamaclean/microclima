@@ -609,8 +609,10 @@ dailyprecipNCEP <- function(lat, long, tme, reanalysis2 = FALSE) {
 
   st <- suntimes(jd, lat, long, merid = 0)
   hrs <- (c(1:length(em)) * hourint - hourint + starttime)%%24
-  dn <- ifelse(hrs > (st$sunrise + 3) & hrs < st$sunset, 1,
-               0)
+  dn <- ifelse(hrs > (st$sunrise + 3) & hrs < st$sunset, 1, 0)  # sunrise before sunset
+  dn2 <- ifelse(hrs > (st$sunrise + 3) | hrs < st$sunset, 1, 0)  # sunrise after sunset
+  sel <- which(st$sunrise > st$sunset)
+  dn[sel] <- dn2[sel]
   cad <- ifelse(dn < 1 & wind < windthresh & em < emthresh,
                 1, 0)
   if (hourint == 1 & con) {
