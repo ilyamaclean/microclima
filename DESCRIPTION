@@ -23,8 +23,7 @@ LazyData: true
 Remotes: mrke/NicheMapR
 LinkingTo: Rcpp
 Imports:
-    raster (>= 2.5),
-    rgdal (>= 0.8),
+    terra,
     elevatr(>= 0.1.4),
     stringr (>= 1.2),
     sp (>= 1.2),
@@ -47,3 +46,5 @@ Suggests: knitr,
 VignetteBuilder: knitr
 URL: https://github.com/ilyamaclean/microclima
 BugReports: http://github.com/microclima/issues
+Depends: 
+    R (>= 2.10)

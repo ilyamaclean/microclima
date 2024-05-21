@@ -38,7 +38,7 @@ runauto(
 )
 }
 \arguments{
-\item{r}{a raster object defining the extent and resolution for which microclimate
+\item{r}{a SpatRaster object defining the extent and resolution for which microclimate
 temperature data are required. Supplied raster must have a projection such that the units of
 x, y and z are identical, and grid cells are square. NA values are assumed to be sea, which
 is important in the calculation of coastal and cold air drainage effects.}
@@ -50,18 +50,18 @@ is important in the calculation of coastal and cold air drainage effects.}
 \item{hgt}{the height (in m) above or below ground for which temperature estimates
 are required. If negative, below-ground temperatures are derived (range -2 to 2).}
 
-\item{l}{an optional single numeric value, vector, raster, matrix or array of leaf area
+\item{l}{an optional single numeric value, vector, SpatRaster, matrix or array of leaf area
 index values. If a single numeric value, the same leaf area is assumed at all locations
 and times. If a vector, the same leaf area is assumed at all locations, but leaf area is
-assumed ot vary through time. If a matrix or raster, leaf area is assumed to vary by
+assumed ot vary through time. If a matrix or SpatRaster, leaf area is assumed to vary by
 location, but is assumed static in time. If an array, variable leaf areas in time and
 space are assumed.}
 
-\item{x}{a single numeric value, matrix or raster representing the ratio of vertical to horizontal projections of foliage as,
+\item{x}{a single numeric value, matrix or SpatRaster representing the ratio of vertical to horizontal projections of foliage as,
 for example, returned by \code{\link[=leaf_geometry]{leaf_geometry()}}. if a single numeric value, the same value of \code{x}
 is assumed at all locations. Varying \code{x} through time is not supported.}
 
-\item{habitat}{a character string, numeric value or matrix or raster of numeric
+\item{habitat}{a character string, numeric value or matrix or SpatRaster of numeric
 values of habitat type(s). See \code{\link[=habitats]{habitats()}}. Ignored if l or x are provided. If a single
 numeric value, the same habitat is assumed at all locations. Varying habitats in time are not
 supported.}
@@ -101,14 +101,14 @@ dem is downloaded.}
 \item{save}{optional integer: don't save forcing data (0), save the forcing data (1)
 or read previously saved data (2).}
 
-\item{albg}{an optional single value, raster object, two-dimensional array or
+\item{albg}{an optional single value, SpatRaster object, two-dimensional array or
 matrix of values representing the albedo(s) of the ground as returned by \code{\link[=albedo2]{albedo2()}}.}
 
-\item{albr}{albr an optional single value, raster object, two-dimensional array
+\item{albr}{albr an optional single value, SpatRaster object, two-dimensional array
 or matrix of values representing the albedo(s) of adjacent surfaces as returned
 by \code{\link[=albedo_reflected]{albedo_reflected()}}.}
 
-\item{albc}{an optional single value, raster object, two-dimensional array or
+\item{albc}{an optional single value, SpatRaster object, two-dimensional array or
 matrix of values representing the albedo(s) of the vegetated canopy as returned
 by \code{\link[=albedo2]{albedo2()}}.}
 
@@ -156,7 +156,7 @@ memory by storing temperature x 1000 as an integer values.}
 \value{
 a list with the following objects:
 (1) temps: an array of temperatures for each pixel of r and hour of the time sequence.
-(2) e: an extent object given the extent of \code{temps}. Generally the same as \code{raster::extent(r)}
+(2) e: an extent object given the extent of \code{temps}. Generally the same as \code{terra::ext(r)}
 though note that edge cells are NA as slopes cannot be calculated for these cells.
 (3) units: the units of \code{temps}. Either deg C or dec C * 1000 if \code{save.memory} is TRUE.
 (4) tmax: If \code{summarydata} is TRUE, a matrix of maximum temperatures
@@ -175,7 +175,7 @@ characteristics either specified by the user, or derived from habitat,
 it runs the microclimate model in hourly timesteps to generate an array of temperatures.
 }
 \examples{
-library(raster)
+library(terra)
 require(NicheMapR)
 # Get DEM for Pico, Azores
 r <- get_dem(lat = 38.467429, long = -28.398995, resolution = 30)

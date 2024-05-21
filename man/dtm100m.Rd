@@ -3,9 +3,9 @@
 \docType{data}
 \name{dtm100m}
 \alias{dtm100m}
-\title{A 100 m resolution raster object of elevation for the Lizard Peninsula, Cornwall, UK.}
+\title{A 100 m resolution wrapped SpatRaster object of elevation for the Lizard Peninsula, Cornwall, UK.}
 \format{
-A raster object with 187 rows and 214 columns.
+A wrapped SpatRaster object with 187 rows and 214 columns.
 }
 \source{
 \url{http://www.tellusgb.ac.uk/}
@@ -14,7 +14,7 @@ A raster object with 187 rows and 214 columns.
 dtm100m
 }
 \description{
-A raster object containing elevation in metres with sea coded as NA for the area bounded by
+A wrapped SpatRaster object containing elevation in metres with sea coded as NA for the area bounded by
 160000, 181400, 11300, 30000  (xmin, xmax, ymin, ymax) using the Ordance Survey GB Grid
 Reference system (CRS: +init=epsg:27700).
 }

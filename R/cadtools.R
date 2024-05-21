@@ -1,531 +1,462 @@
-#' Orders drainage basins by elevation
-#'
-#' @description
-#' `basinsort` is an internal function used by [basindelin()] and [basinmerge()] to number
-#' drainage basins sequentially from lowest elevation (of lowest point) to highest.
-#'
-#' @param dem a raster object, two-dimensional array or matrix of elevations.
-#' @param basins a raster object, two-dimensional array or matrix of basins numbered as integers.
-#'
-#' @return a raster object, two-dimensional array or matrix of sequentially numbered basins
-#' @import raster
-#' @importFrom dplyr left_join
+# ============================================================================ #
+# ~~~~~~~~~ Basin delineation worker functions here  ~~~~~~~~~~~~~~~~~~~~~~~~~ #
+# ============================================================================ #
+#' Check if input is a SpatRaster or PackedSpatRaster and convert to matrix or array
+#' if it is
+#'@noRd
+.is <- function(r) {
+  if (class(r)[1] == "PackedSpatRaster") r<-terra::rast(r)
+  if (class(r)[1] == "SpatRaster") {
+    if (dim(r)[3] == 1) {
+      m<-as.matrix(r,wide=TRUE)
+    } else m<-as.array(r)
+  } else {
+    m<-r
+  }
+  return(m)
+}
+#' Create SpatRaster object using a template
+#' @import terra
 #' @export
 #' @keywords internal
-#' @examples
-#' basins <- matrix(c(1:4), nrow = 2, ncol = 2)
-#' dem <- matrix(c(4:1), nrow = 2, ncol = 2)
-#' basinsort(dem, basins)
-basinsort <- function(dem, basins) {
-  mdf <- function(u) {
-    sel <- which(basins == u)
-    min(dem[sel], na.rm = TRUE)
-  }
-  r <- dem
-  dem <- is_raster(dem)
-  basins <- is_raster(basins)
-  u <- unique(as.vector(basins))
-  u <- u[is.na(u) == F]
-  u2 <- c(1:length(u))
-  df1 <- data.frame(old = as.vector(basins))
-  df2 <- data.frame(old = c(NA, u), new = c(NA, u2))
-  df3 <- left_join(df1, df2, by = "old")
-  basins <- array(df3$new, dim = dim(basins))
-  u <- unique(as.vector(basins))
-  u <- u[is.na(u) == F]
-  mnd <- sapply(u, mdf)
-  o <- order(mnd)
-  u2 <- u[o]
-  df1 <- data.frame(old = as.vector(basins))
-  df2 <- data.frame(old = c(NA, u), new = c(NA, u2))
-  df3 <- left_join(df1, df2, by = "old")
-  bm2 <- array(df3$new, dim = dim(basins))
-  if_raster(bm2, r)
+.rast <- function(m,tem) {
+  r<-rast(m)
+  ext(r)<-ext(tem)
+  crs(r)<-crs(tem)
+  r
 }
-#' Internal funcion to calculate whether neighbouring cell is higher or lower
+#' Wrapper for C++ function
+#' @importFrom Rcpp sourceCpp
+#' @useDynLib microclima, .registration = TRUE
 #' @export
-.hgttongbr <- function(m) {
-  hgt <- rep(m[2, 2], 8)
-  neighbours <- c(m[1, 2], m[1, 3], m[2, 3], m[3, 3], m[3, 2], m[3, 1],
-                  m[2, 1], m[1, 1])
-  htn <- ifelse(hgt > neighbours, 1, 0)
-  intcode <- sum(2 ^ (which(rev(unlist(strsplit(as.character(htn), "")) ==
-                                  1)) - 1))
-  intcode
+.basindelinCpp<-function(dtm) {
+  dm<-.is(dtm)
+  dm[is.na(dm)]<-9999
+  dm2<-array(9999,dim=c(dim(dm)[1]+2,dim(dm)[2]+2))
+  dm2[2:(dim(dm)[1]+1),2:(dim(dm)[2]+1)]<-dm
+  # (2) create blank basin file
+  bsn<-dm2*NA
+  dun<-array(0,dim=dim(bsn))
+  bsn<-basinCpp(dm2, bsn, dun)
+  dd<-dim(bsn)
+  bsn<-bsn[2:(dd[1]-1),2:(dd[2]-1)]
+  r<-.rast(bsn,dtm)
+  return(r)
 }
-#' Internal funcion to convert integer to binary
-#' @import stringr
-#' @export
-.integertobinary8 <- function(i) {
-  a <- 2 ^ (0:9)
-  b <- 2 * a
-  binc <- format(sapply(i, function(x) sum(10 ^ (0:9)[(x %% b) >= a])),
-                 scientific = FALSE)
-  if (nchar(binc) > 8) warning("Integer > 8 bit binary")
-  binc <- str_pad(binc, 8, pad = "0")
-  binc
-}
-#' Internal funcion to check whether neighbouring cell is higher or lower
-#' @export
-.updown <- function(dem) {
-  m <- dem
-  m2 <- array(9999, dim = c(dim(dem)[1] + 2, dim(dem)[2] + 2))
-  m2[2:(dim(dem)[1] + 1), 2:(dim(dem)[2] + 1)] <- m
-  updownm <- matrix(rep(NA, length(dem)), nrow = dim(dem)[1])
-  for (y in 2:(dim(m2)[2] - 1)) {
-    for (x in 2:(dim(m2)[1] - 1)) {
-      focalcell <- m2[x, y]
-      if (is.na(focalcell) == FALSE) {
-        m9 <- matrix(c(m2[x - 1, y - 1], m2[x, y - 1], m2[x + 1, y - 1],
-                       m2[x - 1, y], focalcell, m2[x + 1, y],
-                       m2[x - 1, y + 1], m2[x, y + 1], m2[x + 1, y + 1]),
-                     nrow = 3)
-        updownm[(x - 1), (y - 1)] <- .hgttongbr(m9)
-      }
-    }
-  }
-  updownm
-}
-#' Internal function to merge single basin
-#' @export
-.onebasin_merge <- function(md, mb, b) {
-  mb2 <- array(NA, dim = c(dim(mb)[1] + 2, dim(mb)[2] + 2))
-  mb2[2:(dim(mb)[1] + 1), 2:(dim(mb)[2] + 1)] <- mb
-  md2 <- array(NA, dim = c(dim(md)[1] + 2, dim(md)[2] + 2))
-  md2[2:(dim(md)[1] + 1), 2:(dim(md)[2] + 1)] <- md
-  bm <-  b
-  sel <- which(mb == b)
-  x <- arrayInd(sel, dim(md))[, 1]
-  y <- arrayInd(sel, dim(md))[, 2]
-  for (i in 1:length(x)) {
-    mb9 <- mb2[x[i]:(x[i] + 2), y[i]:(y[i] + 2)]
-    md9 <- md2[x[i]:(x[i] + 2), y[i]:(y[i] + 2)]
-    sel2 <- which(mb9 > b)
-    if (length(sel2) > 0) {
-      for (j in 1:length(sel2)) {
-        xi <- arrayInd(sel2[j], dim(mb9))[, 1]
-        yi <- arrayInd(sel2[j], dim(mb9))[, 2]
-        x2 <- c(xi - 1, xi, xi + 1)
-        y2 <- c(yi - 1, yi, yi + 1)
-        x2 <- x2[x2 > 0 & x2 < 4]
-        y2 <- y2[y2 > 0 & y2 < 4]
-        mb3 <- mb9[x2, y2]
-        md3 <- md9[x2, y2]
-        md3[mb3 == b] <- NA
-        u <- unique(mb3[mb3 > b])
-        u <- u[is.na(u) == F]
-        for (k in 1:length(u)) {
-          vrs <- md3[mb3  == u[k]]
-          if (max(vrs, na.rm = T) > md9[2, 2]) bm <- c(bm, u[k])
+#' Internal function for delineating basins with option for boundary > 0
+#'@noRd
+.basindelin<-function(dtm, boundary = 0) {
+  # Delineate basins
+  dm<-dim(dtm)
+  me<-mean(as.vector(dtm),na.rm=TRUE)
+  if (is.na(me) == FALSE) {
+    bsn<-.basindelinCpp(dtm)
+    # Merge basins if boundary > 0
+    if (boundary > 0) {
+      mx<-max(as.vector(bsn),na.rm=T)
+      tst<-1
+      while (tst == 1) {
+        u<-unique(as.vector(bsn))
+        u<-u[is.na(u) == F]
+        if (length(u) > 1) {
+          bsn<-.basinmerge(dtm,bsn,boundary)
+          u<-unique(as.vector(bsn))
+          u<-u[is.na(u) == F]
+          if (length(u) > 1) {
+            bsn<-.basinmerge(dtm,bsn,boundary)
+            u<-unique(as.vector(bsn))
+            u<-u[is.na(u) == F]
+          }
+          u<-unique(as.vector(bsn))
+          u<-u[is.na(u) == F]
         }
-      }
+        if (length(u) == 1) tst<-0
+        mx2<-max(as.vector(bsn),na.rm=T)
+        if (mx2 ==  mx) {
+          tst<-0
+        } else mx<-mx2
+      } # end while
+    } # end if boundary
+  } else bsn<-dtm # end if boundary
+  return(bsn)
+}
+#' function to identify which basin edge cells are less or equal to boundary
+#'@noRd
+.edge<-function(v) {
+  o<-0
+  if (is.na(v[1]) == FALSE) {
+    if (max(v,na.rm=TRUE) > v[1]) o<-1
+  }
+  o
+}
+#' function to assign which surrounding cells should be merged
+#'@noRd
+.edgec<-function(v) {
+  o<-v*0
+  if (is.na(v[1]) == FALSE) {
+    s<-which(v>v[1])
+    o[s]<-1
+  }
+  o
+}
+#' function to grab neighbouring cells and reassign basin number
+#'@noRd
+.asign3<-function(bm2,bea,rw,cl) {
+  b3<-bm2[rw:(rw+2),cl:(cl+2)]
+  v<-bea[rw,cl,]
+  if (is.na(v[2])==FALSE & v[2] > 0) b3[2,1]<-b3[2,2]
+  if (is.na(v[3])==FALSE & v[3] > 0)  b3[2,3]<-b3[2,2]
+  if (is.na(v[4])==FALSE & v[4] > 0)  b3[1,2]<-b3[2,2]
+  if (is.na(v[5])==FALSE & v[5] > 0)  b3[1,1]<-b3[2,2]
+  if (is.na(v[6])==FALSE & v[6] > 0)  b3[1,3]<-b3[2,2]
+  if (is.na(v[7])==FALSE & v[7] > 0) b3[3,2]<-b3[2,2]
+  if (is.na(v[8])==FALSE & v[8] > 0)  b3[3,1]<-b3[2,2]
+  if (is.na(v[9])==FALSE & v[9] > 0)  b3[3,3]<-b3[2,2]
+  b3
+}
+#' Merge basins based on specified boundary
+#'@noRd
+.basinmerge<-function(dtm,bsn,boundary=0.25) {
+  # Put buffer around basin and dtn
+  bm<-.is(bsn)
+  bm2<-array(NA,dim=c(dim(bm)[1]+2,dim(bm)[2]+2))
+  bm2[2:(dim(bm)[1]+1),2:(dim(bm)[2]+1)]<-bm
+  dm<-.is(dtm)
+  dm2<-array(NA,dim=c(dim(dm)[1]+2,dim(dm)[2]+2))
+  dm2[2:(dim(dm)[1]+1),2:(dim(dm)[2]+1)]<-dm
+  # Create 3D array of  basin numbers  with adjoining cells
+  bma<-array(NA,dim=c(dim(bm),9))
+  bma[,,1]<-bm # rw, cl
+  bma[,,2]<-bm2[2:(dim(bm)[1]+1),1:dim(bm)[2]] # rw, cl-1
+  bma[,,3]<-bm2[2:(dim(bm)[1]+1),3:(dim(bm)[2]+2)] # rw, cl+1
+  bma[,,4]<-bm2[1:dim(bm)[1],2:(dim(bm)[2]+1)] # rw-1, cl
+  bma[,,5]<-bm2[1:dim(bm)[1],1:dim(bm)[2]] # rw-1, cl-1
+  bma[,,6]<-bm2[1:dim(bm)[1],3:(dim(bm)[2]+2)] # rw-1, cl+1
+  bma[,,7]<-bm2[3:(dim(bm)[1]+2),2:(dim(bm)[2]+1)] # rw+1, cl
+  bma[,,8]<-bm2[3:(dim(bm)[1]+2),1:dim(bm)[2]] # rw+1, cl-1
+  bma[,,9]<-bm2[3:(dim(bm)[1]+2),3:(dim(bm)[2]+2)] # rw+1, cl+1
+  # Create 3D array of elevation differences with adjoining cells
+  dma<-array(NA,dim=c(dim(dm),9))
+  dma[,,1]<-dm # rw, cl
+  dma[,,2]<-dm2[2:(dim(dm)[1]+1),1:dim(dm)[2]]-dm # rw, cl-1
+  dma[,,3]<-dm2[2:(dim(dm)[1]+1),3:(dim(dm)[2]+2)]-dm  # rw, cl+1
+  dma[,,4]<-dm2[1:dim(dm)[1],2:(dim(dm)[2]+1)]-dm  # rw-1, cl
+  dma[,,5]<-dm2[1:dim(dm)[1],1:dim(dm)[2]]-dm  # rw-1, cl-1
+  dma[,,6]<-dm2[1:dim(dm)[1],3:(dim(dm)[2]+2)]-dm  # rw-1, cl+1
+  dma[,,7]<-dm2[3:(dim(dm)[1]+2),2:(dim(dm)[2]+1)]-dm  # rw+1, cl
+  dma[,,8]<-dm2[3:(dim(dm)[1]+2),1:dim(dm)[2]]-dm  # rw+1, cl-1
+  dma[,,9]<-dm2[3:(dim(dm)[1]+2),3:(dim(dm)[2]+2)]-dm  # rw+1, cl+1
+  dma2<-dma*0
+  dma2[abs(dma)<boundary]<-1
+  bma<-bma*dma2
+  bma[,,1]<-bm
+  # identify edge and basin merge cells
+  be<-apply(bma,c(1,2),.edge)
+  bea<-aperm(apply(bma,c(1,2),.edgec),c(2,3,1))
+  s<-which(be>0,arr.ind=TRUE)
+  for (i in 1:dim(s)[1]) {
+    rw<-as.numeric(s[i,1])
+    cl<-as.numeric(s[i,2])
+    b3<-.asign3(bm2,bea,rw,cl)
+    bm2[rw:(rw+2),cl:(cl+2)]<-b3
+  }
+  # reassign basin number
+  u<-unique(as.vector(bm2))
+  u<-u[is.na(u)==FALSE]
+  u<-u[order(u)]
+  bm3<-bm2
+  for (i in 1:length(u)) {
+    s<-which(bm2==u[i])
+    bm3[s]<-i
+  }
+  dd<-dim(bm3)
+  bsn<-bm3[2:(dd[1]-1),2:(dd[2]-1)]
+  r<-.rast(bsn,dtm)
+}
+
+#' Mosaic tiled basins merging common joins
+#'@noRd
+.basinmosaic<-function(b1,b2) {
+  e1<-ext(b1)
+  e2<-ext(b2)
+  reso<-res(b1)
+  # *********** Do this if the tiles are vertically adjoined  *************** #
+  if (abs(e1$ymax-e2$ymax) > reso[1]) {
+    if (e2$ymax > e1$ymax) {  # b2 above b1
+      m1<-.is(b1)
+      m2<-.is(b2)
+    } else {  # b1 above b2
+      m1<-.is(b2)
+      m2<-.is(b1)
+    }
+    for (itr in 1:3) {
+      # merge based on top row of b1
+      v1<-m1[1,] # top row of b1
+      n<-dim(m2)[1] # mumber of rows
+      v2<-m2[n,] # bottom row of b2
+      # Create unique pairs matrix
+      mup<-as.matrix(cbind(v1,v2))
+      mup<-unique(mup)
+      s<-which(is.na(mup[,1])==FALSE)
+      mup<-mup[s,]
+      if (class(mup)[1] != "matrix") mup<-t(as.matrix(mup))
+      s<-which(is.na(mup[,2])==FALSE)
+      mup<-mup[s,]
+      if (class(mup)[1] != "matrix") mup<-t(as.matrix(mup))
+      # Create vector of unique v1s
+      u1<-unique(v1)
+      u1<-u1[is.na(u1)==FALSE]
+      u1<-u1[order(u1)]
+      ras2<-list() # list of basins in m2 that should be re-asigned for each basin in u1
+      ras1<-list() # list of basins in m1 that should be re-asigned for each basin in u1
+      if (length(u1) > 0) {
+        for (i in 1:length(u1)) {
+          s<-which(mup[,1]==u1[i])
+          u2<-mup[s,2] # list of basins in m2 that need reassigned
+          u2<-u2[order(u2)]
+          ras2[[i]]<-u2
+          # list of basins in m1 that need reassinged
+          s<-which(mup[,2]==u2[1])
+          u1n<-mup[s,1] # list of basins in m2 that need reassigned
+          if (length(u2) > 1) {
+            for (j in 2:length(u2)) {
+              s<-which(mup[,2]==u2[j])
+              u1n<-c(u1n,mup[s,1]) # list of basins in m2 that need reassigned
+            }
+          }
+          u1n<-unique(u1n)
+          u1n<-u1n[u1n>u1[i]]
+          ras1[[i]]<-u1n[order(u1n)]
+          u2<-ras2[[i]]
+          # Reassign basins in m2
+          if (length(u2) > 0) for (j in 1:length(u2)) m2[m2==u2[j]]<-u1[i]
+          u1n<-ras1[[i]]
+          # Reassign basins in m1
+          if (length(u1n) > 0) for (j in 1:length(u1n)) m1[m1==u1n[j]]<-u1[i]
+        } # end for u1
+      } # end if u1
+    } # end iter
+    # Convert back to SpatRasts
+    if (e2$ymax > e1$ymax) {  # b2 above b1
+      b1n<-.rast(m1,b1)
+      b2n<-.rast(m2,b2)
+    } else {  # b1 above b2
+      b1n<-.rast(m2,b1)
+      b2n<-.rast(m1,b2)
+    }
+  } else {# end do this if the tiles are vertically adjoined
+    # *********** Do this if the tiles are horizontally adjoined  ************** #
+    if (e2$xmax > e1$xmax) {  # b2 right of b1
+      m1<-.is(b1)
+      m2<-.is(b2)
+    } else {  # b2 left of b1
+      m1<-.is(b2)
+      m2<-.is(b1)
+    }
+    for (itr in 1:3) {
+      # merge based on right hand column of b1
+      n<-dim(m1)[2]
+      v1<-m1[,n] # right-hand column of b1
+      v2<-m2[,1] # left-hand column of b2
+      # Create unique pairs matrix
+      mup<-as.matrix(cbind(v1,v2))
+      mup<-unique(mup)
+      s<-which(is.na(mup[,1])==FALSE)
+      mup<-mup[s,]
+      if (class(mup)[1] != "matrix") mup<-t(as.matrix(mup))
+      s<-which(is.na(mup[,2])==FALSE)
+      mup<-mup[s,]
+      if (class(mup)[1] != "matrix") mup<-t(as.matrix(mup))
+      # Create vector of unique v1s
+      u1<-unique(v1)
+      u1<-u1[is.na(u1)==FALSE]
+      u1<-u1[order(u1)]
+      ras2<-list() # list of basins in m2 that should be re-asigned for each basin in u1
+      ras1<-list() # list of basins in m1 that should be re-asigned for each basin in u1
+      if (length(u1) > 0) {
+        for (i in 1:length(u1)) {
+          s<-which(mup[,1]==u1[i])
+          u2<-mup[s,2] # list of basins in m2 that need reassigned
+          u2<-u2[order(u2)]
+          ras2[[i]]<-u2
+          # list of basins in m1 that need reassinged
+          s<-which(mup[,2]==u2[1])
+          u1n<-mup[s,1] # list of basins in m2 that need reassigned
+          if (length(u2) > 1) {
+            for (j in 2:length(u2)) {
+              s<-which(mup[,2]==u2[j])
+              u1n<-c(u1n,mup[s,1]) # list of basins in m2 that need reassigned
+            }
+          }
+          u1n<-unique(u1n)
+          u1n<-u1n[u1n>u1[i]]
+          ras1[[i]]<-u1n[order(u1n)]
+          u2<-ras2[[i]]
+          # Reassign basins in m2
+          if (length(u2) > 0) for (j in 1:length(u2)) m2[m2==u2[j]]<-u1[i]
+          u1n<-ras1[[i]]
+          # Reassign basins in m1
+          if (length(u1n) > 0) for (j in 1:length(u1n)) m1[m1==u1n[j]]<-u1[i]
+        } # end for u1
+      } # end if u1
+    } # end iter
+    # Convert back to SpatRasts
+    if (e2$xmax > e1$xmax) {  # b2 above b1
+      b1n<-.rast(m1,b1)
+      b2n<-.rast(m2,b2)
+    } else {  # b1 above b2
+      b1n<-.rast(m2,b1)
+      b2n<-.rast(m1,b2)
     }
   }
-  unique(bm)
+  # ********************************** Mosaic ******************************* #
+  bout<-mosaic(b1n,b2n)
+  return(bout)
 }
-#' Internal function used by basinmerge
-#' @export
-.basinchars <- function(md, mb) {
-  mb2 <- array(NA, dim = c(dim(mb)[1] + 2, dim(mb)[2] + 2))
-  mb2[2:(dim(mb)[1] + 1), 2:(dim(mb)[2] + 1)] <- mb
-  sel <- which(is.na(mb2) == T)
-  mb2[sel] <- (-999)
-  md2 <- array(NA, dim = c(dim(md)[1] + 2, dim(md)[2] + 2))
-  md2[2:(dim(md)[1] + 1), 2:(dim(md)[2] + 1)] <- md
-  md2[sel] <- 9999
-  dfm <- data.frame(basin = NA, basinmindepth = NA,
-                    pourpointbasin = NA, pourpointhgt = NA)
-  for (b in 1:max(mb, na.rm = T)) {
-    sel <- which(mb == b)
-    x <- arrayInd(sel, dim(md))[, 1]
-    y <- arrayInd(sel, dim(md))[, 2]
-    df1 <- data.frame(basin = b,
-                      basinmindepth = min(md[sel], na.rm = T),
-                      pourpointbasin = NA, pourpointhgt = 0)
-    b2 <- 0
-    pph <- 0
-    for (i in 1:length(x)) {
-      mb9 <- mb2[x[i]:(x[i] + 2), y[i]:(y[i] + 2)]
-      md9 <- md2[x[i]:(x[i] + 2), y[i]:(y[i] + 2)]
-      sel <- which(as.vector(mb9) != b)
-      b2[i] <- NA
-      pph[i] <- NA
-      if (length(sel) > 0) {
-        mb9 <- mb9[sel]
-        md9 <- md9[sel]
-        sel2 <- which(as.vector(md9) == min(as.vector(md9)))
-        b2[i] <- mb9[sel2][1]
-        pph[i] <- md9[sel2][1]
-      }
-    }
-    sel <- which(pph == min(pph, na.rm = T))
-    df1$pourpointbasin <- b2[sel[1]]
-    df1$pourpointhgt <- min(pph, na.rm = T)
-    dfm <- rbind(dfm, df1)
+#' Do an entire column of tiled basins
+#'@noRd
+.docolumn<-function(dtm,tilesize,boundary,x) {
+  e<-ext(dtm)
+  reso<-res(dtm)
+  ymxs<-as.numeric(ceiling((e$ymax-e$ymin)/reso[2]/tilesize))-1
+  xmn<-as.numeric(e$xmin)+reso[1]*tilesize*x
+  xmx<-xmn+reso[1]*tilesize
+  ymn<-as.numeric(e$ymin)+reso[2]*tilesize*0
+  ymx<-ymn+reso[2]*tilesize
+  if (xmx > e$xmax) xmx<-e$xmax
+  if (ymx > e$ymax) ymx<-e$ymax
+  ec<-ext(xmn,xmx,ymn,ymx)
+  dc<-crop(dtm,ec)
+  bma<-basindelin(dc,boundary)
+  # delineate basins for columns
+  for (y in 1:ymxs) {
+    xmn<-as.numeric(e$xmin)+reso[1]*tilesize*x
+    xmx<-xmn+reso[1]*tilesize
+    ymn<-as.numeric(e$ymin)+reso[2]*tilesize*y
+    ymx<-ymn+reso[2]*tilesize
+    if (xmx > e$xmax) xmx<-e$xmax
+    if (ymx > e$ymax) ymx<-e$ymax
+    ec<-ext(xmn,xmx,ymn,ymx)
+    dc<-crop(dtm,ec)
+    ta<-suppressWarnings(max(as.vector(bma),na.rm=T))
+    if (is.infinite(ta)) ta<-0
+    bo<-basindelin(dc,boundary)+ta
+    bma<-.basinmosaic(bma,bo)
+  } # end y
+  return(bma)
+}
+#' Function used for delineating basins with big dtms
+#' @importFrom Rcpp sourceCpp
+#' @useDynLib microclima, .registration = TRUE
+#'@noRd
+.basindelin_big<-function(dtm, boundary = 0, tilesize = 100, plotprogress = FALSE) {
+  # chop into tiles
+  e<-ext(dtm)
+  reso<-res(dtm)
+  xmxs<-as.numeric(ceiling((e$xmax-e$xmin)/reso[1]/tilesize))-1
+  bma<-.docolumn(dtm,tilesize,boundary,0)
+  for (x in 1:xmxs) {
+    ta<-suppressWarnings(max(as.vector(bma),na.rm=T))
+    if (is.infinite(ta)) ta<-0
+    bo<-.docolumn(dtm,tilesize,boundary,x)+ta
+    ed<-Sys.time()
+    bma<-.basinmosaic(bma,bo)
+    if (plotprogress) plot(bma,main=x)
   }
-  dfm <- dfm[which(is.na(dfm$basin) == F), ]
-  dfm
+  m<-.is(bma)
+  # renumber basins
+  u<-unique(as.vector(m))
+  u<-u[is.na(u) == FALSE]
+  u<-u[order(u)]
+  m<-array(renumberbasin(m,u),dim=dim(m))
+  bout<-.rast(m,bout)
+  return(bma)
 }
-#' Internal function used by basinmerge
-#' @export
-.bvarsrem <- function(bvars, boundary) {
-  sel <- which(bvars$pourpointbasin != -999)
-  if (length(sel) == 0) warning("all basins flow into sea")
-  bvars <- bvars[sel, ]
-  bvars$basindepth <- bvars$pourpointhgt - bvars$basinmindepth
-  bvars <- bvars[bvars$basindepth < boundary, ]
-  o <- order(bvars$pourpointhgt, decreasing = TRUE)
-  bvars <- bvars[o, ]
-  bvars
-}
-#' Internal function used to calculate flow direction
-#' @export
+#' Calculate flow direction
+#'@noRd
 .flowdir <- function(md) {
-  fd <- md * 0
-  md2 <- array(NA, dim = c(dim(md)[1] + 2, dim(md)[2] + 2))
-  md2[2:(dim(md)[1] + 1), 2:(dim(md)[2] + 1)] <- md
-  v <- c(1:length(md))
-  v <- v[is.na(md) == F]
-  x <- arrayInd(v, dim(md))[, 1]
-  y <- arrayInd(v, dim(md))[, 2]
+  fd<-md*0
+  md2<-array(NA,dim=c(dim(md)[1]+2,dim(md)[2]+2))
+  md2[2:(dim(md)[1]+1),2:(dim(md)[2]+1)]<-md
+  v<-c(1:length(md))
+  v<-v[is.na(md) == F]
+  x<-arrayInd(v,dim(md))[,1]
+  y<-arrayInd(v,dim(md))[,2]
   for (i in 1:length(x)) {
-    md9 <- md2[x[i]:(x[i] + 2), y[i]:(y[i] + 2)]
-    fd[x[i], y[i]] <- round(mean(which(md9 == min(md9, na.rm = T))), 0)
+    md9<-md2[x[i]:(x[i]+2),y[i]:(y[i]+2)]
+    fd[x[i],y[i]]<-round(mean(which(md9==min(md9,na.rm=TRUE))),0)
   }
   fd
 }
-#' Delineates hydrological basins
-#'
-#' @description `basindelin` uses digital elevation data to delineate hydrological or cold-air drainage basins.
-#'
-#' @param dem a raster object, two-dimensional array or matrix of elevations.
-#'
-#' @return a raster object, two-dimensional array or matrix  with individual basins numbered sequentially as integers.
-#' @import raster
+#' @title Delineates hydrological or cold-air drainage basins
+#' @description The function `basindelin` uses a digital elevation dataset to delineate
+#' hydrological basins, merging adjoining basis separated by a low boundary if specified.
+#' @param dtm a SpatRast object of elevations
+#' @param boundary optional numeric value. If greater than 0, adjoining basins
+#' separated by elevation differences < boundary are merged (see details.
+#' @return a SpatRast of basins sequentially numbered as integers.
+#' @details This function searches for the lowest grid cell in `dtm` and assigns it
+#' as basin 1. All immediately adjacent pixels (in 8 directions) not previously assigned
+#' are then assigned as being part of this basin if higher than the focal cell. The process is repeated
+#' until no higher further cells are found. The next lowest unassigned grid cell is identified
+#' and assigned as basin 2 and the process repeated until all grid cells are assigned a basin number.
+#' If `boundary > 0`, edge grid cells are identified and the height difference from all
+#' surrounding cells calculated. If the height difference is less than `boundary`, basins
+#' are merged and the basins renumbered sequentially.
+#' @import terra
+#' @importFrom Rcpp sourceCpp
+#' @useDynLib microclima, .registration = TRUE
 #' @export
-#'
-#' @seealso [basindelin_big()] for working with large datasets.
-#'
-#' @details
-#' If `dem` is a raster object, a raster onbject is returned.
-#' This function is used to delineate cold-air drainage basins.
-#' It iteratively identifies the lowest elevation pixel of `dem`, and
-#' assigns any of the eight adjoining pixels to the same basin if higher.
-#' The process is repeated on all assigned adjoining pixels until no further
-#' higher pixels are found. The next lowest unassigned pixel is then
-#' identified, a new basin identity assigned and the processes repeated until
-#' all pixels are assigned to a basin. Relative to heuristic algorithms, it is
-#' slow and run time increases exponentially with size of `dtm`. However, in
-#' contrast to many such algorithms, all basins are correctly seperated by
-#' boundaries >0. With large datasets, with > 160,000 pixels, calculations will
-#' be slow and [basindelin_big()] should be used instead
-#'
+#' @rdname basindelin
 #' @examples
-#' library(raster)
-#' dem <- aggregate(dtm1m, 20)
-#' basins <- basindelin (dem)
+#' library(terra)
+#' basins <- basindelin(rast(dtm100m))
 #' plot(basins, main = "Basins")
-basindelin <- function(dem) {
-  r <- dem
-  dem <- is_raster(dem)
-  ngbrow <- c(-1, -1, 0, 1, 1, 1, 0, -1)
-  ngbcol <- c(0, 1, 1, 1, 0, -1, -1, -1)
-  updownm <- .updown(dem)
-  basinsm <- ifelse(is.na(dem), NA, 0)
-  donem <- dem
-  basincell <- order(dem)[1]
-  basin <- 1
-  while (basincell != -999) {
-    while (basincell != -999) {
-      i <- basincell
-      irow <- arrayInd(i, dim(dem))[1]
-      icol <- arrayInd(i, dim(dem))[2]
-      basinsm[irow, icol] <- basin
-      neighbours <- .integertobinary8(updownm[i])
-      for (n in 1:8) {
-        if ((irow + ngbrow[n]) > 0 & (irow + ngbrow[n]) <= dim(basinsm)[1] &
-            (icol + ngbcol[n]) > 0 & (icol + ngbcol[n]) <= dim(basinsm)[2]) {
-          if (!is.na(basinsm[(irow + ngbrow[n]), (icol + ngbcol[n])])) {
-            if (substr(neighbours, n, n) == "0" &
-                basinsm[(irow + ngbrow[n]), (icol + ngbcol[n])] == 0) {
-              basinsm[(irow + ngbrow[n]), (icol + ngbcol[n])] <- basin
-            }
-          }
-        }
-      }
-      donem[i] <- NA
-      if (length(which(basinsm == basin & !is.na(donem))) > 0) {
-        basincell <- min(which(basinsm == basin & !is.na(donem) ))
-      }
-      else basincell <- -999
-    }
-    if (length(which(!is.na(donem)) > 0)) {
-      basincell <- which(donem == min(donem, na.rm = TRUE))[1]
-    }
-    else basincell <- -999
-    basin <- basin + 1
-  }
-  basinsm <- if_raster(basinsm, r)
-  basinsort(r, basinsm)
-}
-#' Delineates hydrological basins for large datasets
-#'
-#' @description
-#' `basindelin_big` is for use with large digital elevation datasets, to
-#' delineate hydrological or cold-air drainage basins.
-#'
-#' @param dem a raster object of elevations.
-#' @param dirout an optional character vector containing a single path directory for temporarily storing tiles. Deleted after use. Tilde expansion (see [path.expand()]) is done.
-#' @param trace a logical value indicating whether to plot and report on progress.
-#'
-#' @return a raster object with individual basins numbered sequentially as integers.
-#' @import raster
-#' @export
-#' @seealso [basindelin()] for working with smaller datasets.
-#'
-#' @details
-#' The function `basindelin_big` divides the large dataset into tiles and then
-#' uses [basindelin()] to delineate basins for each tile before mosaicing back
-#' together and merging basins along tile edges if not separated by a boundary
-#' greater than 0. If `dirout` is unspecified, then a directory `basinsout` is
-#' temporarily created within the working directory. If `trace` is TRUE (the
-#' default) then progress is tracked during three stages: (1) the basins
-#' of each tile are plotted, (2) basins after mosaicing, but prior
-#' to merging are plotted and (3) on each merge iteration, the number of basins
-#' to merge is printed and processed basin is plotted.
-#'
-#' @examples
-#' library(raster)
-#' basins <- basindelin_big(dtm1m)
-#' plot(basins, main = "Basins")
-basindelin_big <- function(dem, dirout = NA, trace = TRUE) {
-  dem <- trim(dem)
-  dmsx <- ceiling(dim(dem)[2] / 200) - 1
-  dmsy <- ceiling(dim(dem)[1] / 200) - 1
-  if (dmsx < 1 & dmsy < 1) {
-    basins <- basindelin(dem)
-  }
-  else {
-    xres <- xres(dem)
-    yres <- yres(dem)
-    ed <- extent(dem)
-    if (is.na(dirout)) dirout <- "basinsout/"
-    dir.create(dirout)
-    fol <- ""
-    ii <- 1
-    for (i in 0:dmsx) {
-      for (j in 0:dmsy) {
-        xmn <- ed@xmin + i * 200 * xres
-        xmx <- min((xmn + 200 * xres), ed@xmax)
-        ymn <- ed@ymin + j * 200 * yres
-        ymx <- min((ymn + 200 * yres), ed@ymax)
-        e <- extent(c(xmn, xmx, ymn, ymx))
-        r <- crop(dem, e)
-        v <- getValues(r)
-        if (is.na(mean(v, na.rm = TRUE)) == FALSE) {
-          b <- basindelin(r)
-          if (trace) {
-            progress <- paste0(round(ii / ((dmsx + 1) * (dmsy + 1)) * 100, 1),
-                               "%")
-            plot(b, main = paste0("basin slice progress: ", progress))
-          }
-          fo <- paste0(dirout, "b", i, "_", j, ".tif")
-          fol <- c(fol, fo)
-          writeRaster(b, filename = fo, overwrite = TRUE)
-        }
-        ii <- ii + 1
-      }
-    }
-    fol <- fol[fol != ""]
-    basins <- raster(fol[1])
-    ta <- max(getValues(basins), na.rm = TRUE)
-    if (length(fol) > 1) {
-      for (i in 2:length(fol)) {
-        r <- raster(fol[i]) + ta
-        basins <- mosaic(basins, r, fun = mean)
-        ta <- max(getValues(basins), na.rm = TRUE)
-      }
-    }
-    if (trace) {
-      plot(basins, main = "Basin mosaic complete")
-    }
-    unlink(dirout)
-    iter <- 1
-    test <- 0
-    basins[is.na(basins)] <- 9999
-    dem[is.na(dem)] <- 9999
-    while (test != 1) {
-      basins <- basinsort(dem, basins)
-      bmm <- getValues(basins, format = "matrix")
-      lst <- as.list(c(1:max(getValues(basins), na.rm = TRUE)))
-      ii <- 1
-      if (dmsx > 0) {
-        for (i in 1:dmsx) {
-          xmn <- ed@xmin + i * 200 * xres - 1
-          xmx <- min((xmn + 2 * xres), ed@xmax)
-          e <- extent(c(xmn, xmx, ed@ymin, ed@ymax))
-          r <- crop(basins, e)
-          ds <- crop(dem, e)
-          md <- getValues(ds, format = "matrix")
-          mb <- getValues(r, format = "matrix")
-          u <- unique(getValues(r))
-          u <- u[is.na(u) == F]
-          u <- u[order(u)]
-          if (length(u) > 0) {
-            for (k in 1:length(u)) {
-              lst[[ii]] <- .onebasin_merge(md, mb, u[k])
-              ii <- ii + 1
-            }
-          }
-        }
-      }
-      if (dmsy > 0) {
-        for (j in 1:dmsy) {
-          ymn <- ed@ymin + j * 200 * yres - 1
-          ymx <- ymn + 2 * yres
-          e <- extent(c(ed@xmin, ed@xmax, ymn, ymx))
-          r <- crop(basins, e)
-          ds <- crop(dem, e)
-          md <- getValues(ds, format = "matrix")
-          mb <- getValues(r, format = "matrix")
-          u <- unique(getValues(r))
-          u <- u[is.na(u) == F]
-          u <- u[order(u)]
-          if (length(u) > 0) {
-            for (k in 1:length(u)) {
-              lst[[ii]] <- .onebasin_merge(md, mb, u[k])
-              ii <- ii + 1
-            }
-          }
-        }
-      }
-      lst <- lst[1:ii]
-      ub <- unique(unlist(lst))
-      ub <- ub[order(ub)]
-      ub2 <- ub
-      for (i in 1:length(ub)) {
-        for (j in 1:ii) {
-          v <- lst[[j]]
-          tst <- which(v == ub[i])
-          if (length(tst) > 0) ub2[i] <- min(ub2[i], min(v))
-        }
-      }
-      sel <- which(ub != ub2)
-      if (trace) {
-        print(paste0("Basins to merge: ", length(sel)))
-      }
-      if (length(sel) == 0) {
-        test <- 1
-        if (trace) plot(basins, main = "Merge complete")
-      }
-      else {
-        mbout <- bmm
-        for (i in 1:length(sel)) {
-          mbout[bmm == ub[sel[i]]] <- ub2[sel[i]]
-        }
-        basins <- raster(mbout, template = basins)
-        if (trace) {
-          plot(basins, main = paste0("Basin merge iteration: ", iter))
-        }
-        iter <- iter + 1
-      }
-    }
-  }
-  basins[dem == 9999] <- NA
-  if (trace) plot (basins, main = "Merge complete")
-  basins <- basinsort(dem, basins)
-  basins
-}
-#' Merges adjoining basins
-#'
-#' @description
-#' `basinmerge` merges adjoining basins if the height differences between the
-#' bottom of the basin and the pour point is less than than that
-#' specified by `boundary`.
-#'
-#' @param dem a raster object, two-dimensional array or matrix of elevations.
-#' @param basins a raster object, two-dimensional array or matrix with basins numbered as integers as returned by [basindelin()].
-#' @param boundary a single numeric value. Basins seperated by boundaries below this height are merged (should have same units as `dtm`).
-#'
-#' @return a raster object, two-dimensional array or matrix with basins numbered as integers.
-#' @import raster
-#' @export
-#'
-#' @details
-#' If `dem` is a raster object, then a raster object is returned.
-#' If the differences in height between the pour-point and bottom of the basin is
-#' less than that specified by `boundary` the basin is merged with basin to which
-#' water or air would pour.
-#'
-#' @examples
-#' library(raster)
-#' basins2 <- basinmerge(dtm100m, basins100m, 1)
-#' par(mfrow=c(1, 2))
-#' plot(basins100m, main = "Basins")
-#' plot(basins2, main = "Merged basins")
-basinmerge <- function(dem, basins, boundary) {
-  if (all.equal(dim(basins)[1:2], dim(dem)[1:2]) == FALSE)
-    stop ("basins and dem have different dimensions")
-  r <- basins
-  dem <- is_raster(dem)
-  basins <- is_raster(basins)
-  test <- F
-  while (test == F) {
-    mb2 <- basins
-    bvars <- .basinchars(dem, basins)
-    bkeep <- .bvarsrem(bvars, boundary)
-    if (dim(bkeep)[1] == 0) test <- T
-    for (b in 1:(dim(bkeep)[1])) {
-      sel <- which(bkeep$pourpointbasin == bkeep$basin[b])
-      if (length(sel) > 0) {
-        bkeep$pourpointbasin[sel] <- bkeep$pourpointbasin[b]
-      }
-      sel <- which(basins == bkeep$basin[b])
-      mb2[sel] <- bkeep$pourpointbasin[b]
-    }
-    u <- unique(as.vector(mb2))
-    sel <- which(is.na(u) == F)
-    u <- u[sel]
-    for (i in 1:length(u)) {
-      sel <- which(mb2 == u[i])
-      basins[sel] <- i
-    }
-  }
-  basins <- basinsort(dem, basins)
-  if_raster(basins, r)
+basindelin<-function(dtm, boundary = 0) {
+  dm<-dim(dtm)
+  if (sqrt(dm[1]*dm[2]) > 250) {
+    bsn<-.basindelin_big(dtm, boundary)
+  } else bsn<-.basindelin(dtm, boundary)
+  return(bsn)
 }
 #' Calculates accumulated flow
-#'
 #' @description
-#' `flowacc` is used by [pcad()] to calculate accumulated flow to each cold air drainage
-#' basin
-#'
-#' @param dem a raster object, two-dimensional array or matrix of elevations.
-#'
-#' @return a raster object, two-dimensional array or matrix of accumulated flow.
-#' @details Accumulated flow is expressed in terms of number of cells.
+#' `flowacc` calculates accumulated flow(used to model cold air drainage)
+#' @param dtm a SpatRast elevations (m).
+#' @param basins optionally a SpatRast of basins numbered as integers (see details).
+#' @return a SpatRast of accumulated flow (number of cells)
+#' @details Accumulated flow is expressed in terms of number of cells. If `basins`
+#' is provided, accumulated flow to any cell within a basin can only occur from
+#' other cells within that basin.
+#' @import terra
 #' @export
-#'
+#' @rdname flowacc
 #' @examples
-#' library(raster)
-#' fa <- flowacc(dtm100m)
+#' library(terra)
+#' fa <- flowacc(rast(dtm100m))
 #' plot(fa, main = 'Accumulated flow')
-flowacc <- function (dem)
-{
-  dm <- is_raster(dem)
-  fd <- .flowdir(dm)
-  fa <- fd * 0 + 1
-  o <- order(dm, decreasing = T, na.last = NA)
+flowacc <- function (dtm, basins = NA) {
+  dm<-.is(dtm)
+  fd<-.flowdir(dm)
+  fa<-fd*0+1
+  if (class(basins) != "logical") ba<-.is(basins)
+  o<-order(dm,decreasing=T,na.last=NA)
   for (i in 1:length(o)) {
-    x <- arrayInd(o[i], dim(dm))[1]
-    y <- arrayInd(o[i], dim(dm))[2]
-    f <- fd[x, y]
-    x2 <- x + (f - 1)%%3 - 1
-    y2 <- y + (f - 1)%/%3 - 1
-    if (x2 > 0 & x2 < dim(dm)[1] & y2 > 0 & y2 < dim(dm)[2])
-      fa[x2, y2] <- fa[x, y] + 1
+    x<-arrayInd(o[i],dim(dm))[1]
+    y<-arrayInd(o[i],dim(dm))[2]
+    f<-fd[x,y]
+    x2<-x+(f-1)%%3-1
+    y2<-y+(f-1)%/%3-1
+    # If basin file provided only add flow accumulation of from same basin
+    if (class(basins) != "logical" & x2>0 & y2>0) {
+      b1<-ba[x,y]
+      b2<-ba[x2,y2]
+      if(!is.na(b1) && !is.na(b2)){ # Check if both b1 and b2 valid basins
+        if(b1==b2 & x2>0 & x2<dim(dm)[1] & y2>0 & y2<dim(dm)[2]) fa[x2,y2]<-fa[x,y]+1 }
+    } else if (x2>0 & x2<dim(dm)[1] & y2>0 & y2<dim(dm)[2]) fa[x2,y2]<-fa[x,y]+1
   }
-  if_raster(fa, dem)
+  fa<-.rast(fa,dtm)
+  return(fa)
 }
 #' Calculates whether conditions are right for cold air drainage
 #'
@@ -534,7 +465,7 @@ flowacc <- function (dem)
 #' cold air drainage is likely to occur
 #'
 #' @param h a vector of hourly specific humidities (\ifelse{html}{\out{kg kg<sup>-1</sup> }}{\eqn{kg kg^{-1}}}).
-#' @param tc a single numeric value, raster object, two-dimensional array or matrix of temperatures (ºC).
+#' @param tc a single numeric value, SpatRaster object, two-dimensional array or matrix of temperatures (ºC).
 #' @param n a vector of hourly fractional cloud cover values (range 0 - 1).
 #' @param p an optional vector of hourly atmospheric pressure values (Pa).
 #' @param wind a vector of wind speed values at one metre above the ground (\ifelse{html}{\out{m s<sup>-1</sup> }}{\eqn{m s^{-1}}})
@@ -627,9 +558,9 @@ cadconditions <- function(h, tc, n, p = 100346.13, wind, startjul, lat, long,
 #' ` pcad` calculates the expected temperature differences resulting from cold air
 #' drainage.
 #'
-#' @param dem a raster object of elevation (m).
-#' @param basins a raster object, two-dimensional array or matrix with basins numbered as integers as returned by [basindelin()].
-#' @param fa a raster object of accumulated flow, as returned by [flowacc()]
+#' @param dem a SpatRaster object of elevation (m).
+#' @param basins a SpatRaster object, two-dimensional array or matrix with basins numbered as integers as returned by [basindelin()].
+#' @param fa a SpatRaster object of accumulated flow, as returned by [flowacc()]
 #' @param tc a single numeric value, raster object, two-dimensional array or matrix of values with the dimensions as `dem` of temperature (ºC).
 #' @param h a single numeric value, raster object, two-dimensional array or matrix of values with the dimensions as `dem` of specific humidity (\ifelse{html}{\out{kg kg<sup>-1</sup> }}{\eqn{kg kg^{-1}}}).
 #' @param p an optional single numeric value, raster object, two-dimensional array or matrix of values with the dimensions as `dem` of atmospheric pressure (Pa).
@@ -640,7 +571,7 @@ cadconditions <- function(h, tc, n, p = 100346.13, wind, startjul, lat, long,
 #'   \item{if `out = "pflow"`}{the accumulated flow logairthmically transformed expressed as a proportion of the maximum in each basin.}
 #'   \item{if `out = "cadp"` (the default)}{the expected temperature difference x the proportion of accumulated flow.}
 #' }
-#' @import raster
+#' @import terra
 #' @export
 #'
 #' @details To derive expected temperature differences, `pcad` calculates the
@@ -653,13 +584,13 @@ cadconditions <- function(h, tc, n, p = 100346.13, wind, startjul, lat, long,
 #' Warning: function is quite slow on large datasets.
 #'
 #' @examples
-#' library(raster)
-#' basins <- basinmerge(dtm100m, basins100m, 2)
+#' library(terra)
+#' basins <- basindelin(rast(dtm100m), boundary = 2)
 #' h <- humidityconvert(50, intype = "relative", 20)$specific
-#' fa <- flowacc(dtm100m, basins)
-#' cp1 <- pcad(dtm100m, basins, fa, 20, h)
-#' cp2 <- pcad(dtm100m, basins, fa, 20, h, out = "tempdif")
-#' cp3 <- pcad(dtm100m, basins, fa, 20, h, out = "pflow")
+#' fa <- flowacc(rast(dtm100m), basins)
+#' cp1 <- pcad(rast(dtm100m), basins, fa, 20, h)
+#' cp2 <- pcad(rast(dtm100m), basins, fa, 20, h, out = "tempdif")
+#' cp3 <- pcad(rast(dtm100m), basins, fa, 20, h, out = "pflow")
 #' par(mfrow=c(1, 3))
 #' plot(cp3, main = "Accumulated flow proportion")
 #' plot(cp2, main = "Expected temperature difference")

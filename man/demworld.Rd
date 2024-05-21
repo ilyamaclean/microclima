@@ -5,7 +5,7 @@
 \alias{demworld}
 \title{A 1.875 (long) by  1.904129(lat) resolution dataset of elevations}
 \format{
-A raster object with 94 rows and 192 columns.
+A wrapped SpatRaster object with 94 rows and 192 columns.
 }
 \source{
 \url{http://www.cmsaf.eu/}
@@ -14,6 +14,6 @@ A raster object with 94 rows and 192 columns.
 demworld
 }
 \description{
-A dataset global dataset elevation in metres (CRS: +init=epsg:4326)
+A dataset global elevation in metres (CRS: +init=epsg:4326)
 }
 \keyword{datasets}

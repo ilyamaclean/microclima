@@ -9,7 +9,7 @@ windheight(ui, zi, zo)
 \arguments{
 \item{ui}{numeric value(s) of measured wind speed (\ifelse{html}{\out{m s<sup>-1</sup> }}{\eqn{ m s^{-1}}}) at height \code{zi} (m).}
 
-\item{zi}{a numeric value idicating the height (m) above the ground at which \code{ui} was measured.}
+\item{zi}{a numeric value indicating the height (m) above the ground at which \code{ui} was measured.}
 
 \item{zo}{a numeric value indicating the height (m) above ground level at which wind speed is desired.}
 }
@@ -21,7 +21,7 @@ numeric values(s) of wind speed at height specified by \code{zo} (\ifelse{html}{
 }
 \details{
 Thus function assumes a logarithmic height profile to convert
-wind speeds. It performs innacurately when \code{uo} is lower than 0.2
+wind speeds. It performs inaccurately when \code{uo} is lower than 0.2
 and a warning is given. If \code{uo} is below ~0.08 then the logairthmic height
 profile cannot be used, and \code{uo} is converted to 0.1 and a warning given.
 }

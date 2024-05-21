@@ -7,12 +7,12 @@
 canopy(l, ref = 0)
 }
 \arguments{
-\item{l}{a raster object, two-dimensional array or matrix of leaf area index values as returned by \code{\link[=lai]{lai()}}.}
+\item{l}{a SpatRaster object, two-dimensional array or matrix of leaf area index values as returned by \code{\link[=lai]{lai()}}.}
 
-\item{ref}{leaf reflectivity.}
+\item{ref}{leaf reflectance.}
 }
 \value{
-a raster object or a two-dimensional array of numeric values representing fractional canopy cover estimated as the proportion of isotropic radiation transmitted through the canopy.
+a SpatRaster object or a two-dimensional array of numeric values representing fractional canopy cover estimated as the proportion of isotropic radiation transmitted through the canopy.
 }
 \description{
 \code{canopy} is used to calculate fractional canopy cover.
@@ -24,10 +24,9 @@ cover if \code{ref} = 0, but if \code{ref} is greater than zero, scattered light
 If \code{l} is a raster object, a raster object is returned.
 }
 \examples{
-library(raster)
+library(terra)
 l <- lai(aerial_image[,,3], aerial_image[,,4])
 l <- if_raster(l, dtm1m) # convert to raster
-fr <- canopy(l)
-fr[is.na(dtm1m)] <- NA
+fr <- mask(canopy(l),rast(dtm1m))
 plot(fr, main = "Fractional canopy cover")
 }

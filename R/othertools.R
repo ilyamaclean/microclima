@@ -2,7 +2,7 @@
 #'
 #' @description `humidityconvert` is used to convert between different measures of humidity, namely relative, absolute or specific. Vapour pressure is also returned.
 #'
-#' @param h humidity value(s). Units as follows: specific humidity (\ifelse{html}{\out{kg kg<sup>-1</sup>}}{\eqn{kg kg^{-1}}}), absolute humidity (\ifelse{html}{\out{kg m<sup>-3</sup> }}{\eqn{kg m^{-3}}}), relative humidity (\%), vapour pressure (kPa).
+#' @param h humidity value(s). Units as follows: specific humidity (\ifelse{html}{\out{kg kg<sup>-1</sup>}}{\eqn{kg kg^{-1}}}), absolute humidity (\ifelse{html}{\out{kg m<sup>-3</sup> }}{\eqn{kg m^{-3}}}), relative humidity (percentage), vapour pressure (kPa).
 #' @param intype a character string description of the humidity type of `h`. One of "relative", "absolute" or "specific".
 #' @param tc A numeric value specifying the temperature (ºC).
 #' @param p An optional numeric value specifying the atmospheric pressure (Pa).
@@ -16,10 +16,12 @@
 #' relative humidity values exceeds 100\% a warning is given.
 #'
 #' @return a list of numeric humidity values with the following components:
-#' @return `relative` relative humidity (\%).
-#' @return `absolute`  absolute humidity (\ifelse{html}{\out{kg m<sup>-3</sup> }}{\eqn{kg m^{-3}}}).
-#' @return `specific` specific humidity (\ifelse{html}{\out{kg kg<sup>-1</sup> }}{\eqn{kg kg^{-1}}}).
-#' @return `vapour_pressure` vapour pressure (kPa).
+#' \describe{
+#'   \item{1}{`relative` - relative humidity (percentage)}
+#'   \item{2}{`absolute` - absolute humidity (\ifelse{html}{\out{kg m<sup>-3</sup> }}{\eqn{kg m^{-3}}})}
+#'   \item{3}{`specific` specific humidity (\ifelse{html}{\out{kg kg<sup>-1</sup> }}{\eqn{kg kg^{-1}}})}
+#'   \item{4}{`vapour_pressure` vapour pressure (kPa)}
+#'  }
 #' @export
 #'
 #' @examples
@@ -57,36 +59,35 @@ humidityconvert <- function(h, intype = "relative", tc = 20, p = 101300) {
 #'
 #' @description `invls` is used to calculate an inverse distance\ifelse{html}{\out{<sup>2</sup>}}{\eqn{^2}} weighted ratio of land to sea in a specified upwind direction.
 #'
-#' @param landsea A raster object with NAs (representing sea) or any non-NA value (representing land). The object should have a larger extent than that for which land-sea ratio values are needed, as the calculation requires land / sea coverage to be assessed upwind outside the target area.
-#' @param e an extent object indicating the region for which land-sea ratios are required.
+#' @param landsea A SpatRast object with NAs (representing sea) or any non-NA value (representing land). The object should have a larger extent than that for which land-sea ratio values are needed, as the calculation requires land / sea coverage to be assessed upwind outside the target area.
+#' @param e an terra::ext object indicating the region for which land-sea ratios are required.
 #' @param direction an optional single numeric value specifying the direction (decimal degrees) from which the wind is blowing.
 #'
 #' @details This function calculates a coefficient of the ratio of land to
 #' sea pixels in a specified upwind direction, across all elements of a
-#' raster object, weighted using an inverse distance squared function,
+#' SpatRaster object, weighted using an inverse distance squared function,
 #' such that nearby pixels have a greater influence on the coefficient.
-#' It returns a raster object representing values ranging between zero
+#' It returns a SpatRaster object representing values ranging between zero
 #' (all upwind pixels sea) to one (all upwind pixels land). Upwind
 #' direction is randomly varied by ± `jitter.amount` degrees.
 #'
-#' @return a raster object with distance-weighted proportions of upwind land pixels
-#' @import raster rgdal
-#' @importFrom sp coordinates
+#' @return a SpatRaster object with distance-weighted proportions of upwind land pixels
+#' @import terra
 #' @useDynLib microclima, .registration = TRUE
 #' @importFrom Rcpp sourceCpp
 #' @export
 #'
 #' @examples
-#' library(raster)
-#' ls1 <- invls(dtm100m, extent(dtm1m), 180)
-#' ls2 <- invls(dtm100m, extent(dtm1m), 270)
+#' library(terra)
+#' ls1 <- invls(rast(dtm100m), ext(rast(dtm1m)), 180)
+#' ls2 <- invls(rast(dtm100m), ext(rast(dtm1m)), 270)
 #' par(mfrow=c(2,1))
 #' plot(ls1, main = "Land to sea weighting, southerly wind")
 #' plot(ls2, main = "Land to sea weighting, westerly wind")
 invls <- function(landsea, e, direction) {
-  e2 <- extent(landsea)
-  maxdist <- sqrt(xres(landsea) * (e2@xmax - e2@xmin) +
-                    yres(landsea) * (e2@ymax - e2@ymin))
+  e2 <- ext(landsea)
+  maxdist <- sqrt(xres(landsea) * (e2$xmax - e2$xmin) +
+                    yres(landsea) * (e2$ymax - e2$ymin))
   resolution <- xres(landsea)
   slr <- landsea * 0 + 1
   m <- is_raster(slr)
@@ -97,11 +98,11 @@ invls <- function(landsea, e, direction) {
   if (e2 != e) {
     lss <- crop(slr, e, snap = 'out')
   } else lss <- slr
-  lsm <- getValues(lss, format = "matrix")
+  lsm <- as.matrix(lss, wide = TRUE)
   lsw <- array(NA, dim = dim(lsm))
-  lsw <- invls_calc(lsm, resolution, e@xmin, e@ymax, s, direction, raster::as.matrix(slr),
-                    raster::xmin(slr),raster::xmax(slr),raster::ymin(slr),raster::ymax(slr))
-  lsr <- raster(lsw, template = lss)
+  lsw <- invls_calc(lsm, resolution, e$xmin, e$ymax, s, direction, terra::as.matrix(slr, wide = TRUE),
+                    terra::xmin(slr),terra::xmax(slr),terra::ymin(slr),terra::ymax(slr))
+  lsr <- .rast(lsw, lss)
   lsr
 }
 #' Calculates coastal effects using thin-plate spline
@@ -109,14 +110,14 @@ invls <- function(landsea, e, direction) {
 #' @description `coastalTps` uses thin-plate spline interpolation to estimate
 #' the effects of coastal buffering of land-temperatures by the sea.
 #'
-#' @param dT a coarse-resolution raster of sea - land temperatures (ºC).
-#' @param lsw a fine-resolution raster of coastal exposure upwind, as produced by [invls()].
-#' @param lsa a fine-resolution raster of mean coastal exposure in all directions.
-#' @return a fine-resolution raster of sea - land temperature differences (ºC).
+#' @param dT a coarse-resolution SpatRaster of sea - land temperatures (ºC).
+#' @param lsw a fine-resolution SpatRaster of coastal exposure upwind, as produced by [invls()].
+#' @param lsa a fine-resolution SpatRaster of mean coastal exposure in all directions.
+#' @return a fine-resolution SpatRaster of sea - land temperature differences (ºC).
 #' @export
 #'
 #' @examples
-#' library(raster)
+#' library(terra)
 #' # =========================================
 #' # Calculate land-sea temperature difference
 #' # =========================================
@@ -141,38 +142,38 @@ coastalTps <- function(dT, lsw, lsa) {
   lswc <- resample(lsw, dT)
   lsac <- resample(lsa, dT)
   xy <- data.frame(xyFromCell(lswc, 1:ncell(dT)))
-  z1 <- extract(lswc, xy)
-  z2 <- extract(lsac, xy)
-  v <- extract(dT, xy)
+  z1 <- extract(lswc, xy)[,2]
+  z2 <- extract(lsac, xy)[,2]
+  v <- extract(dT, xy)[,2]
   xyz <- cbind(xy, z1, z2)
-  sel <- which(is.na(v) == F)
-  v <- v[is.na(v) == F]
+  sel <- which(is.na(v) == FALSE & is.na(z1) == FALSE)
   xyz <- xyz[sel, ]
+  v <- v[sel]
   tps <- fields::Tps(xyz, v, m = 3)
   xy <- data.frame(xyFromCell(lsw, 1:ncell(lsw)))
-  z1 <- extract(lsw, xy)
-  z2 <- extract(lsa, xy)
+  z1 <- extract(lsw, xy)[,2]
+  z2 <- extract(lsa, xy)[,2]
   xyz <- cbind(xy, z1, z2)
   sel <- which(is.na(z1) == FALSE)
   xyz <- xyz[sel, ]
   xy$z <- NA
   xy$z[sel] <- fields::predict.Krig(tps, xyz)
-  r <- rasterFromXYZ(xy)
+  r<-rast(xy,type="xyz")
   r
 }
 #' Calculates the moist adiabatic lapse rate
 #'
 #' @description `lapserate` is used to calculate changes in temperature with height.
 #'
-#' @param tc a single numeric value, raster object, two-dimensional array or matrix of temperature (ºC).
-#' @param h a single numeric value, raster object, two-dimensional array or matrix of specific humidity (\ifelse{html}{\out{kg kg<sup>-1</sup> }}{\eqn{kg kg^{-1}}}).
-#' @param p an optional single numeric value, raster object, two-dimensional array or matrix of atmospheric pressure (Pa).
+#' @param tc a single numeric value, SpatRaster object, two-dimensional array or matrix of temperature (ºC).
+#' @param h a single numeric value, SpatRaster object, two-dimensional array or matrix of specific humidity (\ifelse{html}{\out{kg kg<sup>-1</sup> }}{\eqn{kg kg^{-1}}}).
+#' @param p an optional single numeric value, SpatRaster object, two-dimensional array or matrix of atmospheric pressure (Pa).
 #'
 #' @return the lapse rate (\ifelse{html}{\out{º m<sup>-1</sup> }}{\eqn{ º m^{-1}}}).
 #' @export
-#' @import raster
+#' @import terra
 #'
-#' @details if tc is a raster, a raster object is returned. This function calculates the
+#' @details if tc is a SpatRaster, a SpatRaster object is returned. This function calculates the
 #' theoretical lapse rate. Environmental lapse rates can vary due to winds.
 #'
 #' @examples
@@ -201,11 +202,11 @@ lapserate <- function(tc, h, p = 101300) {
 #' @description `windheight` is used to to apply a height correction to wind speed measured at a specified height above ground level to obtain estimates of wind speed at a desired height above the ground.
 #'
 #' @param ui numeric value(s) of measured wind speed (\ifelse{html}{\out{m s<sup>-1</sup> }}{\eqn{ m s^{-1}}}) at height `zi` (m).
-#' @param zi a numeric value idicating the height (m) above the ground at which `ui` was measured.
+#' @param zi a numeric value indicating the height (m) above the ground at which `ui` was measured.
 #' @param zo a numeric value indicating the height (m) above ground level at which wind speed is desired.
 #'
 #' @details Thus function assumes a logarithmic height profile to convert
-#' wind speeds. It performs innacurately when `uo` is lower than 0.2
+#' wind speeds. It performs inaccurately when `uo` is lower than 0.2
 #' and a warning is given. If `uo` is below ~0.08 then the logairthmic height
 #' profile cannot be used, and `uo` is converted to 0.1 and a warning given.
 #'
@@ -237,12 +238,12 @@ windheight <- function(ui, zi, zo) {
 #'
 #' @description `windcoef` is used to apply a topographic shelter coefficient to wind data.
 #'
-#' @param dsm raster object, two-dimensional array or matrix of elevations (m) derived either from a digital terrain or digital surface model, and orientated as if derived using [is_raster()]. I.e. `[1, 1]` is the NW corner.
+#' @param dsm SpatRaster object, two-dimensional array or matrix of elevations (m) derived either from a digital terrain or digital surface model, and orientated as if derived using [is_raster()]. I.e. `[1, 1]` is the NW corner.
 #' @param direction a single numeric value specifying the direction from which the wind is blowing (º).
 #' @param hgt a single numeric value specifying the height (m) at which wind speed is derived or measured. The wind speeds returned are also for this height, and account for the fact topography affords less shelter to wind at greater heights.
 #' @param reso a single numeric value specifying the the resolution (m) of `dsm`.
 #'
-#' @details If dsm is a raster object, then a raster object is returned.
+#' @details If dsm is a SpatRaster object, then a SpatRaster object is returned.
 #' If elevations are derived from a digital terrain model, then
 #' the sheltering effects of vegetation are ignored. If derived from a
 #' digital surface model, then the sheltering effects of vegetation are
@@ -250,15 +251,15 @@ windheight <- function(ui, zi, zo) {
 #'
 #' @seealso The function [windheight()] converts measured wind heights to a standard reference height.
 #'
-#' @return a raster object, or two-dimensional array of shelter coefficients. E.g. a shelter coefficient of 0.5 indicates that wind speed at that location is 0.5 times that measured at an unobscured location.
-#' @import raster
+#' @return a SpatRaster object, or two-dimensional array of shelter coefficients. E.g. a shelter coefficient of 0.5 indicates that wind speed at that location is 0.5 times that measured at an unobscured location.
+#' @import terra
 #' @export
 #'
 #' @examples
-#' library(raster)
-#' dsm <- dtm1m + veg_hgt
+#' library(terra)
+#' dsm <- rast(dtm1m) + rast(veg_hgt)
 #' wc <- windcoef(dsm, 0)
-#' plot(mask(wc, dtm1m), main ="Northerly wind shelter coefficient")
+#' plot(mask(wc, rast(dtm1m)), main ="Northerly wind shelter coefficient")
 windcoef <- function(dsm, direction, hgt = 1, reso = 1) {
   r <- dsm
   dsm <- is_raster(dsm)
@@ -503,10 +504,10 @@ hourlytemp <- function(julian, em = NA, h, n, p = 100346.13, dni, dif,
 #' equal to `tme[1]`.
 #'
 #' @examples
-#' library(raster)
+#' library(terra)
 #' tme <- as.POSIXct(c(0:364) * 24 * 3600, origin="2010-01-01", tz = "GMT")
 #' h <- arrayspline(huss, tme, out = "2010-05-01 11:00")
-#' plot(raster(h, template = dtm1km),
+#' plot(rast(h),
 #'      main = "Specific humidity 2010-05-01 11:00")
 arrayspline <- function(a, tme, nfact = 24, out = NA) {
   n <- (length(tme) - 1) * nfact + 1
@@ -669,17 +670,17 @@ fitmicro <- function(microfitdata, alldata = FALSE, windthresh = NA,
 #' temperatures for one time interval
 #'
 #' @param params a data.frame of parameter estimates as produced by [fitmicro()]
-#' @param netrad a raster object, two-dimensional array or matrix of downscaled net radiation as produced by [shortwaveveg()] - [longwaveveg()] or [shortwavetopo()] - [longwavetopo()].
-#' @param wind a raster object, two-dimensional array or matrix of downscaled wind speed, as produced by reference wind speed x the output of [windcoef()].
+#' @param netrad a SpatRaster object, two-dimensional array or matrix of downscaled net radiation as produced by [shortwaveveg()] - [longwaveveg()] or [shortwavetopo()] - [longwavetopo()].
+#' @param wind a SpatRaster object, two-dimensional array or matrix of downscaled wind speed, as produced by reference wind speed x the output of [windcoef()].
 #' @param continuous an optional logical value indicating whether the model was fitted by treating wind speed as a continuous variable.
 
-#' @return a raster object, two-dimensional array or matrix of temperature anomolies from reference temperature, normally in ºC, but units depend on those used in [fitmicro()].
-#' @import raster
+#' @return a SpatRaster object, two-dimensional array or matrix of temperature anomolies from reference temperature, normally in ºC, but units depend on those used in [fitmicro()].
+#' @import terra
 #' @export
 #' @seealso [fitmicro()]
 #'
 #' @details
-#' If `netrad` is a raster object, a raster object is returned.
+#' If `netrad` is a SpatRaster object, a SpatRaster object is returned.
 #' If modelling mesoclimate, it is assumed that altitudinal, coastal and cold-air
 #' drainage effects have already been accounted for in the calculation of reference
 #' temperature (see example). It is assumed that the most important energy fluxes
@@ -698,46 +699,44 @@ fitmicro <- function(microfitdata, alldata = FALSE, windthresh = NA,
 #' are assumed under high and low wind conditions.
 #'
 #' @examples
-#' library(raster)
+#' library(terra)
 #' # =======================================================================
 #' # Run microclimate model for 2010-05-24 11:00 (one of the warmest hours)
 #' # =======================================================================
 #' params <- fitmicro(microfitdata)
 #' netrad <- netshort1m - netlong1m
 #' tempanom <- runmicro(params, netrad, wind1m)
-#' reftemp <- raster(temp100[,,564])
-#' extent(reftemp) <- extent(dtm1m)
-#' reftemp <- resample(reftemp, dtm1m)
-#' temps <- tempanom + getValues(reftemp, format = "matrix")
+#' reftemp <- rast(temp100[,,564])
+#' ext(reftemp) <- ext(rast(dtm1m))
+#' reftemp <- resample(reftemp, rast(dtm1m))
+#' temps <- tempanom + as.matrix(reftemp, wide = TRUE)
 #' plot(if_raster(temps, dtm1m), main =
 #'      expression(paste("Temperature ",(~degree~C))))
 #'
 #' # ======================================================================
 #' # Run mesoclimate model for 2010-05-01 11:00 from first principles
 #' # ======================================================================
-#'
-#' # -------------------------
-#' # Resample raster function
-#' # -------------------------
-#' resampleraster <- function(a, ro) {
-#'   r <- raster(a)
-#'   extent(r) <- c(-5.40, -5.00, 49.90, 50.15)
-#'   crs(r) <- "+init=epsg:4326"
-#'   r <- projectRaster(r, crs = "+init=epsg:27700")
-#'   r <- resample(r, ro)
-#'   as.matrix(r)
-#' }
-#'
 #' # --------------------------
-#' # Resample raster: 24 hours
+#' # Resample SpatRast:
+#' # --------------------------
+#' resamplerast <- function(a, ro) {
+#'   r <- rast(a)
+#'   ext(r) <- c(-5.40, -5.00, 49.90, 50.15)
+#'   crs(r) <- "+init=epsg:4326"
+#'   r <- project(r, crs(ro))
+#'   r <- resample(r, ro)
+#'   as.matrix(r, wide = TRUE)
+#' }
+#' # --------------------------
+#' # Resample SpatRast: 24 hours
 #' # --------------------------
 #' get24 <- function(a) {
-#'   ao <- array(NA, dim = c(dim(dtm1km)[1:2], 24))
-#'   for (i in 1:24) {
-#'     ai <- a[,,2880 + i]
-#'     ao[,,i] <- resampleraster(ai, dtm1km)
-#'   }
-#'   ao
+#'   ai <- rast(a[,,2881:2904])
+#'   ext(ai) <- c(-5.40, -5.00, 49.90, 50.15)
+#'   crs(ai) <- "+init=epsg:4326"
+#'   ai <- project(ai, crs(rast(dtm1km)))
+#'   ao <- resample(ai, rast(dtm1km))
+#'   as.array(ao)
 #' }
 #'
 #' # ----------------------------
@@ -778,20 +777,20 @@ fitmicro <- function(microfitdata, alldata = FALSE, windthresh = NA,
 #' # ------------------------------
 #' # Calculate altitudinal effects
 #' # ------------------------------
-#' lrr <- if_raster(lr, dtm1km)
-#' lrr <- resample (lrr, dtm100m)
-#' tc <- sst - dTf + lrr * dtm100m
+#' lrr <- if_raster(lr, rast(dtm1km))
+#' lrr <- resample (lrr, rast(dtm100m))
+#' tc <- sst - dTf + lrr * rast(dtm100m)
 #'
 #' # ------------------------------
 #' # Downscale radiation
 #' # ------------------------------
-#' dni <- resampleraster(dnirad[,,2891], dtm100m)
-#' dif <- resampleraster(difrad[,,2891], dtm100m)
-#' n <- resampleraster(cfc[,,2891], dtm100m)
-#' h <- resample(if_raster(h[,,12], dtm1km), dtm100m)
-#' p <- resample(if_raster(p[,,12], dtm1km), dtm100m)
-#' sv <- skyviewtopo(dtm100m)
-#' netshort <- shortwavetopo(dni, dif, jd, 11, dtm = dtm100m, svf = sv)
+#' dni <- resamplerast(dnirad[,,2891], rast(dtm100m))
+#' dif <- resamplerast(difrad[,,2891], rast(dtm100m))
+#' n <- resamplerast(cfc[,,2891], rast(dtm100m))
+#' h <- resample(if_raster(h[,,12], dtm1km), rast(dtm100m))
+#' p <- resample(if_raster(p[,,12], dtm1km), rast(dtm100m))
+#' sv <- skyviewtopo(rast(dtm100m))
+#' netshort <- shortwavetopo(dni, dif, jd, 11, dtm = rast(dtm100m), svf = sv)
 #' netlong <- longwavetopo(h, tc, p, n, sv)
 #' netrad <- netshort - netlong
 #'
@@ -800,7 +799,7 @@ fitmicro <- function(microfitdata, alldata = FALSE, windthresh = NA,
 #' # ------------------
 #' ws <- array(windheight(wind2010$wind10m, 10, 1), dim = c(1, 1, 8760))
 #' wh <- arrayspline(ws, as.POSIXct(wind2010$obs_time), 6, "2010-05-01 11:00")
-#' ws <- windcoef(dtm100m, 270, reso = 100) * wh
+#' ws <- windcoef(rast(dtm100m), 270, reso = 100) * wh
 #'
 #' # ------------------
 #' # Fit and run model
@@ -808,7 +807,7 @@ fitmicro <- function(microfitdata, alldata = FALSE, windthresh = NA,
 #' params <- fitmicro(mesofitdata, continuous = T)
 #' anom <- runmicro(params, netrad, ws, continuous = T)
 #' tc <- tc + anom
-#' plot(mask(tc, dtm100m), main =
+#' plot(mask(tc, rast(dtm100m)), main =
 #'      expression(paste("Mesoclimate temperature ",(~degree~C))))
 runmicro <- function(params, netrad, wind, continuous = FALSE) {
   r <- netrad
@@ -967,9 +966,9 @@ laifromhabitat <- function(habitat, lat, long, year, meantemp = NA, cvtemp = NA,
   clim <- c(meantemp, cvtemp, rainfall, cvrain, wetmonth)
   for (i in 1:5) {
     if (is.na(clim[i])) {
-      r <- raster(globalclimate[,,i])
-      extent(r) <- e
-      clim[i] <- extract(r, ll)
+      r <- rast(globalclimate[,,i])
+      ext(r) <- e
+      clim[i] <- extract(r, ll)[,2]
     }
   }
   wgts <- function(x1, x2, ll, lmn, lmx) {

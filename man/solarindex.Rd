@@ -6,10 +6,10 @@
 \usage{
 solarindex(
   slope = NA,
-  aspect,
+  aspect = NA,
   localtime,
   lat = NA,
-  long,
+  long = 0,
   julian,
   dtm = array(0, dim = c(1, 1)),
   reso = 1,
@@ -19,9 +19,9 @@ solarindex(
 )
 }
 \arguments{
-\item{slope}{a single value, raster object, two-dimensional array or matrix of slopes (º). If an array or matrix, then orientated as if derived using \code{\link[=is_raster]{is_raster()}}. I.e. \verb{[1, 1]} is the NW corner.}
+\item{slope}{a single value, SpatRaster object, two-dimensional array or matrix of slopes (º). If an array or matrix, then orientated as if derived using \code{\link[=is_raster]{is_raster()}}. I.e. \verb{[1, 1]} is the NW corner.}
 
-\item{aspect}{a single value, raster object, two-dimensional array or matrix of aspects (º). If an array or matrix, then orientated as if derived using \code{\link[=is_raster]{is_raster()}}. I.e. \verb{[1, 1]} is the NW corner.}
+\item{aspect}{a single value, SpatRaster object, two-dimensional array or matrix of aspects (º). If an array or matrix, then orientated as if derived using \code{\link[=is_raster]{is_raster()}}. I.e. \verb{[1, 1]} is the NW corner.}
 
 \item{localtime}{a single numeric value representing local time (decimal hour, 24 hour clock).}
 
@@ -31,7 +31,7 @@ solarindex(
 
 \item{julian}{a single integer representing the Julian day as returned by \code{\link[=julday]{julday()}}.}
 
-\item{dtm}{an optional raster object, two-dimensional array or matrix of elevations (m). If not a raster, orientated as if derived from a raster using \code{\link[=is_raster]{is_raster()}}. I.e. \verb{[1, 1]} is the NW corner.}
+\item{dtm}{an optional SpatRaster object, two-dimensional array or matrix of elevations (m). If not a SpatRaster, orientated as if derived from a raster using \code{\link[=is_raster]{is_raster()}}. I.e. \verb{[1, 1]} is the NW corner.}
 
 \item{reso}{a single numeric value representing the spatial resolution of \code{dtm} (m).}
 
@@ -42,7 +42,7 @@ solarindex(
 \item{shadow}{an optional logical value indicating whether topographic shading should be considered (TRUE = Yes, FALSE = No).}
 }
 \value{
-If shadow is \code{TRUE}, a raster object or a two-dimensional array of numeric values representing the proportion of direct beam radiation incident on an inclined surface, accounting for topographic shading.
+If shadow is \code{TRUE}, a SpatRaster object or a two-dimensional array of numeric values representing the proportion of direct beam radiation incident on an inclined surface, accounting for topographic shading.
 
 If shadow is \code{FALSE}, a raster object or a two-dimensional array of numeric values representing the proportion of direct beam radiation incident on an inclined surface, not accounting for topographic shading.
 
@@ -52,28 +52,25 @@ If no \code{dtm} is provided, a vector, array or single numeric value of the pro
 \code{solarindex} is used to calculate the proportion of direct beam radiation incident on an inclined surface at a specified time and location.
 }
 \details{
-If \code{slope} is unspecified, and \code{dtm} is a raster, \code{slope} and \code{aspect} are calculated from
-the raster. If \code{slope} is unspecified, and \code{dtm} is not a raster, the slope and aspect
+If \code{slope} is unspecified, and \code{dtm} is a SpatRaster, \code{slope} and \code{aspect} are calculated from
+the raster. If \code{slope} is unspecified, and \code{dtm} is not a SpatRaster, the slope and aspect
 are set to zero. If \code{lat} is unspecified, and \code{dtm} is a raster with a coordinate reference
 system defined, \code{lat} and \code{long} are calculated from the raster. If \code{lat} is unspecified,
 and \code{dtm} is not a raster, or a raster without a coordinate reference system defined, an
 error is returned. If \code{dtm} is specified, then the projection system used must be such that
-units of x, y and z are identical. Use \code{\link[=projectRaster]{projectRaster()}} to convert the projection to a
+units of x, y and z are identical. Use \code{\link[terra:project]{terra::project()}} to convert the projection to a
 Universal Transverse Mercator type projection system. If \code{dtm} is a raster object, a raster
 object is returned.
 }
 \examples{
-library(raster)
+library(terra)
 jd <- julday (2010, 6, 21) # Julian day
 # slope, aspect, lat & long calculated from raster
-si1 <- solarindex(localtime = 8, julian = jd, dtm = dtm1m)
-si2 <- solarindex(localtime = 8, julian = jd, dtm = dtm1m, shadow = FALSE)
+si1 <- solarindex(localtime = 8, julian = jd, dtm = rast(dtm1m))
+si2 <- solarindex(localtime = 8, julian = jd, dtm = rast(dtm1m), shadow = FALSE)
 par(mfrow = c(2, 1))
 plot(si1, main = "Solar index with topographic shadowing")
 plot(si2, main = "Solar index without topographic shadowing")
-ll <- latlongfromraster(dtm1m)
+ll <- latlongfromraster(rast(dtm1m))
 solarindex(0, 0, 8, lat = ll$lat, long = ll$long, jd)
-}
-\seealso{
-the raster package function \code{\link[=terrain]{terrain()}} can be used to derive slopes and aspects from \code{dtm} (see example).
 }

@@ -7,21 +7,21 @@
 coastalTps(dT, lsw, lsa)
 }
 \arguments{
-\item{dT}{a coarse-resolution raster of sea - land temperatures (ºC).}
+\item{dT}{a coarse-resolution SpatRaster of sea - land temperatures (ºC).}
 
-\item{lsw}{a fine-resolution raster of coastal exposure upwind, as produced by \code{\link[=invls]{invls()}}.}
+\item{lsw}{a fine-resolution SpatRaster of coastal exposure upwind, as produced by \code{\link[=invls]{invls()}}.}
 
-\item{lsa}{a fine-resolution raster of mean coastal exposure in all directions.}
+\item{lsa}{a fine-resolution SpatRaster of mean coastal exposure in all directions.}
 }
 \value{
-a fine-resolution raster of sea - land temperature differences (ºC).
+a fine-resolution SpatRaster of sea - land temperature differences (ºC).
 }
 \description{
 \code{coastalTps} uses thin-plate spline interpolation to estimate
 the effects of coastal buffering of land-temperatures by the sea.
 }
 \examples{
-library(raster)
+library(terra)
 # =========================================
 # Calculate land-sea temperature difference
 # =========================================

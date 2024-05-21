@@ -7,21 +7,21 @@
 longwavetopo(h, tc, p = 101300, n, svf = 1, co = 1.24)
 }
 \arguments{
-\item{h}{a single numeric value, raster object, two-dimensional array or matrix of specific humidities (\ifelse{html}{\out{kg kg<sup>{-1}</sup> }}{\eqn{kg kg^{-1}}}).}
+\item{h}{a single numeric value, SpatRaster object, two-dimensional array or matrix of specific humidities (\ifelse{html}{\out{kg kg<sup>{-1}</sup> }}{\eqn{kg kg^{-1}}}).}
 
-\item{tc}{a single numeric value, raster object, two-dimensional array or matrix of temperatures (ºC).}
+\item{tc}{a single numeric value, SpatRaster object, two-dimensional array or matrix of temperatures (ºC).}
 
-\item{p}{an optional single numeric value, raster object, two-dimensional array or matrix of sea-level pressures (Pa).}
+\item{p}{an optional single numeric value, SpatRaster object, two-dimensional array or matrix of sea-level pressures (Pa).}
 
-\item{n}{a single numeric value, raster object, two-dimensional array or matrix of fractional cloud cover values (range 0 - 1).
+\item{n}{a single numeric value, SpatRaster object, two-dimensional array or matrix of fractional cloud cover values (range 0 - 1).
 Technically assumed to be 1 - ratio of measured to clear-sky radiation.}
 
-\item{svf}{an optional single value, raster object, two-dimensional array or matrix of values representing the proportion of isotropic radiation received by a partially obscured surface relative to the full hemisphere, as returned by \code{\link[=skyviewtopo]{skyviewtopo()}}.}
+\item{svf}{an optional single value, SpatRaster object, two-dimensional array or matrix of values representing the proportion of isotropic radiation received by a partially obscured surface relative to the full hemisphere, as returned by \code{\link[=skyviewtopo]{skyviewtopo()}}.}
 
 \item{co}{parameter relationship between vapor pressure and temperature near the ground Brutsaert (1975).}
 }
 \value{
-a single numeric value, raster object, two-dimensional array pr matrix of values representing net longwave radiation (MJ per metre squared per hour).
+a single numeric value, SpatRaster object, two-dimensional array pr matrix of values representing net longwave radiation (MJ per metre squared per hour).
 }
 \description{
 \code{longwavetopo} is used to calculate a high-resolution dataset of the net
@@ -29,7 +29,7 @@ longwave radiation flux density emmited from the Earth, ignoring canopy
 effects.
 }
 \details{
-if \code{svf} is a raster object, a raster object is returned.
+if \code{svf} is a SpatRaster object, a SpatRaster object is returned.
 If no values for \code{p} are provided, a default value of 101300 Pa, typical of
 sea-level pressure, is assumed. If single values of \code{h}, \code{tc}, \code{p} and \code{n}
 are given, and \code{svf} is an array or matrix, then the entire area is assumed to
@@ -40,7 +40,7 @@ provided, a single value is returned, and it is assumed that the entire
 hemisphere is in view.
 }
 \examples{
-library(raster)
+library(terra)
 # =================================
 # Extract data for 2010-05-24 11:00
 # =================================
@@ -48,25 +48,27 @@ h <- huss[,,144]
 p <- pres[,,144]
 tc <- tas[,,144] + dtr[,,144]
 n <-cfc[,,3444]
-sv <- skyviewtopo(dtm100m)
+sv <- skyviewtopo(rast(dtm100m))
 # ===========================
 # Resample to 100m resolution
 # ===========================
 hr <- if_raster(h, dtm1km)
 tr <- if_raster(tc, dtm1km)
 pr <- if_raster(p, dtm1km)
-nr <- raster(n, xmn = -5.40, xmx = -5.00, ymn = 49.90, ymx = 50.15)
+e<-ext(-5.40, -5.00, 49.90, 50.15)
+nr <- rast(n)
+ext(nr)<-e
 crs(nr) <- '+init=epsg:4326'
-nr <- projectRaster(nr, crs = '+init=epsg:27700')
-hr <- resample(hr, dtm100m)
-tr <- resample(tr, dtm100m)
-pr <- resample(pr, dtm100m)
-nr <- resample(nr, dtm100m)
+nr <- project(nr, crs(rast(dtm1km)))
+hr <- resample(hr, rast(dtm100m))
+tr <- resample(tr, rast(dtm100m))
+pr <- resample(pr, rast(dtm100m))
+nr <- resample(nr, rast(dtm100m))
 # =========================================
 # Calculate and plot net longwave radiation
 # =========================================
 netlong100m <- longwavetopo(hr, tr, pr, nr, sv)
-netlong100m <- mask(netlong100m, dtm100m)
+netlong100m <- mask(netlong100m, rast(dtm100m))
 plot(netlong100m, main = "Net longwave radiation")
 }
 \seealso{

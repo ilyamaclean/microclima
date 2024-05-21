@@ -17,13 +17,13 @@ albedo(
 )
 }
 \arguments{
-\item{blue}{a raster object, two-dimensional array or matrix of reflectance values in the blue spectral band (0 to \code{max.val}).}
+\item{blue}{a SpatRaster object, two-dimensional array or matrix of reflectance values in the blue spectral band (0 to \code{max.val}).}
 
-\item{green}{a raster object, two-dimensional array or matrix of reflectance values in the green spectral band (0 to \code{max.val}).}
+\item{green}{a SpatRaster object, two-dimensional array or matrix of reflectance values in the green spectral band (0 to \code{max.val}).}
 
-\item{red}{a raster object, two-dimensional array or matrix of reflectance values in the red spectral band (0 to \code{max.val}).}
+\item{red}{a SpatRaster object, two-dimensional array or matrix of reflectance values in the red spectral band (0 to \code{max.val}).}
 
-\item{nir}{a raster object, two-dimensional array or matrix of reflectance values in the near-infrared spectral band (0 to \code{max.val}).}
+\item{nir}{a SpatRaster object, two-dimensional array or matrix of reflectance values in the near-infrared spectral band (0 to \code{max.val}).}
 
 \item{maxval}{a single numeric value representing the maximum reflectance in any of the spectral bands.}
 
@@ -36,17 +36,17 @@ albedo(
 \item{nirrange}{an optional numeric vector of length 2 giving the range (minimum, maximum) of wavelength values captured by the near-infrared spectral band sensor (nm).}
 }
 \value{
-a raster object or two-dimensional array of numeric values representing surface albedo (range 0 to 1).
+a SpatRaster object or two-dimensional array of numeric values representing surface albedo (range 0 to 1).
 }
 \description{
 \code{albedo} is used to calculate surface albedo.
 }
 \details{
 The function assumes that image reflectance has been captured using four spectral bands.
-If \code{blue} is a raster object, then a raster object is returned.
+If \code{blue} is a SpatRaster object, then a SpatRaster object is returned.
 }
 \examples{
-library(raster)
+library(terra)
 alb <- albedo(aerial_image[,,1], aerial_image[,,2], aerial_image[,,3],
               aerial_image[,,4])
 plot(if_raster(alb, dtm1m), main = "Albedo", col = gray(0:255/255))

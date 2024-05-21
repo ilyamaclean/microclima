@@ -7,14 +7,14 @@
 get_dem(r = NA, lat, long, resolution = 30, zmin = 0, xdims = 200, ydims = 200)
 }
 \arguments{
-\item{r}{optional raster object covering the location for which elevations are
+\item{r}{optional SpatRaster object covering the location for which elevations are
 required}
 
 \item{lat}{the latitude (in decimal degrees) of the location for which elevations
-are required. Not used if \code{r} is a raster.}
+are required. Not used if \code{r} is a SpatRaster.}
 
 \item{long}{the longitude (in decimal degrees) of the location for which elevations
-are required. Not used if \code{r} is a raster}
+are required. Not used if \code{r} is a SpatRaster}
 
 \item{resolution}{the resolution (in metres) of the required dem (see details).}
 
@@ -25,10 +25,10 @@ are required. Not used if \code{r} is a raster}
 \item{ydims}{optional numeric value specifying the number of latitudinal grid cells}
 }
 \value{
-a raster object of elevations in metres.
+a SpatRaster object of elevations in metres.
 }
 \description{
-Several web services provide access to raster elevations. This function
+amazon web services provide access to SpatRaster elevations. This function
 provides access to the Registry of Open Data on AWS to retrieve a raster object of
 elevations.
 }
@@ -51,10 +51,10 @@ Stereographic projections are used. X, y and Z units are all in metres. If \code
 specified, the Coordinate Reference System of \code{r} is used.
 }
 \examples{
-library(raster)
-dem50m <- get_dem(dtm100m, resolution = 50)
+library(terra)
+dem50m <- get_dem(rast(dtm100m), resolution = 50)
 plot(dem50m) # 50m raster, OSGB projection system
 
 dem5m <- get_dem(lat = 49.97, long = -5.22, resolution = 5)
-plot(dem5m) # 5m raster, Mercator projection system
+plot(dem5m) # 5m raster, Mercator projection system # warning given
 }

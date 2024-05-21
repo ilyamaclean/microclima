@@ -7,9 +7,9 @@
 lai(red, nir, maxlai = 20)
 }
 \arguments{
-\item{red}{a raster object, two-dimensional array or matrix of reflectance values in the red spectral band.}
+\item{red}{a SpatRaster object, two-dimensional array or matrix of reflectance values in the red spectral band.}
 
-\item{nir}{a raster object, two-dimensional array or matrix of reflectance values in the near-infrared spectral band.}
+\item{nir}{a SpatRaster object, two-dimensional array or matrix of reflectance values in the near-infrared spectral band.}
 
 \item{maxlai}{an optional single numeric value representing the likely upper limit of Leaf Area Index to which all values are capped.}
 }
@@ -20,12 +20,12 @@ a raster object or two-dimensional array of numeric values representing the tota
 \code{lai} is used to calculate the total one-sided area of leaf tissue per unit ground surface area from the Normalized Difference Vegetation Index.
 }
 \details{
-If \code{red} is a raster object, a raster object is returned. This function has been calibrated
+If \code{red} is a SpatRaster object, a SpatRaster object is returned. This function has been calibrated
 using data derived from a small area of Cornwall only. It is strongly recommended that
 locally calibrated values are obtained.
 }
 \examples{
-library(raster)
+library(terra)
 leaf <- lai(aerial_image[,,3], aerial_image[,,4])
 plot(if_raster(leaf, dtm1m), main = "Leaf area index")
 }

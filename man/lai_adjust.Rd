@@ -7,28 +7,28 @@
 lai_adjust(l, veghgt, hgt = 0.05)
 }
 \arguments{
-\item{l}{raster object, two-dimensional array or matrix of leaf area index values as returned by \code{\link[=lai]{lai()}}.}
+\item{l}{SpatRaster object, two-dimensional array or matrix of leaf area index values as returned by \code{\link[=lai]{lai()}}.}
 
-\item{veghgt}{a raster object, two-dimensional array or matrix of vegetation heights (m).}
+\item{veghgt}{a SpatRaster object, two-dimensional array or matrix of vegetation heights (m).}
 
 \item{hgt}{a numeric value representing the height above the ground for which Leaf Area Index is required (m).}
 }
 \value{
-a raster object or a two-dimensional area of numeric values representing the Leaf Area Index values for a specified height above the ground
+a SpatRaster object or a two-dimensional area of numeric values representing the Leaf Area Index values for a specified height above the ground
 }
 \description{
 \code{lai_adjust} is used to adjust the total one-sided area of leaf tissue per unit ground surface area to derive values at at a specified height above the ground.
 }
 \details{
-If \code{l} is a raster object, a raster object is returned. Temperatures are often required for a specified height above the ground,
+If \code{l} is a SpatRaster object, a SpatRaster object is returned. Temperatures are often required for a specified height above the ground,
 and in short vegetation, the leaf area can be substantially less at this
-height than at gorund level. This function enables the user to estimate
+height than at ground level. This function enables the user to estimate
 leaf area for a specified height about the ground.
 }
 \examples{
-library(raster)
+library(terra)
 l <- lai(aerial_image[,,3], aerial_image[,,4])
-la<-lai_adjust(l, veg_hgt)
+la<-lai_adjust(l, rast(veg_hgt))
 par(mfrow=c(2, 1))
 plot(if_raster(l, dtm1m), main = "Leaf area index")
 plot(if_raster(la, dtm1m), main = "Adjusted leaf area index")

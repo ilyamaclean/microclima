@@ -2,7 +2,7 @@
 % Please edit documentation in R/solartools.R
 \name{is_raster}
 \alias{is_raster}
-\title{Checks whether object is a raster and returns a matrix if yes}
+\title{Checks whether object is a SpatRaster and returns a matrix if yes}
 \usage{
 is_raster(r)
 }
@@ -10,16 +10,16 @@ is_raster(r)
 \item{r}{an R object}
 }
 \value{
-if \code{r} is a raster, returns a matrix containing all values of \code{r}, otherwise returns \code{r}
+if \code{r} is a SpatRaster, returns a matrix containing all values of \code{r}, otherwise returns \code{r}
 }
 \description{
 \code{is_raster} is used to permit flexibility in the use of rasters, matrices or arrays in many functions.
 }
 \examples{
-library(raster)
+library(terra)
 r <- is_raster(dtm100m)
-class(dtm100m) # is a RasterLayer
+class(dtm100m) # is a PackedSpatRaster
 class(r) # is a matrix
-plot(r) # not a raster
-plot(raster(r)) # converts to raster
+plot(r) # not a SpatRaster
+plot(rast(r)) # converts to SpatRaster
 }

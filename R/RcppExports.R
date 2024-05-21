@@ -8,6 +8,14 @@
 #' a set of points
 #' @export
 invls_calc <- function(lsm, resolution, xmin, ymax, s, direction, slr, slr_xmin, slr_xmax, slr_ymin, slr_ymax) {
-    .Call(`_microclima_invls_calc`, lsm, resolution, xmin, ymax, s, direction, slr, slr_xmin, slr_xmax, slr_ymin, slr_ymax)
+    .Call('_microclima_invls_calc', PACKAGE = 'microclima', lsm, resolution, xmin, ymax, s, direction, slr, slr_xmin, slr_xmax, slr_ymin, slr_ymax)
+}
+
+basinCpp <- function(dm2, bsn, dun) {
+    .Call('_microclima_basinCpp', PACKAGE = 'microclima', dm2, bsn, dun)
+}
+
+renumberbasin <- function(m, u) {
+    .Call('_microclima_renumberbasin', PACKAGE = 'microclima', m, u)
 }
 

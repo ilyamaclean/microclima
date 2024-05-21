@@ -57,11 +57,11 @@ by function \code{\link[=hourlyNCEP]{hourlyNCEP()}}. Function called if data not
 \item{dailyprecip}{an optional data frame of ourly weather and radiation data as returned
 by function \code{\link[=dailyprecipNCEP]{dailyprecipNCEP()}}. Function called if data not provided.}
 
-\item{dem}{an ptional raster object of elevations covering the location for which point
+\item{dem}{an optional SpatRaster object of elevations covering the location for which point
 data are required. If not provided, one is downloaded from the registry of Open
 Data on AWS. Used to calculate coastal, wind and radiation effects}
 
-\item{demmeso}{an optional raster object of elevations covering the location for which point
+\item{demmeso}{an optional SpatRaster object of elevations covering the location for which point
 data are required. Used to calculate elevation and cold air drainage effects.}
 
 \item{albr}{albedo of ground surface from which radiation is reflected (see details)}
@@ -130,9 +130,9 @@ air drainage effects, determined using \code{\link[=pcad]{pcad()}} and \code{\li
 (5) \code{acoast} an array of temperatures that account for coastal effects for each
 pixel of \code{dem} and each hour of hourlydata.
 
-(6) \code{basins} a raster object of basins used for calculating cold air drainage.
+(6) \code{basins} a SpatRaster object of basins used for calculating cold air drainage.
 
-(7) \code{flowacc} a raster object of accumulated flow.
+(7) \code{flowacc} a SpatRaster object of accumulated flow.
 }
 \description{
 Extract NCEP data and run microclima for use with NicheMapR

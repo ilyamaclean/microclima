@@ -7,11 +7,11 @@
 lapserate(tc, h, p = 101300)
 }
 \arguments{
-\item{tc}{a single numeric value, raster object, two-dimensional array or matrix of temperature (ºC).}
+\item{tc}{a single numeric value, SpatRaster object, two-dimensional array or matrix of temperature (ºC).}
 
-\item{h}{a single numeric value, raster object, two-dimensional array or matrix of specific humidity (\ifelse{html}{\out{kg kg<sup>-1</sup> }}{\eqn{kg kg^{-1}}}).}
+\item{h}{a single numeric value, SpatRaster object, two-dimensional array or matrix of specific humidity (\ifelse{html}{\out{kg kg<sup>-1</sup> }}{\eqn{kg kg^{-1}}}).}
 
-\item{p}{an optional single numeric value, raster object, two-dimensional array or matrix of atmospheric pressure (Pa).}
+\item{p}{an optional single numeric value, SpatRaster object, two-dimensional array or matrix of atmospheric pressure (Pa).}
 }
 \value{
 the lapse rate (\ifelse{html}{\out{º m<sup>-1</sup> }}{\eqn{ º m^{-1}}}).
@@ -20,7 +20,7 @@ the lapse rate (\ifelse{html}{\out{º m<sup>-1</sup> }}{\eqn{ º m^{-1}}}).
 \code{lapserate} is used to calculate changes in temperature with height.
 }
 \details{
-if tc is a raster, a raster object is returned. This function calculates the
+if tc is a SpatRaster, a SpatRaster object is returned. This function calculates the
 theoretical lapse rate. Environmental lapse rates can vary due to winds.
 }
 \examples{

@@ -29,9 +29,9 @@ shortwaveveg(
 )
 }
 \arguments{
-\item{dni}{a single numeric value, raster object, two-dimensional array or matrix of coarse-resolution direct radiation perpendicular to the solar beam (\ifelse{html}{\out{MJ m<sup>-2</sup> hr<sup>-1</sup>}}{\eqn{MJ m^{-2} hr^{-1}}}).}
+\item{dni}{a single numeric value, SpatRaster object, two-dimensional array or matrix of coarse-resolution direct radiation perpendicular to the solar beam (\ifelse{html}{\out{MJ m<sup>-2</sup> hr<sup>-1</sup>}}{\eqn{MJ m^{-2} hr^{-1}}}).}
 
-\item{dif}{a single numeric value, raster object, two-dimensional array or matrix of coarse-resolution diffuse radiation horizontal ot the surface (\ifelse{html}{\out{MJ m<sup>-2</sup> hr<sup>-1</sup>}}{\eqn{MJ m^{-2} hr^{-1}}}).}
+\item{dif}{a single numeric value, SpatRaster object, two-dimensional array or matrix of coarse-resolution diffuse radiation horizontal ot the surface (\ifelse{html}{\out{MJ m<sup>-2</sup> hr<sup>-1</sup>}}{\eqn{MJ m^{-2} hr^{-1}}}).}
 
 \item{julian}{a single integer representing the Julian as returned by \code{\link[=julday]{julday()}}.}
 
@@ -41,21 +41,21 @@ shortwaveveg(
 
 \item{long}{an optional single numeric value representing the mean longitude of the location for which downscaled radiation is required (decimal degrees, -ve west of Greenwich meridian).}
 
-\item{dtm}{an optional raster object, two-dimensional array or matrix of elevations (m), orientated as if derived using \code{\link[=is_raster]{is_raster()}}. I.e. \verb{[1, 1]} is the NW corner.}
+\item{dtm}{an optional SpatRaster object, two-dimensional array or matrix of elevations (m), orientated as if derived using \code{\link[=is_raster]{is_raster()}}. I.e. \verb{[1, 1]} is the NW corner.}
 
-\item{slope}{an optional single value, raster object, two-dimensional array or matrix of slopes (º). If an array or matrix, then orientated as if derived using \code{\link[=is_raster]{is_raster()}}. I.e. \verb{[1, 1]} is the NW corner.}
+\item{slope}{an optional single value, SpatRaster object, two-dimensional array or matrix of slopes (º). If an array or matrix, then orientated as if derived using \code{\link[=is_raster]{is_raster()}}. I.e. \verb{[1, 1]} is the NW corner.}
 
-\item{aspect}{an optional single value, raster object, two-dimensional array or matrix of aspects (º). If an array or matrix, then orientated as if derived using \code{\link[=is_raster]{is_raster()}}. I.e. \verb{[1, 1]} is the NW corner.}
+\item{aspect}{an optional single value, SpatRaster object, two-dimensional array or matrix of aspects (º). If an array or matrix, then orientated as if derived using \code{\link[=is_raster]{is_raster()}}. I.e. \verb{[1, 1]} is the NW corner.}
 
-\item{svv}{an optional raster object, two-dimensional array or matrix of values representing the proportion of isotropic radiation received by a surface partially obscured by topography relative to the full hemisphere underneath vegetation as returned by \code{\link[=skyviewveg]{skyviewveg()}}.}
+\item{svv}{an optional SpatRaster object, two-dimensional array or matrix of values representing the proportion of isotropic radiation received by a surface partially obscured by topography relative to the full hemisphere underneath vegetation as returned by \code{\link[=skyviewveg]{skyviewveg()}}.}
 
-\item{alb}{an optional single value, raster object, two-dimensional array or matrix of values representing albedo(s) as returned by \code{\link[=albedo]{albedo()}}.}
+\item{alb}{an optional single value, SpatRaster object, two-dimensional array or matrix of values representing albedo(s) as returned by \code{\link[=albedo]{albedo()}}.}
 
-\item{fr}{a raster object, two-dimensional array or matrix of fractional canopy cover as returned by \code{\link[=canopy]{canopy()}}.}
+\item{fr}{a SpatRaster object, two-dimensional array or matrix of fractional canopy cover as returned by \code{\link[=canopy]{canopy()}}.}
 
-\item{albr}{an optional single value, raster object, two-dimensional array or matrix of values representing the albedo(s) of adjacent surfaces as returned by \code{\link[=albedo_reflected]{albedo_reflected()}}.}
+\item{albr}{an optional single value, SpatRaster object, two-dimensional array or matrix of values representing the albedo(s) of adjacent surfaces as returned by \code{\link[=albedo_reflected]{albedo_reflected()}}.}
 
-\item{ha}{an optional raster object, two-dimensional array or matrix of values representing the mean slope to the horizon (decimal degrees) of surrounding surfaces from which radiation is reflected for each cell of \code{dtm} as returned by \code{\link[=mean_slope]{mean_slope()}}.}
+\item{ha}{an optional SpatRaster object, two-dimensional array or matrix of values representing the mean slope to the horizon (decimal degrees) of surrounding surfaces from which radiation is reflected for each cell of \code{dtm} as returned by \code{\link[=mean_slope]{mean_slope()}}.}
 
 \item{reso}{a single numeric value representing the spatial resolution of \code{dtm} (m).}
 
@@ -65,15 +65,15 @@ shortwaveveg(
 
 \item{shadow}{an optional logical value indicating whether topographic shading should be considered (False = No, True = Yes).}
 
-\item{x}{a raster object, two-dimensional array or matrix of numeric values representing the ratio of vertical to horizontal projections of leaf foliage as returned by \code{\link[=leaf_geometry]{leaf_geometry()}}.}
+\item{x}{a SpatRaster object, two-dimensional array or matrix of numeric values representing the ratio of vertical to horizontal projections of leaf foliage as returned by \code{\link[=leaf_geometry]{leaf_geometry()}}.}
 
-\item{l}{a raster object, two-dimensional array or matrix of leaf area index values as returned by \code{\link[=lai]{lai()}}.}
+\item{l}{a SpatRaster object, two-dimensional array or matrix of leaf area index values as returned by \code{\link[=lai]{lai()}}.}
 
 \item{difani}{an optinional logical indicating whether to treat a proportion of the diffuse radiation as anistropic (see details).}
 }
 \value{
-a raster object, two-dimensional array of numeric values representing net shortwave radiation (MJ per metre squared per hour).
-The raster package function \code{\link[=terrain]{terrain()}} can be used to derive slopes and aspects from \code{dtm} (see example).
+a SpatRaster object, two-dimensional array of numeric values representing net shortwave radiation (MJ per metre squared per hour).
+The function \code{\link[terra:terrain]{terra::terrain()}} can be used to derive slopes and aspects from \code{dtm} (see example).
 }
 \description{
 \code{shortwaveveg} is used to downscale the flux density of shortwave radiation
@@ -81,15 +81,15 @@ received at the surface of the Earth, accounting for both topographic and
 canopy effects.
 }
 \details{
-If \code{slope} is unspecified, and \code{dtm} is a raster, \code{slope} and \code{aspect} are calculated from
-the raster. If \code{slope} is unspecified, and \code{dtm} is not a raster, the slope and aspect
-are set to zero. If \code{lat} is unspecified, and \code{dtm} is a raster with a coordinate reference
-system defined, \code{lat} and \code{long} are calculated from the raster. If \code{lat} is unspecified,
-and \code{dtm} is not a raster, or a raster without a coordinate reference system defined, an
+If \code{slope} is unspecified, and \code{dtm} is a SpatRaster \code{slope} and \code{aspect} are calculated from
+the SpatRaster. If \code{slope} is unspecified, and \code{dtm} is not a SpatRaster, the slope and aspect
+are set to zero. If \code{lat} is unspecified, and \code{dtm} is a SpatRaster with a coordinate reference
+system defined, \code{lat} and \code{long} are calculated from the SpatRaster. If \code{lat} is unspecified,
+and \code{dtm} is not a SpatRaster, or a SpatRaster without a coordinate reference system defined, an
 error is returned. If \code{dtm} is specified, then the projection system used must be such that
-units of x, y and z are identical. Use \code{\link[=projectRaster]{projectRaster()}} to convert the projection to a
-Universal Transverse Mercator type projection system. If \code{dtm} is a raster object, a raster
-object is returned. If \code{dtm} is a raster object, a raster object is returned. If \code{dni} or \code{dif} are raster
+units of x, y and z are identical. Use \code{\link[terra:project]{terra::project()}} to convert the projection to a
+Universal Transverse Mercator type projection system. If \code{dtm} is a SpatRaster object, a SpatRaster
+object is returned. If \code{dni} or \code{dif} are SpatRaster
 objects, two-dimensional arrays or matrices, then it is assumed that they have been
 derived from coarse-resolution data by interpolation, and have the same extent as \code{dtm}.
 If no value for \code{ha} is provided, the mean slope to the horizon is assumed
@@ -99,7 +99,7 @@ then a default value of 0.23, typical of well-watered grass is assumed. If
 single values of \code{albg} and \code{albr} are given, then the entire area is
 assumed to have the same albedo. If \code{dtm} is specified, then the projection
 system used must be such that the units of x, y and z are identical. Use
-\code{\link[=projectRaster]{projectRaster()}} to convert the projection to a Universal Transverse
+\code{\link[terra:project]{terra::project()}} to convert the projection to a Universal Transverse
 Mercator type projection system. If no value for \code{dtm} is provided,
 radiation is downscaled by deriving values on the inclined surfaces
 specified in \code{slope} and \code{aspect} and topographic shadowing is ignored. If
@@ -118,7 +118,7 @@ needed, and to ensure sub-divided blocks overlap in extent. Calculations are fas
 if values for all inputs are provided.
 }
 \examples{
-library(raster)
+library(terra)
 # =================================
 # Extract data for 2010-05-24 11:00
 # =================================
@@ -127,21 +127,21 @@ dif <- microvars$dif[564]
 # ==========================
 # Calculate input paramaters
 # ==========================
-x <- leaf_geometry(veg_hgt)
+x <- leaf_geometry(rast(veg_hgt))
 l <- lai(aerial_image[,,3], aerial_image[,,4])
-l <- lai_adjust(l, veg_hgt)
+l <- lai_adjust(l, rast(veg_hgt))
 fr <- canopy(l)
 alb <- albedo(aerial_image[,,1], aerial_image[,,2], aerial_image[,,3],
              aerial_image[,,4])
-sv <- skyviewveg(dtm1m, l, x)
+sv <- skyviewveg(rast(dtm1m), l, x)
 jd <- julday(2010, 5, 24)
-ha <- mean_slope(dtm1m)
+ha <- mean_slope(rast(dtm1m))
 # ===============================================================
 # Calculate and plot net shortwave radiation for 2010-05-24 11:00
 # ===============================================================
-netshort1m <- shortwaveveg(dni, dif, jd, 11, dtm = dtm1m, svv = sv, alb = alb,
+netshort1m <- shortwaveveg(dni, dif, jd, 11, dtm = rast(dtm1m), svv = sv, alb = alb,
                            fr = fr, ha = ha, x = x, l = l)
-plot(mask(netshort1m, dtm1m), main = "Net shortwave radiation")
+plot(mask(netshort1m, rast(dtm1m)), main = "Net shortwave radiation")
 }
 \seealso{
 Function \code{\link[=shortwavetopo]{shortwavetopo()}} returns net shortwave radiation, or components thereof, above the canopy.

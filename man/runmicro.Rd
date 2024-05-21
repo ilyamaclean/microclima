@@ -9,21 +9,21 @@ runmicro(params, netrad, wind, continuous = FALSE)
 \arguments{
 \item{params}{a data.frame of parameter estimates as produced by \code{\link[=fitmicro]{fitmicro()}}}
 
-\item{netrad}{a raster object, two-dimensional array or matrix of downscaled net radiation as produced by \code{\link[=shortwaveveg]{shortwaveveg()}} - \code{\link[=longwaveveg]{longwaveveg()}} or \code{\link[=shortwavetopo]{shortwavetopo()}} - \code{\link[=longwavetopo]{longwavetopo()}}.}
+\item{netrad}{a SpatRaster object, two-dimensional array or matrix of downscaled net radiation as produced by \code{\link[=shortwaveveg]{shortwaveveg()}} - \code{\link[=longwaveveg]{longwaveveg()}} or \code{\link[=shortwavetopo]{shortwavetopo()}} - \code{\link[=longwavetopo]{longwavetopo()}}.}
 
-\item{wind}{a raster object, two-dimensional array or matrix of downscaled wind speed, as produced by reference wind speed x the output of \code{\link[=windcoef]{windcoef()}}.}
+\item{wind}{a SpatRaster object, two-dimensional array or matrix of downscaled wind speed, as produced by reference wind speed x the output of \code{\link[=windcoef]{windcoef()}}.}
 
 \item{continuous}{an optional logical value indicating whether the model was fitted by treating wind speed as a continuous variable.}
 }
 \value{
-a raster object, two-dimensional array or matrix of temperature anomolies from reference temperature, normally in ºC, but units depend on those used in \code{\link[=fitmicro]{fitmicro()}}.
+a SpatRaster object, two-dimensional array or matrix of temperature anomolies from reference temperature, normally in ºC, but units depend on those used in \code{\link[=fitmicro]{fitmicro()}}.
 }
 \description{
 \code{runmicro} produces a high-resolution dataset of downscaled
 temperatures for one time interval
 }
 \details{
-If \code{netrad} is a raster object, a raster object is returned.
+If \code{netrad} is a SpatRaster object, a SpatRaster object is returned.
 If modelling mesoclimate, it is assumed that altitudinal, coastal and cold-air
 drainage effects have already been accounted for in the calculation of reference
 temperature (see example). It is assumed that the most important energy fluxes
@@ -42,46 +42,44 @@ varies as a function of a wind speed factor, such that different slope values
 are assumed under high and low wind conditions.
 }
 \examples{
-library(raster)
+library(terra)
 # =======================================================================
 # Run microclimate model for 2010-05-24 11:00 (one of the warmest hours)
 # =======================================================================
 params <- fitmicro(microfitdata)
 netrad <- netshort1m - netlong1m
 tempanom <- runmicro(params, netrad, wind1m)
-reftemp <- raster(temp100[,,564])
-extent(reftemp) <- extent(dtm1m)
-reftemp <- resample(reftemp, dtm1m)
-temps <- tempanom + getValues(reftemp, format = "matrix")
+reftemp <- rast(temp100[,,564])
+ext(reftemp) <- ext(rast(dtm1m))
+reftemp <- resample(reftemp, rast(dtm1m))
+temps <- tempanom + as.matrix(reftemp, wide = TRUE)
 plot(if_raster(temps, dtm1m), main =
      expression(paste("Temperature ",(~degree~C))))
 
 # ======================================================================
 # Run mesoclimate model for 2010-05-01 11:00 from first principles
 # ======================================================================
-
-# -------------------------
-# Resample raster function
-# -------------------------
-resampleraster <- function(a, ro) {
-  r <- raster(a)
-  extent(r) <- c(-5.40, -5.00, 49.90, 50.15)
-  crs(r) <- "+init=epsg:4326"
-  r <- projectRaster(r, crs = "+init=epsg:27700")
-  r <- resample(r, ro)
-  as.matrix(r)
-}
-
 # --------------------------
-# Resample raster: 24 hours
+# Resample SpatRast:
+# --------------------------
+resamplerast <- function(a, ro) {
+  r <- rast(a)
+  ext(r) <- c(-5.40, -5.00, 49.90, 50.15)
+  crs(r) <- "+init=epsg:4326"
+  r <- project(r, crs(ro))
+  r <- resample(r, ro)
+  as.matrix(r, wide = TRUE)
+}
+# --------------------------
+# Resample SpatRast: 24 hours
 # --------------------------
 get24 <- function(a) {
-  ao <- array(NA, dim = c(dim(dtm1km)[1:2], 24))
-  for (i in 1:24) {
-    ai <- a[,,2880 + i]
-    ao[,,i] <- resampleraster(ai, dtm1km)
-  }
-  ao
+  ai <- rast(a[,,2881:2904])
+  ext(ai) <- c(-5.40, -5.00, 49.90, 50.15)
+  crs(ai) <- "+init=epsg:4326"
+  ai <- project(ai, crs(rast(dtm1km)))
+  ao <- resample(ai, rast(dtm1km))
+  as.array(ao)
 }
 
 # ----------------------------
@@ -122,20 +120,20 @@ dTf <- coastalTps(dT, lsw, lsa)
 # ------------------------------
 # Calculate altitudinal effects
 # ------------------------------
-lrr <- if_raster(lr, dtm1km)
-lrr <- resample (lrr, dtm100m)
-tc <- sst - dTf + lrr * dtm100m
+lrr <- if_raster(lr, rast(dtm1km))
+lrr <- resample (lrr, rast(dtm100m))
+tc <- sst - dTf + lrr * rast(dtm100m)
 
 # ------------------------------
 # Downscale radiation
 # ------------------------------
-dni <- resampleraster(dnirad[,,2891], dtm100m)
-dif <- resampleraster(difrad[,,2891], dtm100m)
-n <- resampleraster(cfc[,,2891], dtm100m)
-h <- resample(if_raster(h[,,12], dtm1km), dtm100m)
-p <- resample(if_raster(p[,,12], dtm1km), dtm100m)
-sv <- skyviewtopo(dtm100m)
-netshort <- shortwavetopo(dni, dif, jd, 11, dtm = dtm100m, svf = sv)
+dni <- resamplerast(dnirad[,,2891], rast(dtm100m))
+dif <- resamplerast(difrad[,,2891], rast(dtm100m))
+n <- resamplerast(cfc[,,2891], rast(dtm100m))
+h <- resample(if_raster(h[,,12], dtm1km), rast(dtm100m))
+p <- resample(if_raster(p[,,12], dtm1km), rast(dtm100m))
+sv <- skyviewtopo(rast(dtm100m))
+netshort <- shortwavetopo(dni, dif, jd, 11, dtm = rast(dtm100m), svf = sv)
 netlong <- longwavetopo(h, tc, p, n, sv)
 netrad <- netshort - netlong
 
@@ -144,7 +142,7 @@ netrad <- netshort - netlong
 # ------------------
 ws <- array(windheight(wind2010$wind10m, 10, 1), dim = c(1, 1, 8760))
 wh <- arrayspline(ws, as.POSIXct(wind2010$obs_time), 6, "2010-05-01 11:00")
-ws <- windcoef(dtm100m, 270, reso = 100) * wh
+ws <- windcoef(rast(dtm100m), 270, reso = 100) * wh
 
 # ------------------
 # Fit and run model
@@ -152,7 +150,7 @@ ws <- windcoef(dtm100m, 270, reso = 100) * wh
 params <- fitmicro(mesofitdata, continuous = T)
 anom <- runmicro(params, netrad, ws, continuous = T)
 tc <- tc + anom
-plot(mask(tc, dtm100m), main =
+plot(mask(tc, rast(dtm100m)), main =
      expression(paste("Mesoclimate temperature ",(~degree~C))))
 }
 \seealso{

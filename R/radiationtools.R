@@ -2,10 +2,10 @@
 #'
 #' @description `albedo` is used to calculate surface albedo.
 #'
-#' @param blue a raster object, two-dimensional array or matrix of reflectance values in the blue spectral band (0 to `max.val`).
-#' @param green a raster object, two-dimensional array or matrix of reflectance values in the green spectral band (0 to `max.val`).
-#' @param red a raster object, two-dimensional array or matrix of reflectance values in the red spectral band (0 to `max.val`).
-#' @param nir a raster object, two-dimensional array or matrix of reflectance values in the near-infrared spectral band (0 to `max.val`).
+#' @param blue a SpatRaster object, two-dimensional array or matrix of reflectance values in the blue spectral band (0 to `max.val`).
+#' @param green a SpatRaster object, two-dimensional array or matrix of reflectance values in the green spectral band (0 to `max.val`).
+#' @param red a SpatRaster object, two-dimensional array or matrix of reflectance values in the red spectral band (0 to `max.val`).
+#' @param nir a SpatRaster object, two-dimensional array or matrix of reflectance values in the near-infrared spectral band (0 to `max.val`).
 #' @param maxval a single numeric value representing the maximum reflectance in any of the spectral bands.
 #' @param bluerange an optional numeric vector of length 2 giving the range (minimum, maximum) of wavelength values captured by the blue spectral band sensor (nm).
 #' @param greenrange an optional numeric vector of length 2 giving the range (minimum, maximum) of wavelength values captured by the green spectral band sensor (nm).
@@ -14,16 +14,16 @@
 #'
 #' @details
 #' The function assumes that image reflectance has been captured using four spectral bands.
-#' If `blue` is a raster object, then a raster object is returned.
+#' If `blue` is a SpatRaster object, then a SpatRaster object is returned.
 #'
 #' @seealso Function [albedo_adjust()] for adjusted albedo for image brightness and contrast.
 #'
-#' @return a raster object or two-dimensional array of numeric values representing surface albedo (range 0 to 1).
-#' @import raster
+#' @return a SpatRaster object or two-dimensional array of numeric values representing surface albedo (range 0 to 1).
+#' @import terra
 #' @export
 #'
 #' @examples
-#' library(raster)
+#' library(terra)
 #' alb <- albedo(aerial_image[,,1], aerial_image[,,2], aerial_image[,,3],
 #'               aerial_image[,,4])
 #' plot(if_raster(alb, dtm1m), main = "Albedo", col = gray(0:255/255))
@@ -64,31 +64,32 @@ albedo <- function(blue, green, red, nir, maxval = 255,
 #'
 #' @description `albedo_adjust` is used to correct albedo derived from aerial imagery for image brightness and contrast using MODIS data.
 #'
-#' @param alb_image a raster object with numeric albedo values derived from high-resolution aerial imagery, as derived by [albedo()] and converted to a raster object.
-#' @param alb_modis a raster object with numeric albedo values derived from MODIS imagery covering the same extent as `alb.image` (range 0 to 1). If the extent of the `alb.modis` is greater than that of `alb.image`, `alb.modis` is cropped.
+#' @param alb_image a SpatRaster object with numeric albedo values derived from high-resolution aerial imagery, as derived by [albedo()] and converted to a SpatRaster object.
+#' @param alb_modis a SpatRaster object with numeric albedo values derived from MODIS imagery covering the same extent as `alb.image` (range 0 to 1). If the extent of the `alb.modis` is greater than that of `alb.image`, `alb.modis` is cropped.
 #'
-#' @return a raster object with numeric values representing the adjusted surface albedo values (range 0 to 1).
-#' @import raster
+#' @return a SpatRaster object with numeric values representing the adjusted surface albedo values (range 0 to 1).
+#' @import terra
 #' @export
 #'
 #' @examples
-#' library(raster)
+#' library(terra)
 #' alb <- albedo(aerial_image[,,1], aerial_image[,,2], aerial_image[,,3],
 #'               aerial_image[,,4])
 #' img <- if_raster(alb, dtm1m)
-#' mds <- raster(modis, xmn = 169000, xmx = 170000, ymn = 12000, ymx = 13000)
+#' mds <- rast(modis)
+#' ext(mds)<-c(169000, 170000, 12000, 13000)
 #' alb2 <- albedo_adjust(img, mds)
 #' par(mfrow=c(2, 1))
 #' plot(img, main = "Raw albedo", col = gray(0:255/255))
 #' plot(alb2, main = "Adjusted albedo", col = gray(0:255/255))
 albedo_adjust <- function(alb_image, alb_modis) {
-  alb_modis <- crop(alb_modis, extent(alb_image))
+  alb_modis <- crop(alb_modis, ext(alb_image))
   alb_imagec <- resample(alb_image, alb_modis)
   logit_imagec <- log(alb_imagec / (1 - alb_imagec))
   logit_image <- log(alb_image / (1 - alb_image))
   logit_modis <- log(alb_modis / (1 - alb_modis))
-  sd_adj <- sd(getValues(logit_modis)) / sd(getValues(logit_imagec))
-  mn_adj <- mean(getValues(logit_modis)) - mean(getValues(logit_imagec))
+  sd_adj <- sd(as.vector(logit_modis)) / sd(as.vector(logit_imagec))
+  mn_adj <- mean(as.vector(logit_modis)) - mean(as.vector(logit_imagec))
   logit_image <- sd_adj * (logit_image + mn_adj)
   alb_adj <- 1 / (1 + exp(-1 * logit_image))
   alb_adj
@@ -97,23 +98,23 @@ albedo_adjust <- function(alb_image, alb_modis) {
 #'
 #' @description `lai` is used to calculate the total one-sided area of leaf tissue per unit ground surface area from the Normalized Difference Vegetation Index.
 #'
-#' @param red a raster object, two-dimensional array or matrix of reflectance values in the red spectral band.
-#' @param nir a raster object, two-dimensional array or matrix of reflectance values in the near-infrared spectral band.
+#' @param red a SpatRaster object, two-dimensional array or matrix of reflectance values in the red spectral band.
+#' @param nir a SpatRaster object, two-dimensional array or matrix of reflectance values in the near-infrared spectral band.
 #' @param maxlai an optional single numeric value representing the likely upper limit of Leaf Area Index to which all values are capped.
 #'
 #' @seealso function [lai_adjust()] for calculated leaf area index values at specified heights above the ground.
 #'
 #' @return a raster object or two-dimensional array of numeric values representing the total one-sided area of leaf tissue per unit ground surface area.
-#' @import raster
+#' @import terra
 #' @export
 #'
 #' @details
-#' If `red` is a raster object, a raster object is returned. This function has been calibrated
+#' If `red` is a SpatRaster object, a SpatRaster object is returned. This function has been calibrated
 #' using data derived from a small area of Cornwall only. It is strongly recommended that
 #' locally calibrated values are obtained.
 
 #' @examples
-#' library(raster)
+#' library(terra)
 #' leaf <- lai(aerial_image[,,3], aerial_image[,,4])
 #' plot(if_raster(leaf, dtm1m), main = "Leaf area index")
 lai <- function(red, nir, maxlai = 20) {
@@ -130,24 +131,24 @@ lai <- function(red, nir, maxlai = 20) {
 #'
 #' @description `lai_adjust` is used to adjust the total one-sided area of leaf tissue per unit ground surface area to derive values at at a specified height above the ground.
 
-#' @param l raster object, two-dimensional array or matrix of leaf area index values as returned by [lai()].
-#' @param veghgt a raster object, two-dimensional array or matrix of vegetation heights (m).
+#' @param l SpatRaster object, two-dimensional array or matrix of leaf area index values as returned by [lai()].
+#' @param veghgt a SpatRaster object, two-dimensional array or matrix of vegetation heights (m).
 #' @param hgt a numeric value representing the height above the ground for which Leaf Area Index is required (m).
-#' @import raster
+#' @import terra
 #' @export
 #'
 #' @details
-#' If `l` is a raster object, a raster object is returned. Temperatures are often required for a specified height above the ground,
+#' If `l` is a SpatRaster object, a SpatRaster object is returned. Temperatures are often required for a specified height above the ground,
 #' and in short vegetation, the leaf area can be substantially less at this
-#' height than at gorund level. This function enables the user to estimate
+#' height than at ground level. This function enables the user to estimate
 #' leaf area for a specified height about the ground.
 #'
-#' @return a raster object or a two-dimensional area of numeric values representing the Leaf Area Index values for a specified height above the ground
+#' @return a SpatRaster object or a two-dimensional area of numeric values representing the Leaf Area Index values for a specified height above the ground
 #'
 #' @examples
-#' library(raster)
+#' library(terra)
 #' l <- lai(aerial_image[,,3], aerial_image[,,4])
-#' la<-lai_adjust(l, veg_hgt)
+#' la<-lai_adjust(l, rast(veg_hgt))
 #' par(mfrow=c(2, 1))
 #' plot(if_raster(l, dtm1m), main = "Leaf area index")
 #' plot(if_raster(la, dtm1m), main = "Adjusted leaf area index")
@@ -164,9 +165,9 @@ lai_adjust <- function(l, veghgt, hgt = 0.05) {
 #'
 #' @description `leaf_geometry` is used to calculates the ratio of vertical to horizontal projections of leaf foliage.
 #'
-#' @param veghgt a raster object, two-dimensional array or matrix of vegetation heights (m).
+#' @param veghgt a SpatRaster object, two-dimensional array or matrix of vegetation heights (m).
 #' @param maxx a theoretical upper limit for the ratio of vertical to horizontal projections of leaf foliage, to which all values are capped.
-#' @import raster
+#' @import terra
 #' @export
 #'
 #' @details
@@ -175,21 +176,21 @@ lai_adjust <- function(l, veghgt, hgt = 0.05) {
 #' more vertically oriented and `leaf_geometry` is hence used to calculate an approximate  factor
 #' indicating the degree to which vegetation is vertically orientated based on the premise that
 #' shorter vegetation is more likely to have more vertically orientated leaves.
-#' If `veghgt` is a raster object, a raster object is returned.
+#' If `veghgt` is a SpatRaster object, a SpatRaster object is returned.
 #' This function has been calibrated using data derived from a small area of
 #' Cornwall only. It is strongly recommended that locally calibrated values
 #  are obtained. The projection system associated with `veghgt` must be such that
-#' units of x, y and z are identical. Use [projectRaster()] to convert the
+#' units of x, y and z are identical. Use [terra::project()] to convert the
 #' projection to a Universal Transverse Mercator type projection system.
 
-#' @return a raster object or a two-dimensional array of numeric values representing the
+#' @return a SpatRaster object or a two-dimensional array of numeric values representing the
 #' ratio of vertical to horizontal projections of leaf foliage. The output tends towards
 #' zero as vegetation is more vertically orientated and maxx as it is more horizontally
 #' orientated.
 #'
 #' @examples
-#' library(raster)
-#' x <- leaf_geometry(veg_hgt)
+#' library(terra)
+#' x <- leaf_geometry(rast(veg_hgt))
 #' plot(x, main = "Leaf geometry")
 leaf_geometry <- function(veghgt, maxx = 8) {
   r <- veghgt
@@ -203,12 +204,12 @@ leaf_geometry <- function(veghgt, maxx = 8) {
 #'
 #' @description `canopy` is used to calculate fractional canopy cover.
 #'
-#' @param l a raster object, two-dimensional array or matrix of leaf area index values as returned by [lai()].
-#' @param ref leaf reflectivity.
-#' @import raster
+#' @param l a SpatRaster object, two-dimensional array or matrix of leaf area index values as returned by [lai()].
+#' @param ref leaf reflectance.
+#' @import terra
 #' @export
 #'
-#' @return a raster object or a two-dimensional array of numeric values representing fractional canopy cover estimated as the proportion of isotropic radiation transmitted through the canopy.
+#' @return a SpatRaster object or a two-dimensional array of numeric values representing fractional canopy cover estimated as the proportion of isotropic radiation transmitted through the canopy.
 #' @details
 #' Canopy cover calculated by this function is defined as 1 - the proportion of isotropic
 #' radiation transmitted through the canopy. This is effectively te same as canopy
@@ -216,11 +217,10 @@ leaf_geometry <- function(veghgt, maxx = 8) {
 #' If `l` is a raster object, a raster object is returned.
 #'
 #' @examples
-#' library(raster)
+#' library(terra)
 #' l <- lai(aerial_image[,,3], aerial_image[,,4])
 #' l <- if_raster(l, dtm1m) # convert to raster
-#' fr <- canopy(l)
-#' fr[is.na(dtm1m)] <- NA
+#' fr <- mask(canopy(l),rast(dtm1m))
 #' plot(fr, main = "Fractional canopy cover")
 canopy <- function(l, ref = 0) {
   r <- l
@@ -234,17 +234,17 @@ canopy <- function(l, ref = 0) {
 #'
 #' @description `albedo2` is used to calculate either bare ground or canopy albedo from surface albedo.
 #'
-#' @param alb a raster object, two-dimensional array or matrix of surface albedo values (range 0 - 1) derived using [albedo()] or [albedo_adjust()].
-#' @param fr a raster object, two-dimensional array or matrix of fractional canopy cover as returned by [canopy()].
+#' @param alb a SpatRaster object, two-dimensional array or matrix of surface albedo values (range 0 - 1) derived using [albedo()] or [albedo_adjust()].
+#' @param fr a SpatRaster object, two-dimensional array or matrix of fractional canopy cover as returned by [canopy()].
 #' @param ground a logical value indicating whether to return ground albedo (TRUE) or canopy albedo (FALSE).
-#' @import raster
+#' @import terra
 #' @export
 #'
-#' @return If ground is `TRUE`, a raster object or a two-dimensional array of numeric values representing ground albedo (range 0 to 1).
-#' @return If ground is `FALSE`, a raster object or two-dimensional array of numeric values representing canopy albedo (range 0 to 1).
+#' @return If ground is `TRUE`, a SpatRaster object or a two-dimensional array of numeric values representing ground albedo (range 0 to 1).
+#' @return If ground is `FALSE`, a SpatRaster object or two-dimensional array of numeric values representing canopy albedo (range 0 to 1).
 #'
 #' @details
-#' If alb is a raster object, a raster object is returned. For calculation of net radiation, both
+#' If alb is a SpatRaster object, a SpatRaster object is returned. For calculation of net radiation, both
 #' ground and canopy albedo may be are needed. Areas with high canopy cover typically have lower
 #' albedo values than areas with low canopy cover and mean values for these can be derived from
 #' parts of the image with very high or very low canopy cover. It is assumed that albedo of the
@@ -253,7 +253,7 @@ canopy <- function(l, ref = 0) {
 #' albedos closer to the image-derived albedo in areas with low canopy cover.
 #'
 #' @examples
-#' library(raster)
+#' library(terra)
 #' # ======================
 #' # Calculate image albedo
 #' # ======================
@@ -288,42 +288,42 @@ albedo2 <- function(alb, fr, ground = TRUE) {
 #'
 #' @description `albedo_reflected` is used to calculate mean albedo of surfaces surrounding a location from which radiation is reflected.
 #'
-#' @param alb a raster object, two-dimensional array or matrix of surface albedo values (range 0 - 1) derived using [albedo()] or [albedo_adjust()].
+#' @param alb a SpatRaster object, two-dimensional array or matrix of surface albedo values (range 0 - 1) derived using [albedo()] or [albedo_adjust()].
 #' @param e an optional extent object indicating the geographic extent of `alb`.
-#' @import raster rgdal
-#' @importFrom sp coordinates
+#' @import terra
 #' @export
 #'
 #' @details
 #' A small proportion of radiation received at any given location is in the
 #' form of reflected radiation, and this function permits the albedo of
 #' surrounding surfaces to be calculated. An inverse distance-weighting is
-#' applied (range 0 to 1). If `alb` is a raster object, then a raster object is returned
+#' applied (range 0 to 1). If `alb` is a SpatRaster object, then a SpatRaster object is returned
 #' and `e` can be determined from `alb`.
 #'
 #'
-#' @return a raster object, two-dimensional array or matrix of values representing the mean albedo of surfaces surrounding each pixel of a two-dimension albedo array (range 0 - 1).
+#' @return a SpatRaster object, two-dimensional array or matrix of values representing the mean albedo of surfaces surrounding each pixel of a two-dimension albedo array (range 0 - 1).
 #'
 #' @examples
-#' library(raster)
+#' library(terra)
 #' alb <- albedo(aerial_image[,,1], aerial_image[,,2], aerial_image[,,3],
 #'               aerial_image[,,4])
 #' alb <- alb[901:1000, 901:1000]
-#' e <- extent(c(169900, 170000, 12900, 13000))
-#' rt <-raster(e, res = 1)
+#' e <- ext(169900, 170000, 12900, 13000)
+#' rt <-rast(e)
+#' res(rt)<-1
 #' r_alb <- albedo_reflected(alb, e)
 #' par(mfrow = c(2, 1))
 #' plot(if_raster(alb, rt), main = "Surface albedo", col= gray(0:255/255))
 #' plot(if_raster(r_alb, rt), main = "Albedo of surrounding surfaces",
 #'      col= gray(0:255/255))
-albedo_reflected <- function(alb, e = extent(alb)) {
+albedo_reflected <- function(alb, e = ext(alb)) {
   rr <- alb
   alb <- is_raster(rr)
   albr <- array(NA, dim = dim(alb))
-  r <- raster(alb)
-  extent(r) <- e
+  r <- rast(alb)
+  ext(r) <- e
   reso <- xres(r)
-  maxdist <- max(e@xmax - e@xmin, e@ymax - e@ymin)
+  maxdist <- max(e$xmax - e$xmin, e$ymax - e$ymin)
   s <- c((4:2000) / 4) ^ 2 * reso
   s <- c(0, s)
   s <- s[s <= maxdist]
@@ -331,13 +331,12 @@ albedo_reflected <- function(alb, e = extent(alb)) {
   for (yy in 1:dim(alb)[1]) {
     for (xx in 1:dim(alb)[2]) {
       if (is.na(alb[yy, xx]) == FALSE) {
-        x <- xx * reso + e@xmin - reso / 2
-        y <- e@ymax + reso / 2 - yy * reso
+        x <- xx * reso + e$xmin - reso / 2
+        y <- e$ymax + reso / 2 - yy * reso
         xdist <- round(s * sin(dct * pi / 180), 0)
         ydist <- round(s * cos(dct * pi / 180), 0)
         xy <- data.frame(x = x + xdist, y = y + ydist)
-        coordinates(xy) <- ~x + y
-        ar <- extract(r, xy)
+        ar <- extract(r, xy)[,2]
         albr[yy, xx] <- mean(ar, na.rm = T)
       }
     }
@@ -348,25 +347,25 @@ albedo_reflected <- function(alb, e = extent(alb)) {
 #'
 #' @description `mean_slope` is used to calculates the mean slope to the horizon in all directions.
 #'
-#' @param dtm a raster object, two-dimensional array or matrix of elevations (m).
+#' @param dtm a SpatRaster object, two-dimensional array or matrix of elevations (m).
 #' @param steps an optional integer. The mean slope is calculated from the horizon angle in specified directions. Steps defines the total number of directions used. If the default 36 is specified, then the horizon angle is calculated at 10º intervals.
 #' @param reso a single numeric value representing the spatial resolution of `dtm` (m).
 #'
-#' @return a raster object or a two-dimensional array of the mean slope angle to the horizon in all directions (º).
-#' @import raster
+#' @return a SpatRaster object or a two-dimensional array of the mean slope angle to the horizon in all directions (º).
+#' @import terra
 #' @export
 #'
 #' @details
-#' If `dtm` is a raster object, a raster object is returned.
+#' If `dtm` is a SpatRaster object, a SpatRaster object is returned.
 #' The projection system associated with `dtm` must be such that
-#' units of x, y and z are identical. Use [projectRaster()] to convert the
+#' units of x, y and z are identical. Use [terra::project()] to convert the
 #' projection to a Universal Transverse Mercator type projection system.
 #'
 #' @examples
-#' library(raster)
-#' ms <- mean_slope(dtm100m, reso = 100)
+#' library(terra)
+#' ms <- mean_slope(rast(dtm100m), reso = 100)
 #' plot(ms, main = "Mean slope to horizon")
-mean_slope <- function(dtm, steps = 36, reso = 1) {
+mean_slope <- function(dtm, steps = 36, reso = 100) {
   r <- dtm
   dtm <- is_raster(dtm)
   dtm[is.na(dtm)] <- 0
@@ -382,27 +381,27 @@ mean_slope <- function(dtm, steps = 36, reso = 1) {
 #'
 #' @description `skyviewtopo` is used to calculate a coefficient to correct for the proportion of sky in view when calculating net shortwave or longwave radiation above the canopy.
 #'
-#' @param dtm dtm a raster object, two-dimensional array or matrix of elevations (m).
+#' @param dtm dtm a SpatRaster object, two-dimensional array or matrix of elevations (m).
 #' @param steps an optional integer. The sky view is calculated from the horizon angle in specified directions. Steps defines the total number of directions used. If the default 36 is specified, then the horizon angle is calculated at 10º intervals.
 #' @param reso a single numeric value representing the spatial resolution of `dtm` (m).
-#' @import raster
+#' @import terra
 #' @export
 #'
 #' @details If a proportion of the sky of partially obscured, then the isotropic radiation flux received by a surface can be determined by integrating the single direction radiation flux over the proportion of sky in view. This function returns the integrated flux over the proportion of sky in view expressed as a proportion of the integrated flux over the entire hemisphere.
 #'
 #' @seealso The function [skyviewveg()] calculates a sky view correction factor underneath vegetation.
 #'
-#' @return a raster object or two-dimension array of values representing the proportion of isotropic radiation received by a partially obscured surface relative to the full hemisphere.
+#' @return a SpatRaster object or two-dimension array of values representing the proportion of isotropic radiation received by a partially obscured surface relative to the full hemisphere.
 #'
 #' @details
-#' If `dtm` is a raster object, a raster object is returned.
+#' If `dtm` is a SpatRaster object, a SpatRaster object is returned.
 #' The projection system associated with `dtm` must be such that
-#' units of x, y and z are identical. Use [projectRaster()] to convert the
+#' units of x, y and z are identical. Use [terra::project()] to convert the
 #' projection to a Universal Transverse Mercator type projection system.
 #
 #' @examples
-#' library(raster)
-#' sv <- skyviewtopo(dtm100m)
+#' library(terra)
+#' sv <- skyviewtopo(rast(dtm100m))
 #' plot(sv, main = "Sky view factor")
 skyviewtopo <- function(dtm, steps = 36, reso = 100) {
   r <- dtm
@@ -419,19 +418,19 @@ skyviewtopo <- function(dtm, steps = 36, reso = 100) {
 #' proportion of sky obscured by topography when calculating net shortwave or
 #' longwave radiation above the canopy.
 #'
-#' @param dtm a raster object, two-dimensional array or matrix of elevations (m).
-#' @param l a raster object, two-dimensional array or matrix of leaf area index values as returned by [lai()].
-#' @param x a raster object, two-dimensional array of numeric values representing the ratio of vertical to horizontal projections of leaf foliage as returned by [leaf_geometry()].
+#' @param dtm a SpatRaster object, two-dimensional array or matrix of elevations (m).
+#' @param l a SpatRaster object, two-dimensional array or matrix of leaf area index values as returned by [lai()].
+#' @param x a SpatRaster object, two-dimensional array of numeric values representing the ratio of vertical to horizontal projections of leaf foliage as returned by [leaf_geometry()].
 #' @param steps an optional integer. The sky view is calculated from the horizon angle in specified directions. Steps defines the total number of directions used. If the default 36 is specified, then the horizon angle is calculated at 10º intervals.
 #' @param reso a single numeric value representing the spatial resolution of `dtm` (m).
-#' @import raster
+#' @import terra
 #' @importFrom  stats runif sd spline
 #' @export
 #'
 #' @details
-#' If `dtm` is a raster object, a raster object is returned.
+#' If `dtm` is a SpatRaster object, a SpatRaster object is returned.
 #' The projection system associated with `dtm` must be such that
-#' units of x, y and z are identical. Use [projectRaster()] to convert the
+#' units of x, y and z are identical. Use [terra::project()] to convert the
 #' projection to a Universal Transverse Mercator type projection system.
 #' If a proportion of the sky of partially obscured, then the isotropic
 #' radiation flux received by a surface underneath canopy can be determined by
@@ -443,13 +442,13 @@ skyviewtopo <- function(dtm, steps = 36, reso = 100) {
 #'
 #' @seealso The function [skyviewtopo()] calculates a sky view correction factor above vegetation.
 #'
-#' @return a raster object or a two-dimensional array of numeric values representing the proportion of isotropic radiation received by a surface partially obscured by topography relative to the full hemisphere underneath vegetation.
+#' @return a SpatRaster object or a two-dimensional array of numeric values representing the proportion of isotropic radiation received by a surface partially obscured by topography relative to the full hemisphere underneath vegetation.
 #'
 #' @examples
-#' library(raster)
+#' library(terra)
 #' l <- lai(aerial_image[,, 3], aerial_image[,, 4])
-#' x <- leaf_geometry(veg_hgt)
-#' sv <- skyviewveg(dtm1m, l, x)
+#' x <- leaf_geometry(rast(veg_hgt))
+#' sv <- skyviewveg(rast(dtm1m), l, x)
 #' plot(sv, main = "Sky view factor")
 skyviewveg <- function(dtm, l, x, steps = 36, reso = 1) {
   r <- dtm
@@ -482,14 +481,14 @@ skyviewveg <- function(dtm, l, x, steps = 36, reso = 1) {
 #' longwave radiation flux density emmited from the Earth, ignoring canopy
 #' effects.
 #'
-#' @param h a single numeric value, raster object, two-dimensional array or matrix of specific humidities (\ifelse{html}{\out{kg kg<sup>{-1}</sup> }}{\eqn{kg kg^{-1}}}).
-#' @param tc a single numeric value, raster object, two-dimensional array or matrix of temperatures (ºC).
-#' @param p an optional single numeric value, raster object, two-dimensional array or matrix of sea-level pressures (Pa).
-#' @param n a single numeric value, raster object, two-dimensional array or matrix of fractional cloud cover values (range 0 - 1).
+#' @param h a single numeric value, SpatRaster object, two-dimensional array or matrix of specific humidities (\ifelse{html}{\out{kg kg<sup>{-1}</sup> }}{\eqn{kg kg^{-1}}}).
+#' @param tc a single numeric value, SpatRaster object, two-dimensional array or matrix of temperatures (ºC).
+#' @param p an optional single numeric value, SpatRaster object, two-dimensional array or matrix of sea-level pressures (Pa).
+#' @param n a single numeric value, SpatRaster object, two-dimensional array or matrix of fractional cloud cover values (range 0 - 1).
 #' Technically assumed to be 1 - ratio of measured to clear-sky radiation.
-#' @param svf an optional single value, raster object, two-dimensional array or matrix of values representing the proportion of isotropic radiation received by a partially obscured surface relative to the full hemisphere, as returned by [skyviewtopo()].
+#' @param svf an optional single value, SpatRaster object, two-dimensional array or matrix of values representing the proportion of isotropic radiation received by a partially obscured surface relative to the full hemisphere, as returned by [skyviewtopo()].
 #' @param co parameter relationship between vapor pressure and temperature near the ground Brutsaert (1975).
-#' @import raster
+#' @import terra
 #' @export
 #'
 #' @seealso The function [longwaveveg()] returns the net longwave radiation under vegetation.
@@ -497,7 +496,7 @@ skyviewveg <- function(dtm, l, x, steps = 36, reso = 1) {
 #' [cloudfromrad()] can be used to derive derive cloud cover from radiation.
 #'
 #' @details
-#' if `svf` is a raster object, a raster object is returned.
+#' if `svf` is a SpatRaster object, a SpatRaster object is returned.
 #' If no values for `p` are provided, a default value of 101300 Pa, typical of
 #' sea-level pressure, is assumed. If single values of `h`, `tc`, `p` and `n`
 #' are given, and `svf` is an array or matrix, then the entire area is assumed to
@@ -507,10 +506,10 @@ skyviewveg <- function(dtm, l, x, steps = 36, reso = 1) {
 #' provided, a single value is returned, and it is assumed that the entire
 #' hemisphere is in view.
 #'
-#' @return a single numeric value, raster object, two-dimensional array pr matrix of values representing net longwave radiation (MJ per metre squared per hour).
+#' @return a single numeric value, SpatRaster object, two-dimensional array pr matrix of values representing net longwave radiation (MJ per metre squared per hour).
 #'
 #' @examples
-#' library(raster)
+#' library(terra)
 #' # =================================
 #' # Extract data for 2010-05-24 11:00
 #' # =================================
@@ -518,25 +517,27 @@ skyviewveg <- function(dtm, l, x, steps = 36, reso = 1) {
 #' p <- pres[,,144]
 #' tc <- tas[,,144] + dtr[,,144]
 #' n <-cfc[,,3444]
-#' sv <- skyviewtopo(dtm100m)
+#' sv <- skyviewtopo(rast(dtm100m))
 #' # ===========================
 #' # Resample to 100m resolution
 #' # ===========================
 #' hr <- if_raster(h, dtm1km)
 #' tr <- if_raster(tc, dtm1km)
 #' pr <- if_raster(p, dtm1km)
-#' nr <- raster(n, xmn = -5.40, xmx = -5.00, ymn = 49.90, ymx = 50.15)
+#' e<-ext(-5.40, -5.00, 49.90, 50.15)
+#' nr <- rast(n)
+#' ext(nr)<-e
 #' crs(nr) <- '+init=epsg:4326'
-#' nr <- projectRaster(nr, crs = '+init=epsg:27700')
-#' hr <- resample(hr, dtm100m)
-#' tr <- resample(tr, dtm100m)
-#' pr <- resample(pr, dtm100m)
-#' nr <- resample(nr, dtm100m)
+#' nr <- project(nr, crs(rast(dtm1km)))
+#' hr <- resample(hr, rast(dtm100m))
+#' tr <- resample(tr, rast(dtm100m))
+#' pr <- resample(pr, rast(dtm100m))
+#' nr <- resample(nr, rast(dtm100m))
 #' # =========================================
 #' # Calculate and plot net longwave radiation
 #' # =========================================
 #' netlong100m <- longwavetopo(hr, tr, pr, nr, sv)
-#' netlong100m <- mask(netlong100m, dtm100m)
+#' netlong100m <- mask(netlong100m, rast(dtm100m))
 #' plot(netlong100m, main = "Net longwave radiation")
 longwavetopo <- function(h, tc, p = 101300, n, svf = 1, co = 1.24) {
   r <- svf
@@ -561,27 +562,27 @@ longwavetopo <- function(h, tc, p = 101300, n, svf = 1, co = 1.24) {
 #'
 #' @description `longwaveveg` is used to calculate a high-resolution dataset of the net longwave radiation flux density emmited from the Earth, accounting for canopy effects.
 #'
-#' @param h a single numeric value, raster object, two-dimensional array or matrix of specific humidities (\ifelse{html}{\out{kg kg<sup>{-1}</sup> }}{\eqn{kg kg^{-1}}}).
-#' @param tc a single numeric value, raster object, two-dimensional array or matrix of temperatures (ºC).
-#' @param p an optional single numeric value, raster object, two-dimensional array or matrix of sea-level pressures (Pa).
-#' @param n a single numeric value, raster object, two-dimensional array or matrix of fractional cloud cover (range 0 - 1).
+#' @param h a single numeric value, SpatRaster object, two-dimensional array or matrix of specific humidities (\ifelse{html}{\out{kg kg<sup>{-1}</sup> }}{\eqn{kg kg^{-1}}}).
+#' @param tc a single numeric value, SpatRaster object, two-dimensional array or matrix of temperatures (ºC).
+#' @param p an optional single numeric value, SpatRaster object, two-dimensional array or matrix of sea-level pressures (Pa).
+#' @param n a single numeric value, SpatRaster object, two-dimensional array or matrix of fractional cloud cover (range 0 - 1).
 #' Technically assumed to be 1 - ratio of measured to clear-sky radiation.
-#' @param x a raster object, two-dimensional array or matrix of numeric values representing the ratio of vertical to horizontal projections of leaf foliage as returned by [leaf_geometry()].
-#' @param fr a raster object, two-dimensional array or matrix of fractional canopy cover as returned by [canopy()].
-#' @param svv an optional raster object, two-dimensional array or matrix of values representing the proportion of isotropic radiation received by a surface partially obscured by topography relative to the full hemisphere underneath vegetation as returned by [skyviewveg()].
-#' @param albc an optional single value, raster object, two-dimensional array or matrix of values representing the albedo(s) of the vegetated canopy as returned by [albedo2()].
+#' @param x a SpatRaster object, two-dimensional array or matrix of numeric values representing the ratio of vertical to horizontal projections of leaf foliage as returned by [leaf_geometry()].
+#' @param fr a SpatRaster object, two-dimensional array or matrix of fractional canopy cover as returned by [canopy()].
+#' @param svv an optional SpatRaster object, two-dimensional array or matrix of values representing the proportion of isotropic radiation received by a surface partially obscured by topography relative to the full hemisphere underneath vegetation as returned by [skyviewveg()].
+#' @param albc an optional single value, SpatRaster object, two-dimensional array or matrix of values representing the albedo(s) of the vegetated canopy as returned by [albedo2()].
 #' @param co parameter relationship between vapor pressure and temperature near the ground Brutsaert (1975).
-#' @import raster
+#' @import terra
 #' @export
 #'
 #' @seealso The function [longwavetopo()] returns the net longwave radiation above vegetation.
 #' The function [humidityconvert()] can be used to derive specific humidity from other measures of humidity.
 #' [cloudfromrad()] can be used to derive derive cloud cover from radiation.
 #'
-#' @return a single numeric value, raster object or two-dimensional array of values representing net longwave radiation (MJ per metre squared per hour).
+#' @return a single numeric value, SpatRaster object or two-dimensional array of values representing net longwave radiation (MJ per metre squared per hour).
 #'
 #' @details
-#' If `svv` is a raster object, a raster object is returned.
+#' If `svv` is a SpatRaster object, a SpatRaster is returned.
 #' If no values for `p` are provided, a default value of 101300 Pa, typical of
 #' sea-level pressure, is assumed. If no value for `albc` is provided, then
 #' the entire area is assumed to have a default value of 0.23, typical of
@@ -591,22 +592,24 @@ longwavetopo <- function(h, tc, p = 101300, n, svf = 1, co = 1.24) {
 #' be in view.
 #'
 #' @examples
-#' library(raster)
+#' library(terra)
 #' # =================================
 #' # Extract data for 2010-05-24 11:00
 #' # =================================
 #' h <- microvars$humidity[564]
 #' p <- microvars$pressure[564]
 #' n <- microvars$cloudcover[264]
-#' tcr <- raster(temp100[,,564], xmn = 169000, xmx = 170000, ymn = 12000, ymx = 13000)
-#' tc <- resample(tcr, dtm1m) # Resample temperature raster to 1m
+#' e <- ext(169000, 170000, 12000, 13000)
+#' tcr <- rast(temp100[,,564])
+#' ext(tcr) <- e
+#' tc <- resample(tcr, rast(dtm1m)) # Resample temperature raster to 1m
 #' # =========================
 #' # calculate input variables
 #' # =========================
-#' x <- leaf_geometry(veg_hgt)
+#' x <- leaf_geometry(rast(veg_hgt))
 #' l <- lai(aerial_image[,,3], aerial_image[,,4])
-#' l <- lai_adjust(l, veg_hgt)
-#' svv <- skyviewveg(dtm1m, l, x)
+#' l <- lai_adjust(l, rast(veg_hgt))
+#' svv <- skyviewveg(rast(dtm1m), l, x)
 #' fr <- canopy(l)
 #' alb <- albedo(aerial_image[,,1], aerial_image[,,2], aerial_image[,,3],
 #'              aerial_image[,,4])
@@ -615,7 +618,7 @@ longwavetopo <- function(h, tc, p = 101300, n, svf = 1, co = 1.24) {
 #' # calculate and plot longwave radiation
 #' # =====================================
 #' netlong1m <-longwaveveg(h, tc, p, n, x, fr, svv, albc)
-#' nlr <- mask(netlong1m, dtm1m)
+#' nlr <- mask(netlong1m, rast(dtm1m))
 #' plot(nlr, main = "Net longwave radiation")
 longwaveveg <- function(h, tc, p = 101300, n, x, fr, svv = 1, albc = 0.23, co = 1.24) {
   rr <- svv
@@ -655,49 +658,48 @@ longwaveveg <- function(h, tc, p = 101300, n, x, fr, svv = 1, albc = 0.23, co = 
 #' shortwave radiation received at the surface of the Earth using a
 #' high-resolution digital elevation dataset, ignoring canopy effects.
 #'
-#' @param dni a single numeric value, raster object, two-dimensional array or matrix of coarse-resolution direct radiation perpendicular to the solar beam (\ifelse{html}{\out{MJ m<sup>-2</sup> hr<sup>-1</sup>}}{\eqn{MJ m^{-2} hr^{-1}}}).
-#' @param dif a single numeric value, raster object, two-dimensional array or matrix of diffuse radiation horizontal ot the surface (\ifelse{html}{\out{MJ m<sup>-2</sup> hr<sup>-1</sup>}}{\eqn{MJ m^{-2} hr^{-1}}}).
+#' @param dni a single numeric value, SpatRaster object, two-dimensional array or matrix of coarse-resolution direct radiation perpendicular to the solar beam (\ifelse{html}{\out{MJ m<sup>-2</sup> hr<sup>-1</sup>}}{\eqn{MJ m^{-2} hr^{-1}}}).
+#' @param dif a single numeric value, SpatRaster object, two-dimensional array or matrix of diffuse radiation horizontal ot the surface (\ifelse{html}{\out{MJ m<sup>-2</sup> hr<sup>-1</sup>}}{\eqn{MJ m^{-2} hr^{-1}}}).
 #' @param julian a single integer representing the Julian as returned by [julday()].
 #' @param localtime a single numeric value representing local time (decimal hour, 24 hour clock).
 #' @param lat a single numeric value representing the mean latitude of the location for which downscaled radiation is required (decimal degrees, -ve south of equator).
 #' @param long a single numeric value representing the mean longitude of the location for which downscaled radiation is required (decimal degrees, -ve west of Greenwich meridian).
-#' @param dtm an optional raster object, two-dimensional array or matrix of elevations (m), orientated as if derived using [is_raster()]. I.e. `[1, 1]` is the NW corner.
-#' @param slope a single value, raster object, two-dimensional array or matrix of slopes (º). If an array or matrix, then orientated as if derived using [is_raster()]. I.e. `[1, 1]` is the NW corner.
-#' @param aspect a single value, raster object, two-dimensional array or matrix of aspects (º). If an array or matrix, then orientated as if derived using [is_raster()]. I.e. `[1, 1]` is the NW corner.
-#' @param svf an optional single value, raster object, two-dimensional array or matrix of values representing the proportion of isotropic radiation received by a partially obscured surface relative to the full hemisphere as returned by [skyviewtopo()].
-#' @param alb an optional single value, raster object, two-dimensional array or matrix of surface albedo(s) (range 0 - 1) derived using [albedo()] or [albedo_adjust()].
-#' @param albr an optional single value, raster object, two-dimensional array or matrix of values of albedo(s) of adjacent surfaces (range 0 - 1) as returned by [albedo_reflected()].
-#' @param ha an optional raster object, two-dimensional array or matrix of values representing the mean slope to the horizon (decimal degrees) of surrounding surfaces from which radiation is reflected for each cell of `dtm` as returned by [mean_slope()].
+#' @param dtm an optional SpatRaster object, two-dimensional array or matrix of elevations (m), orientated as if derived using [is_raster()]. I.e. `[1, 1]` is the NW corner.
+#' @param slope a single value, SpatRaster object, two-dimensional array or matrix of slopes (º). If an array or matrix, then orientated as if derived using [is_raster()]. I.e. `[1, 1]` is the NW corner.
+#' @param aspect a single value, SpatRaster object, two-dimensional array or matrix of aspects (º). If an array or matrix, then orientated as if derived using [is_raster()]. I.e. `[1, 1]` is the NW corner.
+#' @param svf an optional single value, SpatRaster object, two-dimensional array or matrix of values representing the proportion of isotropic radiation received by a partially obscured surface relative to the full hemisphere as returned by [skyviewtopo()].
+#' @param alb an optional single value, SpatRaster object, two-dimensional array or matrix of surface albedo(s) (range 0 - 1) derived using [albedo()] or [albedo_adjust()].
+#' @param albr an optional single value, SpatRaster object, two-dimensional array or matrix of values of albedo(s) of adjacent surfaces (range 0 - 1) as returned by [albedo_reflected()].
+#' @param ha an optional SpatRaster object, two-dimensional array or matrix of values representing the mean slope to the horizon (decimal degrees) of surrounding surfaces from which radiation is reflected for each cell of `dtm` as returned by [mean_slope()].
 #' @param reso a single numeric value representing the spatial resolution of `dtm` (m).
 #' @param merid an optional numeric value representing the longitude (decimal degrees) of the local time zone meridian (0 for GMT). Default is `round(long / 15, 0) * 15`
 #' @param dst an optional numeric value representing the time difference from the timezone meridian (hours, e.g. +1 for BST if `merid` = 0).
 #' @param shadow an optional logical value indicating whether topographic shading should be considered (False = No, True = Yes).
 #' @param component an optional character string of the component of radiation to be returned. One of "sw" (net shortwave radiation, i.e. accounting for albedo), "sw2" (total incoming shortwave radiation), "dir" (direct), "dif" (diffuse), "iso" (isotropic diffuse), "ani" (anistopic diffuse), "ref" (reflected).
-#' @param difani an optinional logical indicating whether to treat a proportion of the diffuse radiation as anistropic (see details).
-#' @import raster
+#' @param difani an optional logical indicating whether to treat a proportion of the diffuse radiation as anistropic (see details).
+#' @import terra
 #' @export
 #'
 #' @details
-#' If `slope` is unspecified, and `dtm` is a raster, `slope` and `aspect` are calculated from
-#' the raster. If `slope` is unspecified, and `dtm` is not a raster, the slope and aspect
-#' are set to zero. If `lat` is unspecified, and `dtm` is a raster with a coordinate reference
-#' system defined, `lat` and `long` are calculated from the raster. If `lat` is unspecified,
-#' and `dtm` is not a raster, or a raster without a coordinate reference system defined, an
+#' If `slope` is unspecified, and `dtm` is a SpatRaster, `slope` and `aspect` are calculated from
+#' the raster. If `slope` is unspecified, and `dtm` is not a SpatRaster, the slope and aspect
+#' are set to zero. If `lat` is unspecified, and `dtm` is a SpatRaster with a coordinate reference
+#' system defined, `lat` and `long` are calculated from the SpatRaster. If `lat` is unspecified,
+#' and `dtm` is not a SpatRaster, or a SpatRaster without a coordinate reference system defined, an
 #' error is returned. If `dtm` is specified, then the projection system used must be such that
-#' units of x, y and z are identical. Use [projectRaster()] to convert the projection to a
-#' Universal Transverse Mercator type projection system. If `dtm` is a raster object, a raster
-#' object is returned. If `dtm` is a raster object, a raster object is returned. If `dni` or `dif` are raster
-#' objects, two-dimensional arrays or matrices, then it is assumed that they have been
-#' derived from coarse-resolution data by interpolation, and have the same extent as `dtm`.
-#' If no value for `ha` is provided, the mean slope to the horizon is assumed
-#' to be 0. If no value for `svv` is provided, then the entire hemisphere is
-#' assumed to be in view. If no value for `svf` is provided, then the entire
-#' hemisphere is assumed to be in view. If values of `alb` and `albr` are not
-#' specified, then a default value of 0.23, typical of well-watered grass is
+#' units of x, y and z are identical. Use [terra::project()] to convert the projection to a
+#' Universal Transverse Mercator type projection system. If `dtm` is a SpatRaster object, a raster
+#' object is returned. If `dtm` is a SpatRaster object, a SpatRaster object is returned. If `dni` or
+#' `dif` are SpatRaster objects, two-dimensional arrays or matrices, then it is assumed that they
+#' have been derived from coarse-resolution data by interpolation, and have the same extent as `dtm`.
+#' If no value for `ha` is provided, the mean slope to the horizon is assumed to be 0. If no value
+#' for `svv` is provided, then the entire hemisphere is assumed to be in view. If no value for `svf`
+#' is provided, then the entire hemisphere is assumed to be in view. If values of `alb` and `albr`
+#' are not specified, then a default value of 0.23, typical of well-watered grass is
 #' assumed. If single values of `alb` and `albr` are given, then the entire
 #' area is assumed to have the same albedo. If `dtm` is specified, then the
 #' projection system used must be such that the units of x, y and z are
-#' identical. Use [projectRaster()] to convert the projection to a Universal
+#' identical. Use [terra::project()] to convert the projection to a Universal
 #' Transverse Mercator type projection system. If no value for `dtm` is
 #' provided, radiation is downscaled by deriving values on the inclined
 #' surfaces specified in `slope` and `aspect` and topographic shadowing is
@@ -719,15 +721,15 @@ longwaveveg <- function(h, tc, p = 101300, n, x, fr, svv = 1, albc = 0.23, co = 
 #'
 #' @seealso Function [shortwaveveg()] returns net shortwave radiation below a canopy.
 #'
-#' @return If component is "sw", a raster object or two-dimensional array of numeric values representing net shortwave radiation (MJ m^-2 hr^-1).
-#' @return If component is "sw2", a raster object or two-dimensional array of numeric values representing total incoming shortwave radiation (MJ m^-2 hr^-1).
-#' @return If component is "dir", a raster object or two-dimensional array of numeric values representing direct shortwave radiation (MJ m^-2 hr^-1).
-#' @return If component is "dif", a raster object or two-dimensional array of numeric values representing diffuse shortwave radiation (MJ m^-2 hr^-1).
-#' @return If component is "iso", a raster object or two-dimensional array of numeric values representing isotropic diffuse shortwave radiation (MJ m^-2 hr^-1).
+#' @return If component is "sw", a SpatRaster object or two-dimensional array of numeric values representing net shortwave radiation (MJ m^-2 hr^-1).
+#' @return If component is "sw2", a SpatRaster object or two-dimensional array of numeric values representing total incoming shortwave radiation (MJ m^-2 hr^-1).
+#' @return If component is "dir", a SpatRaster object or two-dimensional array of numeric values representing direct shortwave radiation (MJ m^-2 hr^-1).
+#' @return If component is "dif", a SpatRaster object or two-dimensional array of numeric values representing diffuse shortwave radiation (MJ m^-2 hr^-1).
+#' @return If component is "iso", a SpatRaster object or two-dimensional array of numeric values representing isotropic diffuse shortwave radiation (MJ m^-2 hr^-1).
 #' @return If component is unspecified, then the default "sw" is returned.
 #'
 #' @examples
-#' library(raster)
+#' library(terra)
 #' # =================================
 #' # Extract data for 2010-05-24 11:00
 #' # =================================
@@ -736,23 +738,26 @@ longwaveveg <- function(h, tc, p = 101300, n, x, fr, svv = 1, albc = 0.23, co = 
 #' # ===========================
 #' # Resample to 100m resolution
 #' # ===========================
-#' dnir <- raster(dni, xmn = -5.40, xmx = -5.00, ymn = 49.90, ymx = 50.15)
-#' difr <- raster(dif, xmn = -5.40, xmx = -5.00, ymn = 49.90, ymx = 50.15)
+#' e<-ext(-5.40, -5.00, 49.90, 50.15)
+#' dnir <- rast(dni)
+#' difr <- rast(dif)
+#' ext(dnir) <- e
+#' ext(difr) <- e
 #' crs(dnir) <- '+init=epsg:4326'
 #' crs(difr) <- '+init=epsg:4326'
-#' dnir <- projectRaster(dnir, crs = "+init=epsg:27700")
-#' difr <- projectRaster(difr, crs = "+init=epsg:27700")
-#' dni <- resample(dnir, dtm100m)
-#' dif <- resample(difr, dtm100m)
-#' sv <- skyviewtopo(dtm100m)
+#' dnir <- project(dnir, crs(rast(dtm100m)))
+#' difr <- project(difr, crs(rast(dtm100m)))
+#' dni <- resample(dnir, rast(dtm100m))
+#' dif <- resample(difr, rast(dtm100m))
+#' sv <- skyviewtopo(rast(dtm100m))
 #' jd <- julday(2010, 5, 24)
-#' ha <- mean_slope(dtm100m)
+#' ha <- mean_slope(rast(dtm100m))
 #' # ================================================================
 #' # Calculate and plot net shortwave radiation for 2010-05-24 11:00
 #' # ================================================================
-#' netshort100m <- shortwavetopo(dni, dif, jd, 11, dtm = dtm100m,
+#' netshort100m <- shortwavetopo(dni, dif, jd, 11, dtm = rast(dtm100m),
 #'                               svf = sv, ha = ha)
-#' plot(mask(netshort100m, dtm100m),
+#' plot(mask(netshort100m, rast(dtm100m)),
 #'      main = "Net shortwave radiation")
 shortwavetopo <- function(dni, dif, julian, localtime, lat = NA, long = NA,
                           dtm = array(0, dim = c(1, 1)), slope = NA,
@@ -760,19 +765,19 @@ shortwavetopo <- function(dni, dif, julian, localtime, lat = NA, long = NA,
                           ha = 0, reso = 100, merid = round(long / 15, 0) * 15, dst = 0,
                           shadow = TRUE, component = "sw", difani = TRUE) {
   r <- dtm
-  if (class(slope)[1] == "logical" & class(r)[1] == "RasterLayer") {
-    slope <- terrain(r, opt = "slope", unit = "degrees")
-    aspect <- terrain(r, opt = "aspect", unit = "degrees")
+  if (class(slope)[1] == "logical" & class(r)[1] == "SpatRaster") {
+    slope <- terrain(r, v = "slope", unit = "degrees")
+    aspect <- terrain(r, v = "aspect", unit = "degrees")
   }
-  if (class(slope)[1] == "logical" & class(r)[1] != "RasterLayer") {
+  if (class(slope)[1] == "logical" & class(r)[1] != "SpatRaster") {
     slope <- 0
     aspect <- 0
   }
-  if (class(lat)[1] == "logical" & class(crs(r)) == "CRS") {
+  if (class(lat)[1] == "logical" & nchar(crs(r)) > 0) {
     lat <- latlongfromraster(r)$lat
     long <- latlongfromraster(r)$long
   }
-  if (class(lat)[1] == "logical" & class(crs(r)) != "CRS")
+  if (class(lat)[1] == "logical" & nchar(crs(r)) == 0)
     stop("Latitude not defined and cannot be determined from raster")
   dni <- is_raster(dni)
   dif <- is_raster(dif)
@@ -816,40 +821,40 @@ shortwavetopo <- function(dni, dif, julian, localtime, lat = NA, long = NA,
 #' received at the surface of the Earth, accounting for both topographic and
 #' canopy effects.
 #'
-#' @param dni a single numeric value, raster object, two-dimensional array or matrix of coarse-resolution direct radiation perpendicular to the solar beam (\ifelse{html}{\out{MJ m<sup>-2</sup> hr<sup>-1</sup>}}{\eqn{MJ m^{-2} hr^{-1}}}).
-#' @param dif a single numeric value, raster object, two-dimensional array or matrix of coarse-resolution diffuse radiation horizontal ot the surface (\ifelse{html}{\out{MJ m<sup>-2</sup> hr<sup>-1</sup>}}{\eqn{MJ m^{-2} hr^{-1}}}).
+#' @param dni a single numeric value, SpatRaster object, two-dimensional array or matrix of coarse-resolution direct radiation perpendicular to the solar beam (\ifelse{html}{\out{MJ m<sup>-2</sup> hr<sup>-1</sup>}}{\eqn{MJ m^{-2} hr^{-1}}}).
+#' @param dif a single numeric value, SpatRaster object, two-dimensional array or matrix of coarse-resolution diffuse radiation horizontal ot the surface (\ifelse{html}{\out{MJ m<sup>-2</sup> hr<sup>-1</sup>}}{\eqn{MJ m^{-2} hr^{-1}}}).
 #' @param julian a single integer representing the Julian as returned by [julday()].
 #' @param localtime a single numeric value representing local time (decimal hour, 24 hour clock).
 #' @param lat an optional single numeric value representing the mean latitude of the location for which downscaled radiation is required (decimal degrees, -ve south of equator).
 #' @param long an optional single numeric value representing the mean longitude of the location for which downscaled radiation is required (decimal degrees, -ve west of Greenwich meridian).
-#' @param dtm an optional raster object, two-dimensional array or matrix of elevations (m), orientated as if derived using [is_raster()]. I.e. `[1, 1]` is the NW corner.
-#' @param slope an optional single value, raster object, two-dimensional array or matrix of slopes (º). If an array or matrix, then orientated as if derived using [is_raster()]. I.e. `[1, 1]` is the NW corner.
-#' @param aspect an optional single value, raster object, two-dimensional array or matrix of aspects (º). If an array or matrix, then orientated as if derived using [is_raster()]. I.e. `[1, 1]` is the NW corner.
-#' @param svv an optional raster object, two-dimensional array or matrix of values representing the proportion of isotropic radiation received by a surface partially obscured by topography relative to the full hemisphere underneath vegetation as returned by [skyviewveg()].
-#' @param alb an optional single value, raster object, two-dimensional array or matrix of values representing albedo(s) as returned by [albedo()].
-#' @param fr a raster object, two-dimensional array or matrix of fractional canopy cover as returned by [canopy()].
-#' @param albr an optional single value, raster object, two-dimensional array or matrix of values representing the albedo(s) of adjacent surfaces as returned by [albedo_reflected()].
-#' @param ha an optional raster object, two-dimensional array or matrix of values representing the mean slope to the horizon (decimal degrees) of surrounding surfaces from which radiation is reflected for each cell of `dtm` as returned by [mean_slope()].
+#' @param dtm an optional SpatRaster object, two-dimensional array or matrix of elevations (m), orientated as if derived using [is_raster()]. I.e. `[1, 1]` is the NW corner.
+#' @param slope an optional single value, SpatRaster object, two-dimensional array or matrix of slopes (º). If an array or matrix, then orientated as if derived using [is_raster()]. I.e. `[1, 1]` is the NW corner.
+#' @param aspect an optional single value, SpatRaster object, two-dimensional array or matrix of aspects (º). If an array or matrix, then orientated as if derived using [is_raster()]. I.e. `[1, 1]` is the NW corner.
+#' @param svv an optional SpatRaster object, two-dimensional array or matrix of values representing the proportion of isotropic radiation received by a surface partially obscured by topography relative to the full hemisphere underneath vegetation as returned by [skyviewveg()].
+#' @param alb an optional single value, SpatRaster object, two-dimensional array or matrix of values representing albedo(s) as returned by [albedo()].
+#' @param fr a SpatRaster object, two-dimensional array or matrix of fractional canopy cover as returned by [canopy()].
+#' @param albr an optional single value, SpatRaster object, two-dimensional array or matrix of values representing the albedo(s) of adjacent surfaces as returned by [albedo_reflected()].
+#' @param ha an optional SpatRaster object, two-dimensional array or matrix of values representing the mean slope to the horizon (decimal degrees) of surrounding surfaces from which radiation is reflected for each cell of `dtm` as returned by [mean_slope()].
 #' @param reso a single numeric value representing the spatial resolution of `dtm` (m).
 #' @param merid an optional numeric value representing the longitude (decimal degrees) of the local time zone meridian (0 for GMT). Default is `round(long / 15, 0) * 15`
 #' @param dst an optional numeric value representing the time difference from the timezone meridian (hours, e.g. +1 for BST if `merid` = 0).
 #' @param shadow an optional logical value indicating whether topographic shading should be considered (False = No, True = Yes).
-#' @param x a raster object, two-dimensional array or matrix of numeric values representing the ratio of vertical to horizontal projections of leaf foliage as returned by [leaf_geometry()].
-#' @param l a raster object, two-dimensional array or matrix of leaf area index values as returned by [lai()].
+#' @param x a SpatRaster object, two-dimensional array or matrix of numeric values representing the ratio of vertical to horizontal projections of leaf foliage as returned by [leaf_geometry()].
+#' @param l a SpatRaster object, two-dimensional array or matrix of leaf area index values as returned by [lai()].
 #' @param difani an optinional logical indicating whether to treat a proportion of the diffuse radiation as anistropic (see details).
-#' @import raster
+#' @import terra
 #' @export
 #'
 #' @details
-#' If `slope` is unspecified, and `dtm` is a raster, `slope` and `aspect` are calculated from
-#' the raster. If `slope` is unspecified, and `dtm` is not a raster, the slope and aspect
-#' are set to zero. If `lat` is unspecified, and `dtm` is a raster with a coordinate reference
-#' system defined, `lat` and `long` are calculated from the raster. If `lat` is unspecified,
-#' and `dtm` is not a raster, or a raster without a coordinate reference system defined, an
+#' If `slope` is unspecified, and `dtm` is a SpatRaster `slope` and `aspect` are calculated from
+#' the SpatRaster. If `slope` is unspecified, and `dtm` is not a SpatRaster, the slope and aspect
+#' are set to zero. If `lat` is unspecified, and `dtm` is a SpatRaster with a coordinate reference
+#' system defined, `lat` and `long` are calculated from the SpatRaster. If `lat` is unspecified,
+#' and `dtm` is not a SpatRaster, or a SpatRaster without a coordinate reference system defined, an
 #' error is returned. If `dtm` is specified, then the projection system used must be such that
-#' units of x, y and z are identical. Use [projectRaster()] to convert the projection to a
-#' Universal Transverse Mercator type projection system. If `dtm` is a raster object, a raster
-#' object is returned. If `dtm` is a raster object, a raster object is returned. If `dni` or `dif` are raster
+#' units of x, y and z are identical. Use [terra::project()] to convert the projection to a
+#' Universal Transverse Mercator type projection system. If `dtm` is a SpatRaster object, a SpatRaster
+#' object is returned. If `dni` or `dif` are SpatRaster
 #' objects, two-dimensional arrays or matrices, then it is assumed that they have been
 #' derived from coarse-resolution data by interpolation, and have the same extent as `dtm`.
 #' If no value for `ha` is provided, the mean slope to the horizon is assumed
@@ -859,7 +864,7 @@ shortwavetopo <- function(dni, dif, julian, localtime, lat = NA, long = NA,
 #' single values of `albg` and `albr` are given, then the entire area is
 #' assumed to have the same albedo. If `dtm` is specified, then the projection
 #' system used must be such that the units of x, y and z are identical. Use
-#' [projectRaster()] to convert the projection to a Universal Transverse
+#' [terra::project()] to convert the projection to a Universal Transverse
 #' Mercator type projection system. If no value for `dtm` is provided,
 #' radiation is downscaled by deriving values on the inclined surfaces
 #' specified in `slope` and `aspect` and topographic shadowing is ignored. If
@@ -879,11 +884,11 @@ shortwavetopo <- function(dni, dif, julian, localtime, lat = NA, long = NA,
 #'
 #' @seealso Function [shortwavetopo()] returns net shortwave radiation, or components thereof, above the canopy.
 #'
-#' @return a raster object, two-dimensional array of numeric values representing net shortwave radiation (MJ per metre squared per hour).
-#' The raster package function [terrain()] can be used to derive slopes and aspects from `dtm` (see example).
+#' @return a SpatRaster object, two-dimensional array of numeric values representing net shortwave radiation (MJ per metre squared per hour).
+#' The function [terra::terrain()] can be used to derive slopes and aspects from `dtm` (see example).
 #'
 #' @examples
-#' library(raster)
+#' library(terra)
 #' # =================================
 #' # Extract data for 2010-05-24 11:00
 #' # =================================
@@ -892,40 +897,40 @@ shortwavetopo <- function(dni, dif, julian, localtime, lat = NA, long = NA,
 #' # ==========================
 #' # Calculate input paramaters
 #' # ==========================
-#' x <- leaf_geometry(veg_hgt)
+#' x <- leaf_geometry(rast(veg_hgt))
 #' l <- lai(aerial_image[,,3], aerial_image[,,4])
-#' l <- lai_adjust(l, veg_hgt)
+#' l <- lai_adjust(l, rast(veg_hgt))
 #' fr <- canopy(l)
 #' alb <- albedo(aerial_image[,,1], aerial_image[,,2], aerial_image[,,3],
 #'              aerial_image[,,4])
-#' sv <- skyviewveg(dtm1m, l, x)
+#' sv <- skyviewveg(rast(dtm1m), l, x)
 #' jd <- julday(2010, 5, 24)
-#' ha <- mean_slope(dtm1m)
+#' ha <- mean_slope(rast(dtm1m))
 #' # ===============================================================
 #' # Calculate and plot net shortwave radiation for 2010-05-24 11:00
 #' # ===============================================================
-#' netshort1m <- shortwaveveg(dni, dif, jd, 11, dtm = dtm1m, svv = sv, alb = alb,
+#' netshort1m <- shortwaveveg(dni, dif, jd, 11, dtm = rast(dtm1m), svv = sv, alb = alb,
 #'                            fr = fr, ha = ha, x = x, l = l)
-#' plot(mask(netshort1m, dtm1m), main = "Net shortwave radiation")
+#' plot(mask(netshort1m, rast(dtm1m)), main = "Net shortwave radiation")
 shortwaveveg <- function(dni, dif, julian, localtime, lat = NA, long = NA,
                          dtm = array(0, dim = c(1, 1)), slope = NA, aspect = NA,
                          svv = 1, alb = 0.23, fr, albr = 0.23, ha = 0,
                          reso = 1, merid = NA, dst = 0, shadow = TRUE,
                          x, l, difani = TRUE) {
   r <- dtm
-  if (class(slope)[1] == "logical" & class(r)[1] == "RasterLayer") {
-    slope <- terrain(r, opt = "slope", unit = "degrees")
-    aspect <- terrain(r, opt = "aspect", unit = "degrees")
+  if (class(slope)[1] == "logical" & class(r)[1] == "SpatRaster") {
+    slope <- terrain(r, v = "slope", unit = "degrees")
+    aspect <- terrain(r, v = "aspect", unit = "degrees")
   }
-  if (class(slope)[1] == "logical" & class(r)[1] != "RasterLayer") {
+  if (class(slope)[1] == "logical" & class(r)[1] != "SpatRaster") {
     slope <- 0
     aspect <- 0
   }
-  if (class(lat)[1] == "logical" & class(crs(r)) == "CRS") {
+  if (class(lat)[1] == "logical" & nchar(crs(r)) > 0) {
     lat <- latlongfromraster(r)$lat
     long <- latlongfromraster(r)$long
   }
-  if (class(lat)[1] == "logical" & class(crs(r)) != "CRS")
+  if (class(lat)[1] == "logical" & nchar(crs(r)) == 0)
     stop("Latitude not defined and cannot be determined from raster")
   if (class(merid) == "logical") merid <- round(long / 15, 0) * 15
   dni <- is_raster(dni)

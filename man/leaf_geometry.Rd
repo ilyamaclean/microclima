@@ -7,12 +7,12 @@
 leaf_geometry(veghgt, maxx = 8)
 }
 \arguments{
-\item{veghgt}{a raster object, two-dimensional array or matrix of vegetation heights (m).}
+\item{veghgt}{a SpatRaster object, two-dimensional array or matrix of vegetation heights (m).}
 
 \item{maxx}{a theoretical upper limit for the ratio of vertical to horizontal projections of leaf foliage, to which all values are capped.}
 }
 \value{
-a raster object or a two-dimensional array of numeric values representing the
+a SpatRaster object or a two-dimensional array of numeric values representing the
 ratio of vertical to horizontal projections of leaf foliage. The output tends towards
 zero as vegetation is more vertically orientated and maxx as it is more horizontally
 orientated.
@@ -26,14 +26,14 @@ also affected by leaf structure. At low solar angles, radiation is lower when le
 more vertically oriented and \code{leaf_geometry} is hence used to calculate an approximate  factor
 indicating the degree to which vegetation is vertically orientated based on the premise that
 shorter vegetation is more likely to have more vertically orientated leaves.
-If \code{veghgt} is a raster object, a raster object is returned.
+If \code{veghgt} is a SpatRaster object, a SpatRaster object is returned.
 This function has been calibrated using data derived from a small area of
 Cornwall only. It is strongly recommended that locally calibrated values
-units of x, y and z are identical. Use \code{\link[=projectRaster]{projectRaster()}} to convert the
+units of x, y and z are identical. Use \code{\link[terra:project]{terra::project()}} to convert the
 projection to a Universal Transverse Mercator type projection system.
 }
 \examples{
-library(raster)
-x <- leaf_geometry(veg_hgt)
+library(terra)
+x <- leaf_geometry(rast(veg_hgt))
 plot(x, main = "Leaf geometry")
 }

@@ -15,7 +15,7 @@ coastalNCEP(
 )
 }
 \arguments{
-\item{landsea}{a raster object with NAs (representing sea) or any non-NA value and a projection system defined.}
+\item{landsea}{a SpatRaster  object with NAs (representing sea) or any non-NA value and a projection system defined.}
 
 \item{ncephourly}{a dataframe of hourly climate data as returned by \code{\link[=hourlyNCEP]{hourlyNCEP()}}.}
 
@@ -44,12 +44,12 @@ and sea-surface temperature data are then calculated. Sea surface temperature da
 automatically downloaded from the NOAA.
 }
 \examples{
-library(raster)
+library(terra)
 # Download NCEP data
-ll <- latlongfromraster(dtm100m)
+ll <- latlongfromraster(rast(dtm100m))
 tme <-as.POSIXlt(c(0:31) * 3600 * 24, origin = "2015-03-15", tz = "GMT")
 ncephourly<-hourlyNCEP(NA, ll$lat, ll$long, tme)
-aout <- coastalNCEP(dtm100m, ncephourly)
+aout <- coastalNCEP(rast(dtm100m), ncephourly)
 # Calculate mean temperature and convert to raster
 mtemp <- if_raster(apply(aout, c(1, 2), mean), dtm100m)
 plot(mtemp, main = "Mean temperature")

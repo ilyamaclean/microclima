@@ -7,33 +7,33 @@
 longwaveveg(h, tc, p = 101300, n, x, fr, svv = 1, albc = 0.23, co = 1.24)
 }
 \arguments{
-\item{h}{a single numeric value, raster object, two-dimensional array or matrix of specific humidities (\ifelse{html}{\out{kg kg<sup>{-1}</sup> }}{\eqn{kg kg^{-1}}}).}
+\item{h}{a single numeric value, SpatRaster object, two-dimensional array or matrix of specific humidities (\ifelse{html}{\out{kg kg<sup>{-1}</sup> }}{\eqn{kg kg^{-1}}}).}
 
-\item{tc}{a single numeric value, raster object, two-dimensional array or matrix of temperatures (ºC).}
+\item{tc}{a single numeric value, SpatRaster object, two-dimensional array or matrix of temperatures (ºC).}
 
-\item{p}{an optional single numeric value, raster object, two-dimensional array or matrix of sea-level pressures (Pa).}
+\item{p}{an optional single numeric value, SpatRaster object, two-dimensional array or matrix of sea-level pressures (Pa).}
 
-\item{n}{a single numeric value, raster object, two-dimensional array or matrix of fractional cloud cover (range 0 - 1).
+\item{n}{a single numeric value, SpatRaster object, two-dimensional array or matrix of fractional cloud cover (range 0 - 1).
 Technically assumed to be 1 - ratio of measured to clear-sky radiation.}
 
-\item{x}{a raster object, two-dimensional array or matrix of numeric values representing the ratio of vertical to horizontal projections of leaf foliage as returned by \code{\link[=leaf_geometry]{leaf_geometry()}}.}
+\item{x}{a SpatRaster object, two-dimensional array or matrix of numeric values representing the ratio of vertical to horizontal projections of leaf foliage as returned by \code{\link[=leaf_geometry]{leaf_geometry()}}.}
 
-\item{fr}{a raster object, two-dimensional array or matrix of fractional canopy cover as returned by \code{\link[=canopy]{canopy()}}.}
+\item{fr}{a SpatRaster object, two-dimensional array or matrix of fractional canopy cover as returned by \code{\link[=canopy]{canopy()}}.}
 
-\item{svv}{an optional raster object, two-dimensional array or matrix of values representing the proportion of isotropic radiation received by a surface partially obscured by topography relative to the full hemisphere underneath vegetation as returned by \code{\link[=skyviewveg]{skyviewveg()}}.}
+\item{svv}{an optional SpatRaster object, two-dimensional array or matrix of values representing the proportion of isotropic radiation received by a surface partially obscured by topography relative to the full hemisphere underneath vegetation as returned by \code{\link[=skyviewveg]{skyviewveg()}}.}
 
-\item{albc}{an optional single value, raster object, two-dimensional array or matrix of values representing the albedo(s) of the vegetated canopy as returned by \code{\link[=albedo2]{albedo2()}}.}
+\item{albc}{an optional single value, SpatRaster object, two-dimensional array or matrix of values representing the albedo(s) of the vegetated canopy as returned by \code{\link[=albedo2]{albedo2()}}.}
 
 \item{co}{parameter relationship between vapor pressure and temperature near the ground Brutsaert (1975).}
 }
 \value{
-a single numeric value, raster object or two-dimensional array of values representing net longwave radiation (MJ per metre squared per hour).
+a single numeric value, SpatRaster object or two-dimensional array of values representing net longwave radiation (MJ per metre squared per hour).
 }
 \description{
 \code{longwaveveg} is used to calculate a high-resolution dataset of the net longwave radiation flux density emmited from the Earth, accounting for canopy effects.
 }
 \details{
-If \code{svv} is a raster object, a raster object is returned.
+If \code{svv} is a SpatRaster object, a SpatRaster is returned.
 If no values for \code{p} are provided, a default value of 101300 Pa, typical of
 sea-level pressure, is assumed. If no value for \code{albc} is provided, then
 the entire area is assumed to have a default value of 0.23, typical of
@@ -43,22 +43,24 @@ If no value for \code{svv} is provided then the entire hemisphere is assumed to
 be in view.
 }
 \examples{
-library(raster)
+library(terra)
 # =================================
 # Extract data for 2010-05-24 11:00
 # =================================
 h <- microvars$humidity[564]
 p <- microvars$pressure[564]
 n <- microvars$cloudcover[264]
-tcr <- raster(temp100[,,564], xmn = 169000, xmx = 170000, ymn = 12000, ymx = 13000)
-tc <- resample(tcr, dtm1m) # Resample temperature raster to 1m
+e <- ext(169000, 170000, 12000, 13000)
+tcr <- rast(temp100[,,564])
+ext(tcr) <- e
+tc <- resample(tcr, rast(dtm1m)) # Resample temperature raster to 1m
 # =========================
 # calculate input variables
 # =========================
-x <- leaf_geometry(veg_hgt)
+x <- leaf_geometry(rast(veg_hgt))
 l <- lai(aerial_image[,,3], aerial_image[,,4])
-l <- lai_adjust(l, veg_hgt)
-svv <- skyviewveg(dtm1m, l, x)
+l <- lai_adjust(l, rast(veg_hgt))
+svv <- skyviewveg(rast(dtm1m), l, x)
 fr <- canopy(l)
 alb <- albedo(aerial_image[,,1], aerial_image[,,2], aerial_image[,,3],
              aerial_image[,,4])
@@ -67,7 +69,7 @@ albc <- albedo2(alb, fr, ground = FALSE)
 # calculate and plot longwave radiation
 # =====================================
 netlong1m <-longwaveveg(h, tc, p, n, x, fr, svv, albc)
-nlr <- mask(netlong1m, dtm1m)
+nlr <- mask(netlong1m, rast(dtm1m))
 plot(nlr, main = "Net longwave radiation")
 }
 \seealso{

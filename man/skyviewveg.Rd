@@ -7,18 +7,18 @@
 skyviewveg(dtm, l, x, steps = 36, reso = 1)
 }
 \arguments{
-\item{dtm}{a raster object, two-dimensional array or matrix of elevations (m).}
+\item{dtm}{a SpatRaster object, two-dimensional array or matrix of elevations (m).}
 
-\item{l}{a raster object, two-dimensional array or matrix of leaf area index values as returned by \code{\link[=lai]{lai()}}.}
+\item{l}{a SpatRaster object, two-dimensional array or matrix of leaf area index values as returned by \code{\link[=lai]{lai()}}.}
 
-\item{x}{a raster object, two-dimensional array of numeric values representing the ratio of vertical to horizontal projections of leaf foliage as returned by \code{\link[=leaf_geometry]{leaf_geometry()}}.}
+\item{x}{a SpatRaster object, two-dimensional array of numeric values representing the ratio of vertical to horizontal projections of leaf foliage as returned by \code{\link[=leaf_geometry]{leaf_geometry()}}.}
 
 \item{steps}{an optional integer. The sky view is calculated from the horizon angle in specified directions. Steps defines the total number of directions used. If the default 36 is specified, then the horizon angle is calculated at 10º intervals.}
 
 \item{reso}{a single numeric value representing the spatial resolution of \code{dtm} (m).}
 }
 \value{
-a raster object or a two-dimensional array of numeric values representing the proportion of isotropic radiation received by a surface partially obscured by topography relative to the full hemisphere underneath vegetation.
+a SpatRaster object or a two-dimensional array of numeric values representing the proportion of isotropic radiation received by a surface partially obscured by topography relative to the full hemisphere underneath vegetation.
 }
 \description{
 \code{skyviewveg} is used to calculate a coefficient to correct for the
@@ -26,9 +26,9 @@ proportion of sky obscured by topography when calculating net shortwave or
 longwave radiation above the canopy.
 }
 \details{
-If \code{dtm} is a raster object, a raster object is returned.
+If \code{dtm} is a SpatRaster object, a SpatRaster object is returned.
 The projection system associated with \code{dtm} must be such that
-units of x, y and z are identical. Use \code{\link[=projectRaster]{projectRaster()}} to convert the
+units of x, y and z are identical. Use \code{\link[terra:project]{terra::project()}} to convert the
 projection to a Universal Transverse Mercator type projection system.
 If a proportion of the sky of partially obscured, then the isotropic
 radiation flux received by a surface underneath canopy can be determined by
@@ -39,10 +39,10 @@ view expressed as a proportion of the integrated transmission over the
 entire hemisphere.
 }
 \examples{
-library(raster)
+library(terra)
 l <- lai(aerial_image[,, 3], aerial_image[,, 4])
-x <- leaf_geometry(veg_hgt)
-sv <- skyviewveg(dtm1m, l, x)
+x <- leaf_geometry(rast(veg_hgt))
+sv <- skyviewveg(rast(dtm1m), l, x)
 plot(sv, main = "Sky view factor")
 }
 \seealso{

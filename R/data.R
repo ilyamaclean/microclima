@@ -12,13 +12,13 @@
 #'}
 #' @source \url{https://www.bluesky-world.com/}
 "aerial_image"
-#' A raster of basins numbered as integers
+#' A wrapped SpatRaster of basins numbered as integers
 #'
-#' A raster object of basins numbered as integers for the area bounded by 160000, 181400,
+#' A wrapped SpatRaster of basins numbered as integers for the area bounded by 160000, 181400,
 #' 11300, 30000  (xmin, xmax, ymin, ymax) using the Ordance Survey GB Grid Reference system
 #' (CRS: +init=epsg:27700) as returned by [basindelin()].
 #'
-#' @format A raster object with 187 rows and 214 columns.
+#' @format A wrapped SpatRaster object with 187 rows and 214 columns.
 "basins100m"
 #' A 0.05º resolution dataset of hourly fractional cloud cover
 #'
@@ -31,8 +31,8 @@
 "cfc"
 #' A 1.875 (long) by  1.904129(lat) resolution dataset of elevations
 #'
-#' A dataset global dataset elevation in metres (CRS: +init=epsg:4326)
-#' @format A raster object with 94 rows and 192 columns.
+#' A dataset global elevation in metres (CRS: +init=epsg:4326)
+#' @format A wrapped SpatRaster object with 94 rows and 192 columns.
 #'
 #' @source \url{http://www.cmsaf.eu/}
 "demworld"
@@ -54,33 +54,33 @@
 #'
 #' @source \url{http://www.cmsaf.eu/}
 "dnirad"
-#' A 1 m resolution raster object of elevation for part of the Lizard Peninsula, Cornwall, UK.
+#' A 1 m resolution wrapped SpatRaster object of elevation for part of the Lizard Peninsula, Cornwall, UK.
 #'
-#' A raster object containing elevation in metres with sea coded as NA for the area bounded by
+#' A wrapped SpatRaster object containing elevation in metres with sea coded as NA for the area bounded by
 #' 169000, 170000, 12000, 13000  (xmin, xmax, ymin, ymax) using the Ordance
 #' Survey GB Grid Reference system (CRS: +init=epsg:27700).
 #'
-#' @format A raster object with 1000 rows and 1000 columns.
+#' @format A wrapped SpatRaster object with 1000 rows and 1000 columns.
 
 #' @source \url{http://www.tellusgb.ac.uk/}
 "dtm1m"
-#' A 100 m resolution raster object of elevation for the Lizard Peninsula, Cornwall, UK.
+#' A 100 m resolution wrapped SpatRaster object of elevation for the Lizard Peninsula, Cornwall, UK.
 #'
-#' A raster object containing elevation in metres with sea coded as NA for the area bounded by
+#' A wrapped SpatRaster object containing elevation in metres with sea coded as NA for the area bounded by
 #' 160000, 181400, 11300, 30000  (xmin, xmax, ymin, ymax) using the Ordance Survey GB Grid
 #' Reference system (CRS: +init=epsg:27700).
 #'
-#' @format A raster object with 187 rows and 214 columns.
+#' @format A wrapped SpatRaster object with 187 rows and 214 columns.
 
 #' @source \url{http://www.tellusgb.ac.uk/}
 "dtm100m"
-#' A 1 km resolution raster object of elevation for the Lizard Peninsula, Cornwall, UK.
+#' A 1 km resolution wrapped SpatRaster object of elevation for the Lizard Peninsula, Cornwall, UK.
 #'
-#' A raster object containing elevation in metres with sea coded as NA for the area bounded by
+#' A wrapped SpatRaster object containing elevation in metres with sea coded as NA for the area bounded by
 #' 160000, 182000, 11000, 30000  (xmin, xmax, ymin, ymax) using the Ordance Survey GB Grid
 #' Reference system (CRS: +init=epsg:27700).
 #'
-#' @format A raster object with 19 rows and 22 columns.
+#' @format A wrapped SpatRaster object with 19 rows and 22 columns.
 
 #' @source \url{http://www.tellusgb.ac.uk/}
 "dtm1km"
@@ -262,14 +262,14 @@
 #' for May 2010 as output by [runmicro()].
 #' @format An array with 10 rows, 10 columns and 744 hourly values.
 "temp100"
-#' A 1 m resolution raster object of vegetation height.
+#' A 1 m resolution SpatRaster object of vegetation height.
 #'
 #' A dataset containing the vegetation height (m) for the area bounded by
 #' 169000, 170000, 12000, 13000  (xmin, xmax, ymin, ymax) using the Ordance
 #' Survey GB Grid Reference system (CRS: +init=epsg:27700). Data were derived
 #' from a digital terrain and digital surface model.
 #'
-#' @format A matrix with 1000 rows and 1000 columns.
+#' @format A SpatRaster with 1000 rows and 1000 columns.
 
 #' @source \url{http://www.tellusgb.ac.uk/}
 "veg_hgt"

@@ -7,14 +7,14 @@
 skyviewtopo(dtm, steps = 36, reso = 100)
 }
 \arguments{
-\item{dtm}{dtm a raster object, two-dimensional array or matrix of elevations (m).}
+\item{dtm}{dtm a SpatRaster object, two-dimensional array or matrix of elevations (m).}
 
 \item{steps}{an optional integer. The sky view is calculated from the horizon angle in specified directions. Steps defines the total number of directions used. If the default 36 is specified, then the horizon angle is calculated at 10º intervals.}
 
 \item{reso}{a single numeric value representing the spatial resolution of \code{dtm} (m).}
 }
 \value{
-a raster object or two-dimension array of values representing the proportion of isotropic radiation received by a partially obscured surface relative to the full hemisphere.
+a SpatRaster object or two-dimension array of values representing the proportion of isotropic radiation received by a partially obscured surface relative to the full hemisphere.
 }
 \description{
 \code{skyviewtopo} is used to calculate a coefficient to correct for the proportion of sky in view when calculating net shortwave or longwave radiation above the canopy.
@@ -22,14 +22,14 @@ a raster object or two-dimension array of values representing the proportion of 
 \details{
 If a proportion of the sky of partially obscured, then the isotropic radiation flux received by a surface can be determined by integrating the single direction radiation flux over the proportion of sky in view. This function returns the integrated flux over the proportion of sky in view expressed as a proportion of the integrated flux over the entire hemisphere.
 
-If \code{dtm} is a raster object, a raster object is returned.
+If \code{dtm} is a SpatRaster object, a SpatRaster object is returned.
 The projection system associated with \code{dtm} must be such that
-units of x, y and z are identical. Use \code{\link[=projectRaster]{projectRaster()}} to convert the
+units of x, y and z are identical. Use \code{\link[terra:project]{terra::project()}} to convert the
 projection to a Universal Transverse Mercator type projection system.
 }
 \examples{
-library(raster)
-sv <- skyviewtopo(dtm100m)
+library(terra)
+sv <- skyviewtopo(rast(dtm100m))
 plot(sv, main = "Sky view factor")
 }
 \seealso{

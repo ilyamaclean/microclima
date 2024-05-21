@@ -7,14 +7,14 @@
 invls(landsea, e, direction)
 }
 \arguments{
-\item{landsea}{A raster object with NAs (representing sea) or any non-NA value (representing land). The object should have a larger extent than that for which land-sea ratio values are needed, as the calculation requires land / sea coverage to be assessed upwind outside the target area.}
+\item{landsea}{A SpatRast object with NAs (representing sea) or any non-NA value (representing land). The object should have a larger extent than that for which land-sea ratio values are needed, as the calculation requires land / sea coverage to be assessed upwind outside the target area.}
 
-\item{e}{an extent object indicating the region for which land-sea ratios are required.}
+\item{e}{an terra::ext object indicating the region for which land-sea ratios are required.}
 
 \item{direction}{an optional single numeric value specifying the direction (decimal degrees) from which the wind is blowing.}
 }
 \value{
-a raster object with distance-weighted proportions of upwind land pixels
+a SpatRaster object with distance-weighted proportions of upwind land pixels
 }
 \description{
 \code{invls} is used to calculate an inverse distance\ifelse{html}{\out{<sup>2</sup>}}{\eqn{^2}} weighted ratio of land to sea in a specified upwind direction.
@@ -22,16 +22,16 @@ a raster object with distance-weighted proportions of upwind land pixels
 \details{
 This function calculates a coefficient of the ratio of land to
 sea pixels in a specified upwind direction, across all elements of a
-raster object, weighted using an inverse distance squared function,
+SpatRaster object, weighted using an inverse distance squared function,
 such that nearby pixels have a greater influence on the coefficient.
-It returns a raster object representing values ranging between zero
+It returns a SpatRaster object representing values ranging between zero
 (all upwind pixels sea) to one (all upwind pixels land). Upwind
 direction is randomly varied by ± \code{jitter.amount} degrees.
 }
 \examples{
-library(raster)
-ls1 <- invls(dtm100m, extent(dtm1m), 180)
-ls2 <- invls(dtm100m, extent(dtm1m), 270)
+library(terra)
+ls1 <- invls(rast(dtm100m), ext(rast(dtm1m)), 180)
+ls2 <- invls(rast(dtm100m), ext(rast(dtm1m)), 270)
 par(mfrow=c(2,1))
 plot(ls1, main = "Land to sea weighting, southerly wind")
 plot(ls2, main = "Land to sea weighting, westerly wind")

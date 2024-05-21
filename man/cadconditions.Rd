@@ -25,7 +25,7 @@ cadconditions(
 \arguments{
 \item{h}{a vector of hourly specific humidities (\ifelse{html}{\out{kg kg<sup>-1</sup> }}{\eqn{kg kg^{-1}}}).}
 
-\item{tc}{a single numeric value, raster object, two-dimensional array or matrix of temperatures (ºC).}
+\item{tc}{a single numeric value, SpatRaster object, two-dimensional array or matrix of temperatures (ºC).}
 
 \item{n}{a vector of hourly fractional cloud cover values (range 0 - 1).}
 

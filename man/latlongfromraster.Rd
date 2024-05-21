@@ -2,12 +2,12 @@
 % Please edit documentation in R/solartools.R
 \name{latlongfromraster}
 \alias{latlongfromraster}
-\title{Derives latitude and longitude of centre of raster object}
+\title{Derives latitude and longitude of centre of SpatRaster object}
 \usage{
 latlongfromraster(r)
 }
 \arguments{
-\item{r}{a raster object with the coordinate reference system defined by \code{\link[=crs]{crs()}}}
+\item{r}{a SpatRaster object with the coordinate reference system defined by \code{\link[=crs]{crs()}}}
 }
 \value{
 a data.frame with the latitude and longitude of the centre of the raster
@@ -17,6 +17,6 @@ a data.frame with the latitude and longitude of the centre of the raster
 the centre of a raster object.
 }
 \examples{
-latlongfromraster(dtm1m)
-latlongfromraster(dtm100m)
+latlongfromraster(rast(dtm1m))
+latlongfromraster(rast(dtm100m))
 }

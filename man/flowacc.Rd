@@ -4,23 +4,26 @@
 \alias{flowacc}
 \title{Calculates accumulated flow}
 \usage{
-flowacc(dem)
+flowacc(dtm, basins = NA)
 }
 \arguments{
-\item{dem}{a raster object, two-dimensional array or matrix of elevations.}
+\item{dtm}{a SpatRast elevations (m).}
+
+\item{basins}{optionally a SpatRast of basins numbered as integers (see details).}
 }
 \value{
-a raster object, two-dimensional array or matrix of accumulated flow.
+a SpatRast of accumulated flow (number of cells)
 }
 \description{
-\code{flowacc} is used by \code{\link[=pcad]{pcad()}} to calculate accumulated flow to each cold air drainage
-basin
+\code{flowacc} calculates accumulated flow(used to model cold air drainage)
 }
 \details{
-Accumulated flow is expressed in terms of number of cells.
+Accumulated flow is expressed in terms of number of cells. If \code{basins}
+is provided, accumulated flow to any cell within a basin can only occur from
+other cells within that basin.
 }
 \examples{
-library(raster)
-fa <- flowacc(dtm100m)
+library(terra)
+fa <- flowacc(rast(dtm100m))
 plot(fa, main = 'Accumulated flow')
 }

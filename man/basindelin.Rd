@@ -2,39 +2,35 @@
 % Please edit documentation in R/cadtools.R
 \name{basindelin}
 \alias{basindelin}
-\title{Delineates hydrological basins}
+\title{Delineates hydrological or cold-air drainage basins}
 \usage{
-basindelin(dem)
+basindelin(dtm, boundary = 0)
 }
 \arguments{
-\item{dem}{a raster object, two-dimensional array or matrix of elevations.}
+\item{dtm}{a SpatRast object of elevations}
+
+\item{boundary}{optional numeric value. If greater than 0, adjoining basins
+separated by elevation differences < boundary are merged (see details.}
 }
 \value{
-a raster object, two-dimensional array or matrix  with individual basins numbered sequentially as integers.
+a SpatRast of basins sequentially numbered as integers.
 }
 \description{
-\code{basindelin} uses digital elevation data to delineate hydrological or cold-air drainage basins.
+The function \code{basindelin} uses a digital elevation dataset to delineate
+hydrological basins, merging adjoining basis separated by a low boundary if specified.
 }
 \details{
-If \code{dem} is a raster object, a raster onbject is returned.
-This function is used to delineate cold-air drainage basins.
-It iteratively identifies the lowest elevation pixel of \code{dem}, and
-assigns any of the eight adjoining pixels to the same basin if higher.
-The process is repeated on all assigned adjoining pixels until no further
-higher pixels are found. The next lowest unassigned pixel is then
-identified, a new basin identity assigned and the processes repeated until
-all pixels are assigned to a basin. Relative to heuristic algorithms, it is
-slow and run time increases exponentially with size of \code{dtm}. However, in
-contrast to many such algorithms, all basins are correctly seperated by
-boundaries >0. With large datasets, with > 160,000 pixels, calculations will
-be slow and \code{\link[=basindelin_big]{basindelin_big()}} should be used instead
+This function searches for the lowest grid cell in \code{dtm} and assigns it
+as basin 1. All immediately adjacent pixels (in 8 directions) not previously assigned
+are then assigned as being part of this basin if higher than the focal cell. The process is repeated
+until no higher further cells are found. The next lowest unassigned grid cell is identified
+and assigned as basin 2 and the process repeated until all grid cells are assigned a basin number.
+If \code{boundary > 0}, edge grid cells are identified and the height difference from all
+surrounding cells calculated. If the height difference is less than \code{boundary}, basins
+are merged and the basins renumbered sequentially.
 }
 \examples{
-library(raster)
-dem <- aggregate(dtm1m, 20)
-basins <- basindelin (dem)
+library(terra)
+basins <- basindelin(rast(dtm100m))
 plot(basins, main = "Basins")
-}
-\seealso{
-\code{\link[=basindelin_big]{basindelin_big()}} for working with large datasets.
 }

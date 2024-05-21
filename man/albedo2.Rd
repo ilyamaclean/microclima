@@ -7,22 +7,22 @@
 albedo2(alb, fr, ground = TRUE)
 }
 \arguments{
-\item{alb}{a raster object, two-dimensional array or matrix of surface albedo values (range 0 - 1) derived using \code{\link[=albedo]{albedo()}} or \code{\link[=albedo_adjust]{albedo_adjust()}}.}
+\item{alb}{a SpatRaster object, two-dimensional array or matrix of surface albedo values (range 0 - 1) derived using \code{\link[=albedo]{albedo()}} or \code{\link[=albedo_adjust]{albedo_adjust()}}.}
 
-\item{fr}{a raster object, two-dimensional array or matrix of fractional canopy cover as returned by \code{\link[=canopy]{canopy()}}.}
+\item{fr}{a SpatRaster object, two-dimensional array or matrix of fractional canopy cover as returned by \code{\link[=canopy]{canopy()}}.}
 
 \item{ground}{a logical value indicating whether to return ground albedo (TRUE) or canopy albedo (FALSE).}
 }
 \value{
-If ground is \code{TRUE}, a raster object or a two-dimensional array of numeric values representing ground albedo (range 0 to 1).
+If ground is \code{TRUE}, a SpatRaster object or a two-dimensional array of numeric values representing ground albedo (range 0 to 1).
 
-If ground is \code{FALSE}, a raster object or two-dimensional array of numeric values representing canopy albedo (range 0 to 1).
+If ground is \code{FALSE}, a SpatRaster object or two-dimensional array of numeric values representing canopy albedo (range 0 to 1).
 }
 \description{
 \code{albedo2} is used to calculate either bare ground or canopy albedo from surface albedo.
 }
 \details{
-If alb is a raster object, a raster object is returned. For calculation of net radiation, both
+If alb is a SpatRaster object, a SpatRaster object is returned. For calculation of net radiation, both
 ground and canopy albedo may be are needed. Areas with high canopy cover typically have lower
 albedo values than areas with low canopy cover and mean values for these can be derived from
 parts of the image with very high or very low canopy cover. It is assumed that albedo of the
@@ -31,7 +31,7 @@ canopy albedos are closer to the image-derived albedos in areas of high canopy c
 albedos closer to the image-derived albedo in areas with low canopy cover.
 }
 \examples{
-library(raster)
+library(terra)
 # ======================
 # Calculate image albedo
 # ======================

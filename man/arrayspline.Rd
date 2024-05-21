@@ -30,9 +30,9 @@ equivelent times. I.e. the time of both \code{a[1, 1, 1]} and \code{a[1000, 1000
 equal to \code{tme[1]}.
 }
 \examples{
-library(raster)
+library(terra)
 tme <- as.POSIXct(c(0:364) * 24 * 3600, origin="2010-01-01", tz = "GMT")
 h <- arrayspline(huss, tme, out = "2010-05-01 11:00")
-plot(raster(h, template = dtm1km),
+plot(rast(h),
      main = "Specific humidity 2010-05-01 11:00")
 }

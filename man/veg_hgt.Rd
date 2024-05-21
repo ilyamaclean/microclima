@@ -3,9 +3,9 @@
 \docType{data}
 \name{veg_hgt}
 \alias{veg_hgt}
-\title{A 1 m resolution raster object of vegetation height.}
+\title{A 1 m resolution SpatRaster object of vegetation height.}
 \format{
-A matrix with 1000 rows and 1000 columns.
+A SpatRaster with 1000 rows and 1000 columns.
 }
 \source{
 \url{http://www.tellusgb.ac.uk/}

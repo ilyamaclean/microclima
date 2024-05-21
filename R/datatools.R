@@ -1,22 +1,24 @@
 #' Gets raster of elevations
 #'
-#' @description Several web services provide access to raster elevations. This function
+#' @description amazon web services provide access to SpatRaster elevations. This function
 #' provides access to the Registry of Open Data on AWS to retrieve a raster object of
 #' elevations.
 #'
-#' @param r optional raster object covering the location for which elevations are
+#' @param r optional SpatRaster object covering the location for which elevations are
 #' required
 #' @param lat the latitude (in decimal degrees) of the location for which elevations
-#' are required. Not used if `r` is a raster.
+#' are required. Not used if `r` is a SpatRaster.
 #' @param long the longitude (in decimal degrees) of the location for which elevations
-#' are required. Not used if `r` is a raster
+#' are required. Not used if `r` is a SpatRaster
 #' @param resolution the resolution (in metres) of the required dem (see details).
 #' @param zmin assumed sea-level height. Values below this are set to zmin.
 #' @param xdims optional numeric value specifying the number of longitudinal grid cells
 #' @param ydims optional numeric value specifying the number of latitudinal grid cells
 #'
-#' @return a raster object of elevations in metres.
-#' @import raster elevatr sf
+#' @return a SpatRaster object of elevations in metres.
+#' @import terra
+#' @import elevatr
+#' @import sf
 #' @export
 #'
 #' @details Currently, `get_dem` utilises the Amazon Web Services (AWS)
@@ -37,53 +39,50 @@
 #' specified, the Coordinate Reference System of `r` is used.
 #'
 #' @examples
-#' library(raster)
-#' dem50m <- get_dem(dtm100m, resolution = 50)
+#' library(terra)
+#' dem50m <- get_dem(rast(dtm100m), resolution = 50)
 #' plot(dem50m) # 50m raster, OSGB projection system
 #'
 #' dem5m <- get_dem(lat = 49.97, long = -5.22, resolution = 5)
-#' plot(dem5m) # 5m raster, Mercator projection system
-get_dem <- function(r = NA, lat, long, resolution = 30, zmin = 0, xdims = 200, ydims = 200) {
+#' plot(dem5m) # 5m raster, Mercator projection system # warning given
+get_dem<-function(r = NA, lat, long, resolution = 30, zmin = 0, xdims = 200, ydims = 200) {
+  if (!curl::has_internet()) {
+    message("Please connect to the internet and try again.")
+    return(NULL)
+  }
   if (resolution < 30) {
     warning("Higher resolution data only available for some locations. DEM
-            may be derived by interpolation")
+             may be derived by interpolation")
   }
-  if (class(r)[1] != "RasterLayer") {
+  if (class(r)[1] != "SpatRaster") {
     xy <- data.frame(x = long, y = lat)
     xy <- sf::st_as_sf(xy, coords = c('x', 'y'), crs = 4326)
-
     if (lat >= -80 & lat <= 84)
       xy <- sf::st_transform(xy, 3395)
     if (lat > 84)
       xy <- sf::st_transform(xy, 3413)
     if (lat < -80)
       xy <- sf::st_transform(xy, 3976)
-
-      e <- extent(c(sf::st_coordinates(xy)[1] - floor(xdims/2) * resolution,
-                    sf::st_coordinates(xy)[1] + ceiling(xdims/2) * resolution,
-                    sf::st_coordinates(xy)[2] - floor(ydims/2) * resolution,
-                    sf::st_coordinates(xy)[2] + ceiling(ydims/2) * resolution))
-
-    r <- raster(e)
+    e <- ext(c(sf::st_coordinates(xy)[1] - floor(xdims/2) * resolution,
+               sf::st_coordinates(xy)[1] + ceiling(xdims/2) * resolution,
+               sf::st_coordinates(xy)[2] - floor(ydims/2) * resolution,
+               sf::st_coordinates(xy)[2] + ceiling(ydims/2) * resolution))
+    r <- rast(e)
     res(r) <- resolution
-	crs(r) <- CRS(SRS_string = st_crs(xy)$wkt)
-
+    crs(r) <- sf::st_crs(xy)$wkt
   } else {
-    lat <- latlongfromraster(r)$lat
-    long <- latlongfromraster(r)$long
-    res(r) <- resolution
+    ll <- lat <- latlongfromraster(r)
+    lat <- ll$lat
+    long <- ll$long
+    if (is.na(resolution)) resolution<-res(r)[1]
   }
-  z <- ceiling(log((cos(lat * pi/180) * 2 * pi * 6378137) / (256 * resolution), 2))
-  z <- ifelse(z > 14, 14, z)
-  p <- as(extent(r), 'SpatialPoints')
-  p <- as.data.frame(p)
-  xx <- sp::proj4string(r)
-  r2 <- elevatr::get_elev_raster(p, z = z, src = "aws", prj = xx)
+  z<-ceiling(log((cos(ll$lat*pi/180)*2*pi*6378137)/(256*resolution),2))
+  if (z > 14) z <- 14
+  prj<-sf::st_crs(r)
+  r2<-elevatr::get_aws_terrain(r,z,prj)
   r2 <- resample(r2, r)
-  m2 <- getValues(r2, format = "matrix")
-  m2[m2 < zmin] <- zmin
-  m2[is.na(m2)] <- zmin
-  r2 <- if_raster(m2, r2)
+  r2[r2 < zmin] <- zmin
+  r2[is.na(r2)] <- zmin
   return(r2)
 }
 #' Obtains NCEP data required to run microclima
@@ -547,8 +546,8 @@ dailyprecipNCEP <- function(lat, long, tme, reanalysis2 = FALSE) {
   for (i in 0:35) {
     wscr <- windcoef(dem, i*10, hgt = 2, reso = reso)
     wscr2 <- windcoef(dem, i*10, hgt = 0, reso = reso)
-    wsc36[i + 1] <- raster::extract(wscr, xy)
-    wsc36atground[i + 1] <- raster::extract(wscr2, xy)
+    wsc36[i + 1] <- terra::extract(wscr, xy)[,2]
+    wsc36atground[i + 1] <- terra::extract(wscr2, xy)[,2]
   }
   wshelt <- 0
   wsheltatground <- 0
@@ -560,24 +559,24 @@ dailyprecipNCEP <- function(lat, long, tme, reanalysis2 = FALSE) {
     wsheltatground[i] <- wsc36atground[daz]
   }
   if (class(slope)[1] == "logical") {
-    slope <- terrain(dem, unit = 'degrees')
-    slope <- raster::extract(slope, xy)
+    slope <- terra::terrain(dem, v = 'slope', unit = 'degrees')
+    slope <- terra::extract(slope, xy)[,2]
   }
   if (class(aspect)[1] == "logical") {
-    aspect <- terrain(dem, opt = 'aspect', unit = 'degrees')
-    aspect <- raster::extract(aspect, xy)
+    aspect <- terra::terrain(dem, v = 'aspect', unit = 'degrees')
+    aspect <- terra::extract(aspect, xy)[,2]
   }
   fr <- canopy(array(l, dim = dim(dem)[1:2]))
   if (class(svf)[1] == "logical") {
     svf <- skyviewveg(dem, array(l, dim = dim(dem)[1:2]),
                       array(x, dim = dim(dem)[1:2]), reso = reso)
-    svf <- raster::extract(svf, xy)
+    svf <- terra::extract(svf, xy)[,2]
   }
   if (class(horizon)[1] == "logical") {
     ha36 <- 0
     for (i in 0:35) {
       har <- horizonangle(dem, i*10, reso)
-      ha36[i + 1] <- atan(raster::extract(har, xy)) * (180/pi)
+      ha36[i + 1] <- atan(terra::extract(har, xy)[,2]) * (180/pi)
     }
   } else ha36 <- rep(horizon, 36)
   tme <- as.POSIXlt(hourlydata$obs_time)
@@ -626,20 +625,20 @@ dailyprecipNCEP <- function(lat, long, tme, reanalysis2 = FALSE) {
 #' @import sf
 #' @export
 .eleveffects <- function(hourlydata, dem, lat, long, windthresh = 4.5,
-                         emthresh = 0.78,  weather.elev, cad.effects) {
+                         emthresh = 0.78,  weather.elev = 'ncep', cad.effects) {
   xy <- data.frame(x = long, y = lat)
   if (weather.elev == 'ncep') {
-    elevncep <- raster::extract(demworld, xy)
+    elevncep <- terra::extract(rast(demworld), xy)[,2]
   } else if (weather.elev == 'era5') {
     lar <- round(lat*4,0)/4
     lor <- round(long*4,0)/4
-    e <- extent(lor-0.875,lor+0.875,lar-0.875,lar+0.875)
+    e <- ext(lor-0.875,lor+0.875,lar-0.875,lar+0.875)
     e5d <- get_dem(r = NA, lat, long, resolution = 10000, xdims = 10, ydims = 10)
-    e5d <- projectRaster(e5d, crs = sf::st_crs(4326)$wkt)
-    rte <- raster(e)
+    e5d <- project(e5d, sf::st_crs(4326)$wkt)
+    rte <- rast(e)
     res(rte) <- 0.25
     e5d <- resample(e5d,rte)
-    elevncep <- raster:: extract(e5d, xy)
+    elevncep <- terra::extract(e5d, xy)[,2]
   } else elevncep <- as.numeric(weather.elev)
   if (is.na(elevncep)) {
     warnings("elevation of input weather data NA. Setting to zero")
@@ -647,7 +646,7 @@ dailyprecipNCEP <- function(lat, long, tme, reanalysis2 = FALSE) {
   }
   xy <- sf::st_as_sf(xy, coords = c("x", "y"), crs = 4326)
   xy <- sf::st_transform(xy, sf::st_crs(dem)$wkt)
-  elev <- raster::extract(dem, xy)
+  elev <- terra::extract(dem, xy)[,2]
   if (is.na(elev)) elev <- 0
   lr <- lapserate(hourlydata$temperature, hourlydata$humidity, hourlydata$pressure)
   elevt <- lr * (elev - elevncep) + hourlydata$temperature
@@ -658,14 +657,7 @@ dailyprecipNCEP <- function(lat, long, tme, reanalysis2 = FALSE) {
     cad <- .cadconditions2(hourlydata$emissivity, hourlydata$windspeed,
                            jds, lat, long, starttime = tme$hour[1], hourint = 1,
                            windthresh = windthresh, emthresh = emthresh)
-    pxls <- dim(dem)[1] * dim(dem)[2]
-    if (pxls > 300 * 300) {
-      basins <- basindelin_big(dem)
-    } else {
-      basins <- basindelin(dem)
-    }
-    basins <- basinmerge(dem, basins, 2)
-    basins <- basinsort(dem, basins)
+    basins <- basindelin(dem, boundary = 2)
     fa <- flowacc(dem)
     pfa <- is_raster(fa) * 0
     td <- is_raster(fa) * 0
@@ -680,7 +672,7 @@ dailyprecipNCEP <- function(lat, long, tme, reanalysis2 = FALSE) {
     }
     cdif <- pfa * td
     cdif <- if_raster(cdif, dem)
-    cdif <- extract(cdif, xy)
+    cdif <- terra::extract(cdif, xy)[,2]
     if (is.na(cdif)) cdif <- 0
     cadt <- cdif * lr * cad
   } else {
@@ -702,19 +694,19 @@ dailyprecipNCEP <- function(lat, long, tme, reanalysis2 = FALSE) {
     rc <- trim(rc)
     aggf <- floor(mean(res(rc)[1:2]) / mean(res(rfine)))
     if (aggf > 1) {
-      rfine2 <- suppressWarnings(aggregate(rfine, aggf, max))
+      rfine2 <- suppressWarnings(terra::aggregate(rfine, aggf, max))
     } else rfine2 <- rfine
-    rfine2 <- suppressWarnings(resample(rfine2, rc, method = 'ngb'))
-    rfine2 <- crop(rfine2, extent(rfine))
+    rfine2 <- suppressWarnings(terra::resample(rfine2, rc, method = 'near'))
+    rfine2 <- terra::crop(rfine2, ext(rfine))
     if (dim(rfine2)[1] * dim(rfine2)[2] == 1) {
       xx <- mean(is_raster(rfine), na.rm = T)
       rfine2 <- if_raster(as.matrix(xx), rfine2)
     }
     a <- array(-999, dim = dim(rfine2)[1:2])
-    rc2 <- raster(a)
-    extent(rc2) <- extent(rfine2)
-    rc2 <- mosaic(rc, rc2, fun = min)
-    rc2 <- mosaic(rc2, rfine2, fun = max)
+    rc2 <- rast(a)
+    ext(rc2) <- ext(rfine2)
+    rc2 <- mosaic(rc, rc2, fun = 'min')
+    rc2 <- mosaic(rc2, rfine2, fun = 'max')
     rc2[rc2 == zmin] <- NA
     rc2
   }
@@ -732,9 +724,9 @@ dailyprecipNCEP <- function(lat, long, tme, reanalysis2 = FALSE) {
   ys <- seq(-88.542, by = 1.904129, length.out = 94)
   xc <- xs[which.min(abs(xs - ll$long%%360))]
   yc <- ys[which.min(abs(ys - ll$lat))]
-  rll <- raster(matrix(0, nrow = 3, ncol = 3))
-  extent(rll) <- extent(xc -  2.8125, xc +  2.8125,
-                        yc - 2.856193, yc + 2.856193)
+  rll <- rast(matrix(0, nrow = 3, ncol = 3))
+  ext(rll) <- ext(xc -  2.8125, xc +  2.8125,
+                  yc - 2.856193, yc + 2.856193)
   crs(rll) <- sf::st_crs(4326)$wkt
   ress <- c(30, 90, 500, 1000, 10000)
   ress <- ress[ress > mean(res(r))]
@@ -743,9 +735,9 @@ dailyprecipNCEP <- function(lat, long, tme, reanalysis2 = FALSE) {
   # Create a list of dems
   cat("Downloading land sea data \n")
   dem.list <- list()
-  rmet <- projectRaster(rll, crs = sf::st_crs(r)$wkt)
+  rmet <- project(rll, sf::st_crs(r)$wkt)
   dem <- get_dem(rmet, resolution = ress[1], zmin = zmin)
-  dem.list[[1]] <- projectRaster(dem, crs = sf::st_crs(r)$wkt)
+  dem.list[[1]] <- project(dem, sf::st_crs(r)$wkt)
   dc <- ceiling(max(dim(r)) / 2)
   rres <- mean(res(r))
   for (i in 2:(length(ress)-1)) {
@@ -754,20 +746,19 @@ dailyprecipNCEP <- function(lat, long, tme, reanalysis2 = FALSE) {
     if (ress[i] <= mean(res(r)[1:2]))
       d <- dc
     if (tst > 50) d <- tst
-    e <- extent(r)
-    xy <- c((e@xmin + e@xmax) / 2, (e@ymin + e@ymax) / 2)
-    e2 <- extent(c(xy[1] - d * ress[i], xy[1] + d * ress[i],
-                   xy[2] - d * ress[i], xy[2] + d * ress[i]))
-    rr <- raster()
-    extent(rr) <- e2
+    e <- ext(r)
+    xy <- c((e$xmin + e$xmax) / 2, (e$ymin + e$ymax) / 2)
+    e2 <- ext(c(xy[1] - d * ress[i], xy[1] + d * ress[i],
+                xy[2] - d * ress[i], xy[2] + d * ress[i]))
+    rr <- rast(e2)
     crs(rr) <- sf::st_crs(r)$wkt
     dem <- suppressWarnings(get_dem(rr, resolution = ress[i], zmin = zmin))
-    dem.list[[i]] <- projectRaster(dem, crs = st_crs(r)$wkt)
+    dem.list[[i]] <- project(dem, st_crs(r)$wkt)
   }
   if (tidyr & mean(res(r)) <= 30)
     warning("raster tidying ignored as resolution <= 30")
   if (tidyr & mean(res(r)) > 30) {
-    rx <- raster(extent(r))
+    rx <- rast(ext(r))
     res(rx) <- 30
     crs(rx) <- sf::st_crs(r)$wkt
     rfine <- get_dem(rx, resolution = 30, zmin = zmin)
@@ -786,18 +777,18 @@ dailyprecipNCEP <- function(lat, long, tme, reanalysis2 = FALSE) {
       m <- is_raster(dem)
       m[m == zmin] <- NA
       dem <- if_raster(m, dem)
-      lsa <- invls(dem, extent(r), direction)
+      lsa <- invls(dem, ext(r), direction)
       lsa[is.na(lsa)] <- 0
       lsm <- is_raster(lsa)
       if (max(lsm) > min(lsm)) {
         if (min(dim(lsm)) < 2) {
-          r2 <- aggregate(r, 100)
-          xx<- resample(lsa, r2, method = "ngb")
-          xx <- resample(xx, r)
-          xx <- mask(xx, r)
+          r2 <- terra::aggregate(r, 100)
+          xx<- resample(lsa, r2, method = "near")
+          xx <- terra::resample(xx, r)
+          xx <- terra::mask(xx, r)
         } else {
-          xx <- resample(lsa, r)
-          x <- mask(xx, r)
+          xx <- terra::resample(lsa, r)
+          x <- terra::mask(xx, r)
         }
         mx <- mean(is_raster(xx), na.rm = T)
         if  (is.na(mx)) xx <- xx * 0 + mean(lsm, na.rm = T)
@@ -814,7 +805,7 @@ dailyprecipNCEP <- function(lat, long, tme, reanalysis2 = FALSE) {
     for (i in 2:length(ress))
       lsa <- pmin(lsa, is_raster(lsa.list[[i]]))
     lsa <- if_raster(lsa, r)
-    if (use.raster) lsa <- mask(lsa, r)
+    if (use.raster) lsa <- terra::mask(lsa, r)
     if (plot.progress) plot(lsa, main = paste("Direction:",direction))
     lsa.array[,,dct + 1] <- is_raster(lsa)
   }
@@ -824,20 +815,20 @@ dailyprecipNCEP <- function(lat, long, tme, reanalysis2 = FALSE) {
   eone <- extent(xc - 1.875 / 2, xc + 1.875 / 2,
                  yc - 1.904129 / 2, yc + 1.904129 / 2)
   rllo <- crop(rll, eone)
-  rone <- projectRaster(rllo, crs = sf::st_crs(r)$wkt)
+  rone <- project(rllo, sf::st_crs(r)$wkt)
   rone[is.na(rone)] <- zmin
   dem <- dem.list[[1]]
   m <- is_raster(dem)
   m[m == zmin] <- NA
   dem <- if_raster(m, dem)
-  e <- extent(r)
-  xy <- data.frame(x = (e@xmin + e@xmax) / 2,
-                   y = (e@ymin + e@ymax) / 2)
+  e <- ext(r)
+  xy <- data.frame(x = (e$xmin + e$xmax) / 2,
+                   y = (e$ymin + e$ymax) / 2)
   xy <- sf::st_as_sf(xy, coords = c("x","y"), crs = st_crs(r)$wkt)
   for (dct in 0:(steps - 1)) {
     direction <- dct * (360 / steps)
-    lsa <- invls(dem, extent(rone), direction)
-    f1 <- extract(lsa, xy)
+    lsa <- invls(dem, ext(rone), direction)
+    f1 <- terra::extract(lsa, xy)[,2]
     if (is.na(f1)) f1 <- mean(is_raster(lsa), na.rm = T)
     mncep <- mean(is_raster(lsa), na.rm = T) / f1
     cncep[dct + 1] <- mncep
@@ -881,11 +872,11 @@ dailyprecipNCEP <- function(lat, long, tme, reanalysis2 = FALSE) {
       sst <- t(sst)
       sst <- apply(sst, 2, rev)
       sst <- na.approx(sst, na.rm = F)
-      sstr <- raster(sst)
-      extent(sstr) <- extent(-1, 359, -89, 89)
+      sstr <- rast(sst)
+      ext(sstr) <- c(-1, 359, -89, 89)
       long2 <- long%%360
       long2 <- ifelse(long2 > 359, long2 - 360, long2)
-      s <- extract(sstr, data.frame(long2, lat))
+      s <- extract(sstr, data.frame(long2, lat))[,2]
       orn <- paste0(yrs[yr], "-", mths[mt], "-01 00:00")
       tmem <- as.POSIXlt(0 + 3600 * 24 * dms[mths[mt]] / 2, origin = orn, tz = "GMT")
       sstdo <- data.frame(obs_time = tmem, sst = s)
@@ -902,7 +893,7 @@ dailyprecipNCEP <- function(lat, long, tme, reanalysis2 = FALSE) {
 }
 #' Calculates coastal effects from NCEP data
 #'
-#' @param landsea a raster object with NAs (representing sea) or any non-NA value and a projection system defined.
+#' @param landsea a SpatRaster  object with NAs (representing sea) or any non-NA value and a projection system defined.
 #' @param ncephourly a dataframe of hourly climate data as returned by [hourlyNCEP()].
 #' @param steps an optional integer. Coastal effects are calculated in specified directions upwind. Steps defines the total number of directions used. If the default 8 is specified, coastal effects are calculated at 45º intervals.
 #' @param use.raster an optional logical value indicating whether to mask the output values by `landsea`.
@@ -918,14 +909,14 @@ dailyprecipNCEP <- function(lat, long, tme, reanalysis2 = FALSE) {
 #'
 #' @return a three-dimension array of hourly temperature values for each pixel of `landsea`
 #' @export
-#' @import raster sp zoo rnoaa ncdf4 sf
+#' @import terra sp zoo rnoaa ncdf4 sf
 #' @examples
-#' library(raster)
+#' library(terra)
 #' # Download NCEP data
-#' ll <- latlongfromraster(dtm100m)
+#' ll <- latlongfromraster(rast(dtm100m))
 #' tme <-as.POSIXlt(c(0:31) * 3600 * 24, origin = "2015-03-15", tz = "GMT")
 #' ncephourly<-hourlyNCEP(NA, ll$lat, ll$long, tme)
-#' aout <- coastalNCEP(dtm100m, ncephourly)
+#' aout <- coastalNCEP(rast(dtm100m), ncephourly)
 #' # Calculate mean temperature and convert to raster
 #' mtemp <- if_raster(apply(aout, c(1, 2), mean), dtm100m)
 #' plot(mtemp, main = "Mean temperature")
@@ -969,7 +960,7 @@ coastalNCEP <- function(landsea, ncephourly, steps = 8, use.raster = T, zmin = 0
     pdT <- dT[i] + xx
     aout[,,i] <- (pdT - sst[i]) * (-1)
     if (plot.progress == T & i%%500 == 0) {
-      plot(if_raster(aout[,,i], landsea), main = tme[i])
+      plot(if_raster(aout[,,i], landsea), main = as.character(tme[i]))
     }
   }
   return(aout)
@@ -989,10 +980,10 @@ coastalNCEP <- function(landsea, ncephourly, steps = 8, use.raster = T, zmin = 0
 #' by function [hourlyNCEP()]. Function called if data not provided.
 #' @param dailyprecip an optional data frame of ourly weather and radiation data as returned
 #' by function [dailyprecipNCEP()]. Function called if data not provided.
-#' @param dem an ptional raster object of elevations covering the location for which point
+#' @param dem an optional SpatRaster object of elevations covering the location for which point
 #' data are required. If not provided, one is downloaded from the registry of Open
 #' Data on AWS. Used to calculate coastal, wind and radiation effects
-#' @param demmeso an optional raster object of elevations covering the location for which point
+#' @param demmeso an optional SpatRaster object of elevations covering the location for which point
 #' data are required. Used to calculate elevation and cold air drainage effects.
 #' @param albr albedo of ground surface from which radiation is reflected (see details)
 #' @param resolution the resolution (in metres) of the dem used for downscaling (see details).
@@ -1046,9 +1037,9 @@ coastalNCEP <- function(landsea, ncephourly, steps = 8, use.raster = T, zmin = 0
 #' (5) `acoast` an array of temperatures that account for coastal effects for each
 #' pixel of `dem` and each hour of hourlydata.
 #'
-#' (6) `basins` a raster object of basins used for calculating cold air drainage.
+#' (6) `basins` a SpatRaster object of basins used for calculating cold air drainage.
 #'
-#' (7) `flowacc` a raster object of accumulated flow.
+#' (7) `flowacc` a SpatRaster object of accumulated flow.
 #'
 #' @details The package `NicheMapR` (Kearney & Porter 2016), includes a suite of
 #' programs for mechanistic modelling of heat and mass exchange and provides a
@@ -1067,8 +1058,8 @@ coastalNCEP <- function(landsea, ncephourly, steps = 8, use.raster = T, zmin = 0
 #' [coastalNCEP()] for retrieving and processing coastal effects.
 #'
 #' @export
-#' @import raster
-#' @import sp sf
+#' @import terra
+#' @import sf
 #' @import zoo
 #'
 #' @examples
@@ -1143,7 +1134,7 @@ microclimaforNMR <- function(lat, long, dstart, dfinish, l, x, coastal = TRUE, h
 #' characteristics either specified by the user, or derived from habitat,
 #' it runs the microclimate model in hourly timesteps to generate an array of temperatures.
 #'
-#' @param r a raster object defining the extent and resolution for which microclimate
+#' @param r a SpatRaster object defining the extent and resolution for which microclimate
 #' temperature data are required. Supplied raster must have a projection such that the units of
 #' x, y and z are identical, and grid cells are square. NA values are assumed to be sea, which
 #' is important in the calculation of coastal and cold air drainage effects.
@@ -1151,16 +1142,16 @@ microclimaforNMR <- function(lat, long, dstart, dfinish, l, x, coastal = TRUE, h
 #' @param dfinish end date as character of time period required in format DD/MM/YYYY
 #' @param hgt the height (in m) above or below ground for which temperature estimates
 #' are required. If negative, below-ground temperatures are derived (range -2 to 2).
-#' @param l  an optional single numeric value, vector, raster, matrix or array of leaf area
+#' @param l  an optional single numeric value, vector, SpatRaster, matrix or array of leaf area
 #' index values. If a single numeric value, the same leaf area is assumed at all locations
 #' and times. If a vector, the same leaf area is assumed at all locations, but leaf area is
-#' assumed ot vary through time. If a matrix or raster, leaf area is assumed to vary by
+#' assumed ot vary through time. If a matrix or SpatRaster, leaf area is assumed to vary by
 #' location, but is assumed static in time. If an array, variable leaf areas in time and
 #' space are assumed.
-#' @param x  a single numeric value, matrix or raster representing the ratio of vertical to horizontal projections of foliage as,
+#' @param x  a single numeric value, matrix or SpatRaster representing the ratio of vertical to horizontal projections of foliage as,
 #' for example, returned by [leaf_geometry()]. if a single numeric value, the same value of `x`
 #' is assumed at all locations. Varying `x` through time is not supported.
-#' @param habitat a character string, numeric value or matrix or raster of numeric
+#' @param habitat a character string, numeric value or matrix or SpatRaster of numeric
 #' values of habitat type(s). See [habitats()]. Ignored if l or x are provided. If a single
 #' numeric value, the same habitat is assumed at all locations. Varying habitats in time are not
 #' supported.
@@ -1195,12 +1186,12 @@ microclimaforNMR <- function(lat, long, dstart, dfinish, l, x, coastal = TRUE, h
 #' @param save optional integer: don't save forcing data (0), save the forcing data (1)
 #' or read previously saved data (2).
 #' @param dailyprecip Optional data.frame of daily precipitation data as returned by [dailyprecipNCEP()]
-#' @param albg an optional single value, raster object, two-dimensional array or
+#' @param albg an optional single value, SpatRaster object, two-dimensional array or
 #' matrix of values representing the albedo(s) of the ground as returned by [albedo2()].
-#' @param albr albr an optional single value, raster object, two-dimensional array
+#' @param albr albr an optional single value, SpatRaster object, two-dimensional array
 #' or matrix of values representing the albedo(s) of adjacent surfaces as returned
 #' by [albedo_reflected()].
-#' @param albc an optional single value, raster object, two-dimensional array or
+#' @param albc an optional single value, SpatRaster object, two-dimensional array or
 #' matrix of values representing the albedo(s) of the vegetated canopy as returned
 #' by [albedo2()].
 #' @param mesoresolution optional numeric value indicating resolution of the dem used for
@@ -1239,7 +1230,7 @@ microclimaforNMR <- function(lat, long, dstart, dfinish, l, x, coastal = TRUE, h
 #'
 #' @return a list with the following objects:
 #' (1) temps: an array of temperatures for each pixel of r and hour of the time sequence.
-#' (2) e: an extent object given the extent of `temps`. Generally the same as `raster::extent(r)`
+#' (2) e: an extent object given the extent of `temps`. Generally the same as `terra::ext(r)`
 #' though note that edge cells are NA as slopes cannot be calculated for these cells.
 #' (3) units: the units of `temps`. Either deg C or dec C * 1000 if `save.memory` is TRUE.
 #' (4) tmax: If `summarydata` is TRUE, a matrix of maximum temperatures
@@ -1247,11 +1238,11 @@ microclimaforNMR <- function(lat, long, dstart, dfinish, l, x, coastal = TRUE, h
 #' (6) tmean: If `summarydata` is TRUE, a matrix of mean temperatures
 #' (7) frosthours: If `summarydata` is TRUE, a matrix of hours below 0 deg C.
 #'
-#' @import raster
+#' @import terra
 #' @export
 #'
 #' @examples
-#' library(raster)
+#' library(terra)
 #' require(NicheMapR)
 #' # Get DEM for Pico, Azores
 #' r <- get_dem(lat = 38.467429, long = -28.398995, resolution = 30)
@@ -1509,7 +1500,7 @@ runauto <- function(r, dstart, dfinish, hgt = 0.05, l, x, habitat = NA,
   r2 <- if_raster(m, r)
   cat("Calculating wind shelter coefficients \n")
   wca <- array(NA, dim = c(dim(r)[1:2], 16))
-  rff <- raster(r)
+  rff <- rast(r)
   res(rff) <- res(r)[1] / 4
   r3 <- resample(r2, rff)
   hgtw <- ifelse(hgt < 0, 0, hgt)
@@ -1552,7 +1543,7 @@ runauto <- function(r, dstart, dfinish, hgt = 0.05, l, x, habitat = NA,
     if (cad[i] > 0) {
       cadp <- pcad(dem, basin, fa, hourlydata$temperature[i],
                    hourlydata$humidity[i], hourlydata$pressure[i])
-      cadp <- projectRaster(cadp, crs = crs(r))
+      cadp <- project(cadp, crs(r))
       cadp <- resample(cadp, r2)
       cadp <- mask(cadp, r)
       tr <- tr + cadp

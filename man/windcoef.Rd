@@ -7,7 +7,7 @@
 windcoef(dsm, direction, hgt = 1, reso = 1)
 }
 \arguments{
-\item{dsm}{raster object, two-dimensional array or matrix of elevations (m) derived either from a digital terrain or digital surface model, and orientated as if derived using \code{\link[=is_raster]{is_raster()}}. I.e. \verb{[1, 1]} is the NW corner.}
+\item{dsm}{SpatRaster object, two-dimensional array or matrix of elevations (m) derived either from a digital terrain or digital surface model, and orientated as if derived using \code{\link[=is_raster]{is_raster()}}. I.e. \verb{[1, 1]} is the NW corner.}
 
 \item{direction}{a single numeric value specifying the direction from which the wind is blowing (º).}
 
@@ -16,23 +16,23 @@ windcoef(dsm, direction, hgt = 1, reso = 1)
 \item{reso}{a single numeric value specifying the the resolution (m) of \code{dsm}.}
 }
 \value{
-a raster object, or two-dimensional array of shelter coefficients. E.g. a shelter coefficient of 0.5 indicates that wind speed at that location is 0.5 times that measured at an unobscured location.
+a SpatRaster object, or two-dimensional array of shelter coefficients. E.g. a shelter coefficient of 0.5 indicates that wind speed at that location is 0.5 times that measured at an unobscured location.
 }
 \description{
 \code{windcoef} is used to apply a topographic shelter coefficient to wind data.
 }
 \details{
-If dsm is a raster object, then a raster object is returned.
+If dsm is a SpatRaster object, then a SpatRaster object is returned.
 If elevations are derived from a digital terrain model, then
 the sheltering effects of vegetation are ignored. If derived from a
 digital surface model, then the sheltering effects of vegetation are
 accounted for. If \code{res} is unspecified \code{dtm} is assumed to have a resolution of one m.
 }
 \examples{
-library(raster)
-dsm <- dtm1m + veg_hgt
+library(terra)
+dsm <- rast(dtm1m) + rast(veg_hgt)
 wc <- windcoef(dsm, 0)
-plot(mask(wc, dtm1m), main ="Northerly wind shelter coefficient")
+plot(mask(wc, rast(dtm1m)), main ="Northerly wind shelter coefficient")
 }
 \seealso{
 The function \code{\link[=windheight]{windheight()}} converts measured wind heights to a standard reference height.

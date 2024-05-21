@@ -3,9 +3,9 @@
 \docType{data}
 \name{dtm1km}
 \alias{dtm1km}
-\title{A 1 km resolution raster object of elevation for the Lizard Peninsula, Cornwall, UK.}
+\title{A 1 km resolution wrapped SpatRaster object of elevation for the Lizard Peninsula, Cornwall, UK.}
 \format{
-A raster object with 19 rows and 22 columns.
+A wrapped SpatRaster object with 19 rows and 22 columns.
 }
 \source{
 \url{http://www.tellusgb.ac.uk/}
@@ -14,7 +14,7 @@ A raster object with 19 rows and 22 columns.
 dtm1km
 }
 \description{
-A raster object containing elevation in metres with sea coded as NA for the area bounded by
+A wrapped SpatRaster object containing elevation in metres with sea coded as NA for the area bounded by
 160000, 182000, 11000, 30000  (xmin, xmax, ymin, ymax) using the Ordance Survey GB Grid
 Reference system (CRS: +init=epsg:27700).
 }

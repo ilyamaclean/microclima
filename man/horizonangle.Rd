@@ -7,14 +7,14 @@
 horizonangle(dtm, azimuth, reso = 1)
 }
 \arguments{
-\item{dtm}{a raster object, two-dimensional array or matrix of elevations (m). If not a raster, orientated as if derived from a raster using \code{\link[=is_raster]{is_raster()}}. I.e. \verb{[1, 1]} is the NW corner.}
+\item{dtm}{a SpatRaster object, two-dimensional array or matrix of elevations (m). If not a SpatRaster, orientated as if derived from a raster using \code{\link[=is_raster]{is_raster()}}. I.e. \verb{[1, 1]} is the NW corner.}
 
 \item{azimuth}{a numeric value representing the direction of the horizon as, for example, returned by \code{\link[=solazi]{solazi()}} (º from north).}
 
 \item{reso}{a single numeric value representing the spatial resolution of \code{dtm} (m).}
 }
 \value{
-a raster object or two-dimensional array of numeric values representing the tangent of the angle to the horizon in a specified direction.
+a SpatRaster object or two-dimensional array of numeric values representing the tangent of the angle to the horizon in a specified direction.
 }
 \description{
 \code{horizonangle} is used to calculate the tangent of the angle to the horizon in a specified direction.
@@ -23,11 +23,11 @@ a raster object or two-dimensional array of numeric values representing the tang
 To enable calculation of horizon angles near the edge of \code{dtm} a 100 pixel buffer is of
 zeros is placed around it. NAs in \code{dtm} are converted to zeros.
 The projection system used must be such that units of x, y and z are identical. Use
-\code{\link[=projectRaster]{projectRaster()}} to convert the projection to a Universal Transverse Mercator type
-projection system. If \code{dtm} is a raster object, a raster object is returned.
+\code{\link[terra:project]{terra::project()}} to convert the projection to a Universal Transverse Mercator type
+projection system. If \code{dtm} is a SpatRaster object, a SpatRaster object is returned.
 }
 \examples{
-library(raster)
+library(terra)
 ha <- horizonangle(dtm1m, 0)
 plot(ha, main = "Tangent of angle to horizon")
 }

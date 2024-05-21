@@ -1,71 +1,76 @@
-#' Flexible conversion to raster object
+#' Flexible conversion to SpatRaster object
 #'
 #' @description
-#' `if_raster` is used to permit flexibility in the use of rasters, matrices or arrays in many functions.
+#' `if_raster` is used to permit flexibility in the use of SpatRasts, matrices or arrays in many functions.
 #'
 #' @param x an R object
 #' @param r an R object
 #'
-#' @return if `r` is a raster, `x` is converted to a raster with the same attributes as `r`, otherwise returns `x`
-#' @import raster
+#' @return if `r` is a SpatRaster, `x` is converted to a SpatRaster with the same attributes as `r`, otherwise returns `x`
+#' @import terra
 #' @export
 #'
 #' @examples
 #' r <- is_raster(dtm100m)
 #' r1 <- if_raster(r, dtm100m)
 #' r2 <- if_raster(r, r)
-#' class(r1) # is a RasterLayer
+#' class(r1) # is a SpatRaster
 #' class(r2) # is a matrix
 if_raster <- function(x, r) {
-  if (class(r)[1] == "RasterLayer")
-    x <- raster(is_raster(x), template = r)
+  if (class(r)[1] == "PackedSpatRaster") r<-rast(r)
+  if (class(r)[1] == "SpatRaster") {
+    x <- rast(is_raster(x))
+    ext(x)<-ext(r)
+    crs(x)<-crs(r)
+  }
   x
 }
-#' Checks whether object is a raster and returns a matrix if yes
+#' Checks whether object is a SpatRaster and returns a matrix if yes
 
 #' @description
 #' `is_raster` is used to permit flexibility in the use of rasters, matrices or arrays in many functions.
 #'
 #' @param r an R object
 #'
-#' @return if `r` is a raster, returns a matrix containing all values of `r`, otherwise returns `r`
-#' @import raster
+#' @return if `r` is a SpatRaster, returns a matrix containing all values of `r`, otherwise returns `r`
+#' @import terra
 #' @export
 #'
 #' @examples
-#' library(raster)
+#' library(terra)
 #' r <- is_raster(dtm100m)
-#' class(dtm100m) # is a RasterLayer
+#' class(dtm100m) # is a PackedSpatRaster
 #' class(r) # is a matrix
-#' plot(r) # not a raster
-#' plot(raster(r)) # converts to raster
+#' plot(r) # not a SpatRaster
+#' plot(rast(r)) # converts to SpatRaster
 is_raster <- function(r) {
-  if (class(r)[1] == "RasterLayer")
-    r <- getValues(r, format = "matrix")
+  if (class(r)[1] == "PackedSpatRaster") r<-rast(r)
+  if (class(r)[1] == "SpatRaster")
+    r <- as.matrix(r, wide = TRUE)
   r
 }
-#' Derives latitude and longitude of centre of raster object
+#' Derives latitude and longitude of centre of SpatRaster object
 #'
 #' @description `latlongfromraster` is used to calculate the latitude and longitude of
 #' the centre of a raster object.
 #'
-#' @param r a raster object with the coordinate reference system defined by [crs()]
+#' @param r a SpatRaster object with the coordinate reference system defined by [crs()]
 #'
 #' @return a data.frame with the latitude and longitude of the centre of the raster
 #' @export
-#' @import raster rgdal sf
-#' @importFrom sp coordinates
+#' @import terra
+#' @import sf
 #'
 #' @examples
-#' latlongfromraster(dtm1m)
-#' latlongfromraster(dtm100m)
-latlongfromraster <- function (r) {
-  e <- extent(r)
-  xy <- data.frame(x = (e@xmin + e@xmax)/2, y = (e@ymin + e@ymax)/2)
-  xy <- sf::st_as_sf(xy, coords = c('x', 'y'), crs = sf::st_crs(r)$wkt)
+#' latlongfromraster(rast(dtm1m))
+#' latlongfromraster(rast(dtm100m))
+latlongfromraster<-function (r) {
+  e <- ext(r)
+  xy <- data.frame(x = (e$xmin + e$xmax)/2, y = (e$ymin + e$ymax)/2)
+  xy <- sf::st_as_sf(xy, coords = c("x", "y"),
+                     crs = crs(r))
   ll <- sf::st_transform(xy, 4326)
-  ll <- data.frame(lat = sf::st_coordinates(ll)[2],
-                   long = sf::st_coordinates(ll)[1])
+  ll <- data.frame(lat = sf::st_coordinates(ll)[2], long = sf::st_coordinates(ll)[1])
   return(ll)
 }
 #' Calculates the astronomical Julian day
@@ -195,43 +200,39 @@ solalt <- function(localtime, lat, long, julian, merid = round(long / 15, 0) * 1
 #'
 #' @description `horizonangle` is used to calculate the tangent of the angle to the horizon in a specified direction.
 #'
-#' @param dtm a raster object, two-dimensional array or matrix of elevations (m). If not a raster, orientated as if derived from a raster using [is_raster()]. I.e. `[1, 1]` is the NW corner.
+#' @param dtm a SpatRaster object, two-dimensional array or matrix of elevations (m). If not a SpatRaster, orientated as if derived from a raster using [is_raster()]. I.e. `[1, 1]` is the NW corner.
 #' @param azimuth a numeric value representing the direction of the horizon as, for example, returned by [solazi()] (º from north).
 #' @param reso a single numeric value representing the spatial resolution of `dtm` (m).
 #'
-#' @return a raster object or two-dimensional array of numeric values representing the tangent of the angle to the horizon in a specified direction.
-#' @import raster
+#' @return a SpatRaster object or two-dimensional array of numeric values representing the tangent of the angle to the horizon in a specified direction.
+#' @import terra
 #' @export
 #'
 #' @details
 #' To enable calculation of horizon angles near the edge of `dtm` a 100 pixel buffer is of
 #' zeros is placed around it. NAs in `dtm` are converted to zeros.
 #' The projection system used must be such that units of x, y and z are identical. Use
-#' [projectRaster()] to convert the projection to a Universal Transverse Mercator type
-#' projection system. If `dtm` is a raster object, a raster object is returned.
+#' [terra::project()] to convert the projection to a Universal Transverse Mercator type
+#' projection system. If `dtm` is a SpatRaster object, a SpatRaster object is returned.
 
 #' @examples
-#' library(raster)
+#' library(terra)
 #' ha <- horizonangle(dtm1m, 0)
 #' plot(ha, main = "Tangent of angle to horizon")
 horizonangle <- function(dtm, azimuth, reso = 1) {
-  r <- dtm
-  dtm <- is_raster(r)
-  dtm[is.na(dtm)] <- 0
-  dtm <- (dtm * 5) / reso
-  azimuth <- azimuth - 90
-  azi <- azimuth * (pi / 180)
-  horizon <- array(0, dim(dtm))
-  dtm3 <- array(0, dim(dtm) + 200)
-  x <- dim(dtm)[1]
-  y <- dim(dtm)[2]
-  dtm3[101:(x + 100), 101:(y + 100)] <- dtm
+  r<-dtm
+  dtm<-is_raster(dtm)
+  dtm[is.na(dtm)]<-0
+  dtm<-dtm/reso
+  azi<-azimuth*pi/180
+  horizon<-array(0,dim(dtm))
+  dtm3<-array(0,dim(dtm)+200)
+  x<-dim(dtm)[1]
+  y<-dim(dtm)[2]
+  dtm3[101:(x+100),101:(y+100)]<-dtm
   for (step in 1:10) {
-    horizon[1:x, 1:y] <- pmax(horizon[1:x, 1:y], (dtm3[(101 + sin(azi) *
-                         step ^ 2):(x + 100 + sin(azi) * step ^ 2),
-                         (101 + cos(azi) * step ^ 2):(y + 100 + cos(azi) *
-                         step ^ 2)] - dtm3[101:(x + 100), 101:(y + 100)]) /
-                         (5 * step ^ 2))
+    horizon[1:x,1:y]<-pmax(horizon[1:x,1:y],(dtm3[(101-cos(azi)*step^2):(x+100-cos(azi)*step^2),
+                                                  (101+sin(azi)*step^2):(y+100+sin(azi)*step^2)]-dtm3[101:(x+100),101:(y+100)])/(step^2),na.rm=T)
   }
   horizon <- if_raster(horizon, r)
   horizon
@@ -240,66 +241,64 @@ horizonangle <- function(dtm, azimuth, reso = 1) {
 #'
 #' @description `solarindex` is used to calculate the proportion of direct beam radiation incident on an inclined surface at a specified time and location.
 #'
-#' @param slope a single value, raster object, two-dimensional array or matrix of slopes (º). If an array or matrix, then orientated as if derived using [is_raster()]. I.e. `[1, 1]` is the NW corner.
-#' @param aspect a single value, raster object, two-dimensional array or matrix of aspects (º). If an array or matrix, then orientated as if derived using [is_raster()]. I.e. `[1, 1]` is the NW corner.
+#' @param slope a single value, SpatRaster object, two-dimensional array or matrix of slopes (º). If an array or matrix, then orientated as if derived using [is_raster()]. I.e. `[1, 1]` is the NW corner.
+#' @param aspect a single value, SpatRaster object, two-dimensional array or matrix of aspects (º). If an array or matrix, then orientated as if derived using [is_raster()]. I.e. `[1, 1]` is the NW corner.
 #' @param localtime a single numeric value representing local time (decimal hour, 24 hour clock).
 #' @param lat a single numeric value representing the mean latitude of the location for which the solar index is required (decimal degrees, -ve south of the equator).
 #' @param long a single numeric value representing the mean longitude of the location for which the solar index is required (decimal degrees, -ve west of Greenwich meridian).
 #' @param julian a single integer representing the Julian day as returned by [julday()].
-#' @param dtm an optional raster object, two-dimensional array or matrix of elevations (m). If not a raster, orientated as if derived from a raster using [is_raster()]. I.e. `[1, 1]` is the NW corner.
+#' @param dtm an optional SpatRaster object, two-dimensional array or matrix of elevations (m). If not a SpatRaster, orientated as if derived from a raster using [is_raster()]. I.e. `[1, 1]` is the NW corner.
 #' @param reso a single numeric value representing the spatial resolution of `dtm` (m).
 #' @param merid an optional numeric value representing the longitude (decimal degrees) of the local time zone meridian (0 for GMT). Default is `round(long / 15, 0) * 15`
 #' @param dst an optional numeric value representing the time difference from the timezone meridian (hours, e.g. +1 for BST if `merid` = 0).
 #' @param shadow an optional logical value indicating whether topographic shading should be considered (TRUE = Yes, FALSE = No).
 #'
-#' @return If shadow is `TRUE`, a raster object or a two-dimensional array of numeric values representing the proportion of direct beam radiation incident on an inclined surface, accounting for topographic shading.
+#' @return If shadow is `TRUE`, a SpatRaster object or a two-dimensional array of numeric values representing the proportion of direct beam radiation incident on an inclined surface, accounting for topographic shading.
 #' @return If shadow is `FALSE`, a raster object or a two-dimensional array of numeric values representing the proportion of direct beam radiation incident on an inclined surface, not accounting for topographic shading.
 #' @return If no `dtm` is provided, a vector, array or single numeric value of the proportion of direct beam radiation incident on the inclined surfaces specified by `slope` and `aspect`, and topographic shading is ignored.
-#' @import raster
+#' @import terra
 #'
 #' @details
-#' If `slope` is unspecified, and `dtm` is a raster, `slope` and `aspect` are calculated from
-#' the raster. If `slope` is unspecified, and `dtm` is not a raster, the slope and aspect
+#' If `slope` is unspecified, and `dtm` is a SpatRaster, `slope` and `aspect` are calculated from
+#' the raster. If `slope` is unspecified, and `dtm` is not a SpatRaster, the slope and aspect
 #' are set to zero. If `lat` is unspecified, and `dtm` is a raster with a coordinate reference
 #' system defined, `lat` and `long` are calculated from the raster. If `lat` is unspecified,
 #' and `dtm` is not a raster, or a raster without a coordinate reference system defined, an
 #' error is returned. If `dtm` is specified, then the projection system used must be such that
-#' units of x, y and z are identical. Use [projectRaster()] to convert the projection to a
+#' units of x, y and z are identical. Use [terra::project()] to convert the projection to a
 #' Universal Transverse Mercator type projection system. If `dtm` is a raster object, a raster
 #' object is returned.
 #'
 #' @export
 #'
-#' @seealso the raster package function [terrain()] can be used to derive slopes and aspects from `dtm` (see example).
-#'
 #' @examples
-#' library(raster)
+#' library(terra)
 #' jd <- julday (2010, 6, 21) # Julian day
 #' # slope, aspect, lat & long calculated from raster
-#' si1 <- solarindex(localtime = 8, julian = jd, dtm = dtm1m)
-#' si2 <- solarindex(localtime = 8, julian = jd, dtm = dtm1m, shadow = FALSE)
+#' si1 <- solarindex(localtime = 8, julian = jd, dtm = rast(dtm1m))
+#' si2 <- solarindex(localtime = 8, julian = jd, dtm = rast(dtm1m), shadow = FALSE)
 #' par(mfrow = c(2, 1))
 #' plot(si1, main = "Solar index with topographic shadowing")
 #' plot(si2, main = "Solar index without topographic shadowing")
-#' ll <- latlongfromraster(dtm1m)
+#' ll <- latlongfromraster(rast(dtm1m))
 #' solarindex(0, 0, 8, lat = ll$lat, long = ll$long, jd)
-solarindex <- function(slope = NA, aspect, localtime, lat = NA, long, julian,
-                      dtm = array(0, dim = c(1, 1)), reso = 1, merid = round(long / 15, 0) * 15,
-                      dst = 0, shadow = TRUE) {
+solarindex <- function(slope = NA, aspect = NA, localtime, lat = NA, long = 0, julian,
+                       dtm = array(0, dim = c(1, 1)), reso = 1, merid = round(long / 15, 0) * 15,
+                       dst = 0, shadow = TRUE) {
   r <- dtm
-  if (class(slope)[1] == "logical" & class(r)[1] == "RasterLayer") {
-    slope <- terrain(r, opt = "slope", unit = "degrees")
-    aspect <- terrain(r, opt = "aspect", unit = "degrees")
+  if (class(slope)[1] == "logical" & class(r)[1] == "SpatRaster") {
+    slope <- terrain(r, v = "slope", unit = "degrees")
+    aspect <- terrain(r, v = "aspect", unit = "degrees")
   }
-  if (class(slope)[1] == "logical" & class(r)[1] != "RasterLayer") {
+  if (class(slope)[1] == "logical" & class(r)[1] != "SpatRaster") {
     slope <- 0
     aspect <- 0
   }
-  if (class(lat)[1] == "logical" & class(crs(r)) == "CRS") {
+  if (class(lat)[1] == "logical" & nchar(crs(r)) > 0) {
     lat <- latlongfromraster(r)$lat
     long <- latlongfromraster(r)$long
   }
-  if (class(lat)[1] == "logical" & class(crs(r)) != "CRS")
+  if (class(lat)[1] == "logical" & nchar(crs(r)) == 0)
     stop("Latitude not defined and cannot be determined from raster")
   dtm <- is_raster(dtm)
   slope <- is_raster(slope)

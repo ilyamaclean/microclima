@@ -4,15 +4,15 @@
 \alias{albedo_reflected}
 \title{Calculates the mean albedo of surfaces surrounding each location}
 \usage{
-albedo_reflected(alb, e = extent(alb))
+albedo_reflected(alb, e = ext(alb))
 }
 \arguments{
-\item{alb}{a raster object, two-dimensional array or matrix of surface albedo values (range 0 - 1) derived using \code{\link[=albedo]{albedo()}} or \code{\link[=albedo_adjust]{albedo_adjust()}}.}
+\item{alb}{a SpatRaster object, two-dimensional array or matrix of surface albedo values (range 0 - 1) derived using \code{\link[=albedo]{albedo()}} or \code{\link[=albedo_adjust]{albedo_adjust()}}.}
 
 \item{e}{an optional extent object indicating the geographic extent of \code{alb}.}
 }
 \value{
-a raster object, two-dimensional array or matrix of values representing the mean albedo of surfaces surrounding each pixel of a two-dimension albedo array (range 0 - 1).
+a SpatRaster object, two-dimensional array or matrix of values representing the mean albedo of surfaces surrounding each pixel of a two-dimension albedo array (range 0 - 1).
 }
 \description{
 \code{albedo_reflected} is used to calculate mean albedo of surfaces surrounding a location from which radiation is reflected.
@@ -21,16 +21,17 @@ a raster object, two-dimensional array or matrix of values representing the mean
 A small proportion of radiation received at any given location is in the
 form of reflected radiation, and this function permits the albedo of
 surrounding surfaces to be calculated. An inverse distance-weighting is
-applied (range 0 to 1). If \code{alb} is a raster object, then a raster object is returned
+applied (range 0 to 1). If \code{alb} is a SpatRaster object, then a SpatRaster object is returned
 and \code{e} can be determined from \code{alb}.
 }
 \examples{
-library(raster)
+library(terra)
 alb <- albedo(aerial_image[,,1], aerial_image[,,2], aerial_image[,,3],
               aerial_image[,,4])
 alb <- alb[901:1000, 901:1000]
-e <- extent(c(169900, 170000, 12900, 13000))
-rt <-raster(e, res = 1)
+e <- ext(169900, 170000, 12900, 13000)
+rt <-rast(e)
+res(rt)<-1
 r_alb <- albedo_reflected(alb, e)
 par(mfrow = c(2, 1))
 plot(if_raster(alb, rt), main = "Surface albedo", col= gray(0:255/255))

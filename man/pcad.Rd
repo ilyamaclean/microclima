@@ -7,11 +7,11 @@
 pcad(dem, basins, fa, tc, h, p = 101300, out = "cadp")
 }
 \arguments{
-\item{dem}{a raster object of elevation (m).}
+\item{dem}{a SpatRaster object of elevation (m).}
 
-\item{basins}{a raster object, two-dimensional array or matrix with basins numbered as integers as returned by \code{\link[=basindelin]{basindelin()}}.}
+\item{basins}{a SpatRaster object, two-dimensional array or matrix with basins numbered as integers as returned by \code{\link[=basindelin]{basindelin()}}.}
 
-\item{fa}{a raster object of accumulated flow, as returned by \code{\link[=flowacc]{flowacc()}}}
+\item{fa}{a SpatRaster object of accumulated flow, as returned by \code{\link[=flowacc]{flowacc()}}}
 
 \item{tc}{a single numeric value, raster object, two-dimensional array or matrix of values with the dimensions as \code{dem} of temperature (ºC).}
 
@@ -44,13 +44,13 @@ boundaries, \code{basins} is best derived using \code{\link[=basinmerge]{basinme
 Warning: function is quite slow on large datasets.
 }
 \examples{
-library(raster)
-basins <- basinmerge(dtm100m, basins100m, 2)
+library(terra)
+basins <- basindelin(rast(dtm100m), boundary = 2)
 h <- humidityconvert(50, intype = "relative", 20)$specific
-fa <- flowacc(dtm100m, basins)
-cp1 <- pcad(dtm100m, basins, fa, 20, h)
-cp2 <- pcad(dtm100m, basins, fa, 20, h, out = "tempdif")
-cp3 <- pcad(dtm100m, basins, fa, 20, h, out = "pflow")
+fa <- flowacc(rast(dtm100m), basins)
+cp1 <- pcad(rast(dtm100m), basins, fa, 20, h)
+cp2 <- pcad(rast(dtm100m), basins, fa, 20, h, out = "tempdif")
+cp3 <- pcad(rast(dtm100m), basins, fa, 20, h, out = "pflow")
 par(mfrow=c(1, 3))
 plot(cp3, main = "Accumulated flow proportion")
 plot(cp2, main = "Expected temperature difference")

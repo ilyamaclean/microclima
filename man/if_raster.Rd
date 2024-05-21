@@ -2,7 +2,7 @@
 % Please edit documentation in R/solartools.R
 \name{if_raster}
 \alias{if_raster}
-\title{Flexible conversion to raster object}
+\title{Flexible conversion to SpatRaster object}
 \usage{
 if_raster(x, r)
 }
@@ -12,15 +12,15 @@ if_raster(x, r)
 \item{r}{an R object}
 }
 \value{
-if \code{r} is a raster, \code{x} is converted to a raster with the same attributes as \code{r}, otherwise returns \code{x}
+if \code{r} is a SpatRaster, \code{x} is converted to a SpatRaster with the same attributes as \code{r}, otherwise returns \code{x}
 }
 \description{
-\code{if_raster} is used to permit flexibility in the use of rasters, matrices or arrays in many functions.
+\code{if_raster} is used to permit flexibility in the use of SpatRasts, matrices or arrays in many functions.
 }
 \examples{
 r <- is_raster(dtm100m)
 r1 <- if_raster(r, dtm100m)
 r2 <- if_raster(r, r)
-class(r1) # is a RasterLayer
+class(r1) # is a SpatRaster
 class(r2) # is a matrix
 }

@@ -7,7 +7,7 @@
 humidityconvert(h, intype = "relative", tc = 20, p = 101300)
 }
 \arguments{
-\item{h}{humidity value(s). Units as follows: specific humidity (\ifelse{html}{\out{kg kg<sup>-1</sup>}}{\eqn{kg kg^{-1}}}), absolute humidity (\ifelse{html}{\out{kg m<sup>-3</sup> }}{\eqn{kg m^{-3}}}), relative humidity (\\%), vapour pressure (kPa).}
+\item{h}{humidity value(s). Units as follows: specific humidity (\ifelse{html}{\out{kg kg<sup>-1</sup>}}{\eqn{kg kg^{-1}}}), absolute humidity (\ifelse{html}{\out{kg m<sup>-3</sup> }}{\eqn{kg m^{-3}}}), relative humidity (percentage), vapour pressure (kPa).}
 
 \item{intype}{a character string description of the humidity type of \code{h}. One of "relative", "absolute" or "specific".}
 
@@ -17,14 +17,12 @@ humidityconvert(h, intype = "relative", tc = 20, p = 101300)
 }
 \value{
 a list of numeric humidity values with the following components:
-
-\code{relative} relative humidity (\\%).
-
-\code{absolute}  absolute humidity (\ifelse{html}{\out{kg m<sup>-3</sup> }}{\eqn{kg m^{-3}}}).
-
-\code{specific} specific humidity (\ifelse{html}{\out{kg kg<sup>-1</sup> }}{\eqn{kg kg^{-1}}}).
-
-\code{vapour_pressure} vapour pressure (kPa).
+\describe{
+\item{1}{\code{relative} - relative humidity (percentage)}
+\item{2}{\code{absolute} - absolute humidity (\ifelse{html}{\out{kg m<sup>-3</sup> }}{\eqn{kg m^{-3}}})}
+\item{3}{\code{specific} specific humidity (\ifelse{html}{\out{kg kg<sup>-1</sup> }}{\eqn{kg kg^{-1}}})}
+\item{4}{\code{vapour_pressure} vapour pressure (kPa)}
+}
 }
 \description{
 \code{humidityconvert} is used to convert between different measures of humidity, namely relative, absolute or specific. Vapour pressure is also returned.
