@@ -34,7 +34,8 @@ runauto(
   summarydata = TRUE,
   save.memory = FALSE,
   weather.elev = "ncep",
-  cad.effects = TRUE
+  cad.effects = TRUE,
+  run.gads = 1
 )
 }
 \arguments{
@@ -152,11 +153,14 @@ from NOAA-NCEP reanalysis) project or \code{era5} (derived from Copernicus ERA5 
 \item{cad.effects}{optional logical indicating whether to calaculate cold air drainage effects
 (TRUE = Yes, slower. FALSE =  No, quicker)
 memory by storing temperature x 1000 as an integer values.}
+
+\item{run.gads}{NicheMapR parameter controlling if/how the Global Aerosol Database is used to derive solar radiation
+(1=yes (Fortran version), 2=yes (R version), 0=no). If program is crashing, try run.gads = 2.}
 }
 \value{
 a list with the following objects:
 (1) temps: an array of temperatures for each pixel of r and hour of the time sequence.
-(2) e: an extent object given the extent of \code{temps}. Generally the same as \code{terra::ext(r)}
+(2) e: a terra::ext object given the extent of \code{temps}. Generally the same as \code{terra::ext(r)}
 though note that edge cells are NA as slopes cannot be calculated for these cells.
 (3) units: the units of \code{temps}. Either deg C or dec C * 1000 if \code{save.memory} is TRUE.
 (4) tmax: If \code{summarydata} is TRUE, a matrix of maximum temperatures
@@ -186,7 +190,6 @@ temps <- runauto(r, "10/06/2010", "15/06/2010", hgt = 0.1, l = NA, x = NA,
 mypal <- colorRampPalette(c("darkblue", "blue", "green", "yellow", "orange",
                           "red"))(255)
 meantemp <- temps$tmean
-extent(meantemp) <- temps$e
 par(mfrow = c(1, 1))
 plot(meantemp, main = "Mean temperature", col = mypal)
 # Interactive 3D plot

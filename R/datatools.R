@@ -1222,6 +1222,8 @@ microclimaforNMR <- function(lat, long, dstart, dfinish, l, x, coastal = TRUE, h
 #' @param cad.effects optional logical indicating whether to calaculate cold air drainage effects
 #' (TRUE = Yes, slower. FALSE =  No, quicker)
 #' memory by storing temperature x 1000 as an integer values.
+#' @param run.gads NicheMapR parameter controlling if/how the Global Aerosol Database is used to derive solar radiation
+#' (1=yes (Fortran version), 2=yes (R version), 0=no). If program is crashing, try run.gads = 2.
 #'
 #' @references Kearney MR,  Porter WP (2016) NicheMapR – an R package for biophysical
 #' modelling: the microclimate model. Ecography 40: 664-674.
@@ -1231,7 +1233,7 @@ microclimaforNMR <- function(lat, long, dstart, dfinish, l, x, coastal = TRUE, h
 #'
 #' @return a list with the following objects:
 #' (1) temps: an array of temperatures for each pixel of r and hour of the time sequence.
-#' (2) e: an extent object given the extent of `temps`. Generally the same as `terra::ext(r)`
+#' (2) e: a terra::ext object given the extent of `temps`. Generally the same as `terra::ext(r)`
 #' though note that edge cells are NA as slopes cannot be calculated for these cells.
 #' (3) units: the units of `temps`. Either deg C or dec C * 1000 if `save.memory` is TRUE.
 #' (4) tmax: If `summarydata` is TRUE, a matrix of maximum temperatures
@@ -1254,7 +1256,6 @@ microclimaforNMR <- function(lat, long, dstart, dfinish, l, x, coastal = TRUE, h
 #' mypal <- colorRampPalette(c("darkblue", "blue", "green", "yellow", "orange",
 #'                           "red"))(255)
 #' meantemp <- temps$tmean
-#' extent(meantemp) <- temps$e
 #' par(mfrow = c(1, 1))
 #' plot(meantemp, main = "Mean temperature", col = mypal)
 #' # Interactive 3D plot
@@ -1271,7 +1272,7 @@ runauto <- function(r, dstart, dfinish, hgt = 0.05, l, x, habitat = NA,
                     aspect = NA, windthresh = 4.5, emthresh = 0.78, reanalysis2 = FALSE,
                     steps = 8, plot.progress = TRUE, continuous = TRUE,
                     summarydata = TRUE, save.memory = FALSE, weather.elev = 'ncep',
-                    cad.effects = TRUE) {
+                    cad.effects = TRUE, run.gads = 1) {
   longwaveveg2 <- function(le0, lwsky, x, fr, svv, albc) {
     lw1 <- (1 - fr) * lwsky
     lr <- (2 / 3) * log(x + 1)
@@ -1450,7 +1451,7 @@ runauto <- function(r, dstart, dfinish, hgt = 0.05, l, x, habitat = NA,
   micronmr <- micro_ncep(dstart = dstart, dfinish = dfinish, dem = r, dem2 = dem, LAI = 0,
                          loc = loc, Usrhyt = hgt2, Refhyt = 2, coastal = coastal, reanalysis = reanalysis2,
                          DEP = dep, save = save, hourlydata = hourlydata, dailyprecip = dailyprecip,
-                         weather.elev = weather.elev, cad.effects = cad.effects)
+                         weather.elev = weather.elev, cad.effects = cad.effects, run.gads = run.gads)
   ma <- micronmr$microclima.out
   hourlydata <- ma$hourlydata
   #####################
@@ -1589,7 +1590,7 @@ runauto <- function(r, dstart, dfinish, hgt = 0.05, l, x, habitat = NA,
     if (plot.progress & i%%100 == 0) {
       tempr <- if_raster(tout[,,i], r)
       if (save.memory) tempr <- tempr / 1000
-      plot(tempr, main = tme[i], col = mypal)
+      plot(tempr, main = as.character(tme[i]), col = mypal)
     }
   }
   if (hgt < 0) {
@@ -1620,10 +1621,10 @@ runauto <- function(r, dstart, dfinish, hgt = 0.05, l, x, habitat = NA,
     plot(tfrost, main = "Frost hours", col = mypal2)
   }
   if (save.memory) {
-    return(list(temps = tout, e = extent(r), tme = tme, units = "deg C * 1000",
+    return(list(temps = tout, e = ext(r), tme = tme, units = "deg C * 1000",
                 tmax = tmax, tmin = tmin, tmean = tmean, frosthours = hfrost))
   } else {
-    return(list(temps = tout, e = extent(r), tme = tme, units = "deg C",
+    return(list(temps = tout, e = ext(r), tme = tme, units = "deg C",
                 tmax = tmax, tmin = tmin, tmean = tmean, frosthours = hfrost))
   }
 }
