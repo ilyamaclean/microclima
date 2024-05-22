@@ -956,13 +956,13 @@ laifromhabitat <- function(habitat, lat, long, year, meantemp = NA, cvtemp = NA,
   }
   long <- ifelse(long > 180.9375, long - 360, long)
   long <- ifelse(long < -179.0625, long + 360, long)
-  ll <- SpatialPoints(data.frame(x = long, y = lat))
+  ll <- data.frame(x = long, y = lat)
   diy <- 366
   if (year%%4 == 0) diy <- 366
   if (year%%100 == 0 & year%%400 != 0) diy <- 365
   mmonth <-c(16, 45.5, 75, 105.5, 136, 166.5, 197, 228, 258.5, 289, 319.5, 350)
   if (diy == 365) mmonth[2:12] <- mmonth[2:12] + 0.5
-  e <- extent(c(-179.0625, 180.9375, -89.49406, 89.49406))
+  e <- ext(c(-179.0625, 180.9375, -89.49406, 89.49406))
   clim <- c(meantemp, cvtemp, rainfall, cvrain, wetmonth)
   for (i in 1:5) {
     if (is.na(clim[i])) {

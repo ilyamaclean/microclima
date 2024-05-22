@@ -294,12 +294,10 @@ solarindex <- function(slope = NA, aspect = NA, localtime, lat = NA, long = 0, j
     slope <- 0
     aspect <- 0
   }
-  if (class(lat)[1] == "logical" & nchar(crs(r)) > 0) {
+  if (class(lat)[1] == "logical") {
     lat <- latlongfromraster(r)$lat
     long <- latlongfromraster(r)$long
   }
-  if (class(lat)[1] == "logical" & nchar(crs(r)) == 0)
-    stop("Latitude not defined and cannot be determined from raster")
   dtm <- is_raster(dtm)
   slope <- is_raster(slope)
   aspect <- is_raster(aspect)

@@ -70,8 +70,9 @@ get_dem<-function(r = NA, lat, long, resolution = 30, zmin = 0, xdims = 200, ydi
     r <- rast(e)
     res(r) <- resolution
     crs(r) <- sf::st_crs(xy)$wkt
+    ll <- latlongfromraster(r)
   } else {
-    ll <- lat <- latlongfromraster(r)
+    ll <- latlongfromraster(r)
     lat <- ll$lat
     long <- ll$long
     if (is.na(resolution)) resolution<-res(r)[1]
@@ -812,7 +813,7 @@ dailyprecipNCEP <- function(lat, long, tme, reanalysis2 = FALSE) {
   # Compute land-sea ratio of ncep grid cell
   cat("Computing mean coastal exposure of ncep grid cell \n")
   cncep <-0
-  eone <- extent(xc - 1.875 / 2, xc + 1.875 / 2,
+  eone <- ext(xc - 1.875 / 2, xc + 1.875 / 2,
                  yc - 1.904129 / 2, yc + 1.904129 / 2)
   rllo <- crop(rll, eone)
   rone <- project(rllo, sf::st_crs(r)$wkt)

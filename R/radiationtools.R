@@ -773,12 +773,10 @@ shortwavetopo <- function(dni, dif, julian, localtime, lat = NA, long = NA,
     slope <- 0
     aspect <- 0
   }
-  if (class(lat)[1] == "logical" & nchar(crs(r)) > 0) {
+  if (class(lat)[1] == "logical") {
     lat <- latlongfromraster(r)$lat
     long <- latlongfromraster(r)$long
   }
-  if (class(lat)[1] == "logical" & nchar(crs(r)) == 0)
-    stop("Latitude not defined and cannot be determined from raster")
   dni <- is_raster(dni)
   dif <- is_raster(dif)
   slope <- is_raster(slope)
@@ -926,12 +924,10 @@ shortwaveveg <- function(dni, dif, julian, localtime, lat = NA, long = NA,
     slope <- 0
     aspect <- 0
   }
-  if (class(lat)[1] == "logical" & nchar(crs(r)) > 0) {
+  if (class(lat)[1] == "logical") {
     lat <- latlongfromraster(r)$lat
     long <- latlongfromraster(r)$long
   }
-  if (class(lat)[1] == "logical" & nchar(crs(r)) == 0)
-    stop("Latitude not defined and cannot be determined from raster")
   if (class(merid) == "logical") merid <- round(long / 15, 0) * 15
   dni <- is_raster(dni)
   dif <- is_raster(dif)
@@ -945,7 +941,7 @@ shortwaveveg <- function(dni, dif, julian, localtime, lat = NA, long = NA,
   l <- is_raster(l)
   dtm <- is_raster(dtm)
   dtm[is.na(dtm)] <- 0
-  si <- solarindex(slope, aspect, localtime, lat, long, julian, dtm, reso,
+  si <- solarindex(slope, aspect, localtime, lat, long, julian, r, reso,
                    merid, dst, shadow)
   dirr <- si * dni
   a <- slope * (pi / 180)
@@ -971,7 +967,7 @@ shortwaveveg <- function(dni, dif, julian, localtime, lat = NA, long = NA,
   kk <- sqrt((x^2 + (tan(zen * (pi/180))^2)))/(x + 1.774 * (x + 1.182)^(-0.733))
   trd <- exp(-kk * s * l)
   trf <- exp(-s * l)
-  fgd <- fd * trd * (1 - albg)
+  fgd <- is_raster(fd) * trd * (1 - albg)
   fged <- fdf * trf * (1 - albg) * svv
   fgc <- fgd + fged
   if_raster(fgc, r)
