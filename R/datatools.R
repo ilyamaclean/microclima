@@ -1080,6 +1080,12 @@ microclimaforNMR <- function(lat, long, dstart, dfinish, l, x, coastal = TRUE, h
                              svf = NA, difani = TRUE, windthresh = 4.5, emthresh = 0.78, reanalysis2 = FALSE,
                              steps = 8, use.raster = TRUE, plot.progress = TRUE, tidyr = FALSE,
                              weather.elev = 'ncep', cad.effects = TRUE) {
+  if (coastal) {
+    if (!require("rnoaa", quietly = TRUE)) {
+      stop("archive version of package 'rnoaa' is needed for calculating coastal effects. Please install it from: https://cran.r-project.org/web/packages/rnoaa/index.html or set coastal to FALSE",
+         call. = FALSE)
+    }
+  }
   tme <- seq(as.POSIXlt(dstart, format = "%d/%m/%Y", origin = "01/01/1900", tz = "UTC"),
              as.POSIXlt(dfinish, format = "%d/%m/%Y", origin = "01/01/1900", tz = "UTC")
              + 3600 * 24, by = 'hours')
