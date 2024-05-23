@@ -1082,7 +1082,7 @@ microclimaforNMR <- function(lat, long, dstart, dfinish, l, x, coastal = TRUE, h
                              weather.elev = 'ncep', cad.effects = TRUE) {
   if (coastal) {
     if (!require("rnoaa", quietly = TRUE)) {
-      stop("archive version of package 'rnoaa' is needed for calculating coastal effects. Please install it from: https://cran.r-project.org/web/packages/rnoaa/index.html or set coastal to FALSE",
+      stop("archive version of package 'rnoaa' is needed for calculating coastal effects. Please install it from archive: https://cran.r-project.org/web/packages/rnoaa/index.html or set coastal to FALSE",
          call. = FALSE)
     }
   }
