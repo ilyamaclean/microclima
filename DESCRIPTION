@@ -29,7 +29,6 @@ Imports:
     RNCEP (>= 1.0.8),
     zoo (>= 1.8),
     devtools,
-    rnoaa,
     ncdf4,
     fields,
     Rcpp,
@@ -40,6 +39,7 @@ Suggests: knitr,
     rmarkdown,
     plotly,
     NicheMapR,
+    rnoaa,
 	testthat
 VignetteBuilder: knitr
 URL: https://github.com/ilyamaclean/microclima

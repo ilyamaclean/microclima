@@ -840,8 +840,13 @@ dailyprecipNCEP <- function(lat, long, tme, reanalysis2 = FALSE) {
 }
 #' Downloads sea-surface temperature data
 #' @export
-#' @import rnoaa ncdf4
+#' @import rnoaa
+#' @import ncdf4
 .get_sst <- function(lat, long, tme) {
+  if (!require("rnoaa", quietly = TRUE)) {
+    stop("archive version of package 'rnoaa' is needed. Please install it from: https://cran.r-project.org/web/packages/rnoaa/index.html",
+         call. = FALSE)
+  }
   sel1 <- which(tme$year == min(tme$year))
   sel2 <- which(tme$year == max(tme$year))
   dms <- c(31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31)
