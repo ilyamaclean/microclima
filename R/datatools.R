@@ -840,7 +840,6 @@ dailyprecipNCEP <- function(lat, long, tme, reanalysis2 = FALSE) {
 }
 #' Downloads sea-surface temperature data
 #' @export
-#' @import rnoaa
 #' @import ncdf4
 .get_sst <- function(lat, long, tme) {
   if (!require("rnoaa", quietly = TRUE)) {
@@ -873,7 +872,7 @@ dailyprecipNCEP <- function(lat, long, tme, reanalysis2 = FALSE) {
     sel <- which(tme2$year + 1900 == yrs[yr])
     mths <- unique(tme2$mon[sel]) + 1
     for (mt in 1:length(mths)) {
-      nc <- ersst(yrs[yr], mths[mt])
+      nc <- rnoaa::ersst(yrs[yr], mths[mt])
       sst <- ncvar_get(nc, 'sst')
       sst <- t(sst)
       sst <- apply(sst, 2, rev)
@@ -915,7 +914,7 @@ dailyprecipNCEP <- function(lat, long, tme, reanalysis2 = FALSE) {
 #'
 #' @return a three-dimension array of hourly temperature values for each pixel of `landsea`
 #' @export
-#' @import terra sp zoo rnoaa ncdf4 sf
+#' @import terra sp zoo ncdf4 sf
 #' @examples
 #' library(terra)
 #' # Download NCEP data
